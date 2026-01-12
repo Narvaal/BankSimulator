@@ -3,7 +3,6 @@ package br.com.ale.service;
 import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.TransactionDAO;
 import br.com.ale.domain.Account;
-import br.com.ale.domain.Transaction;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
 import br.com.ale.dto.*;
@@ -17,7 +16,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.sql.Connection;
 import java.time.Instant;
-import java.util.Optional;
 
 public class AccountService {
 
@@ -63,7 +61,12 @@ public class AccountService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Create account", e);
+            throw new RuntimeException(
+                    "Service error while creating account " +
+                            "[accountNumber=" + request.accountNumber() + ", " +
+                            "clientId=" + request.clientId() + "]",
+                    e
+            );
         }
     }
 
@@ -74,13 +77,16 @@ public class AccountService {
             return accountDAO.selectByNumber(conn, accountNumber)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Account not found with number: " + accountNumber
+                                    "Account not found " +
+                                            "[accountNumber=" + accountNumber + "]"
                             )
                     );
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Error - Select account by number", e
+                    "Service error while selecting account " +
+                            "[accountNumber=" + accountNumber + "]",
+                    e
             );
         }
     }
@@ -95,24 +101,34 @@ public class AccountService {
 
             if (rowsAffected == 0) {
                 throw new RuntimeException(
-                        "Account not found with id: " + request.id()
+                        "Account not found " +
+                                "[accountId=" + request.id() + "]"
                 );
             }
 
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Update account", e);
+            throw new RuntimeException(
+                    "Service error while updating account " +
+                            "[accountId=" + request.id() + "]",
+                    e
+            );
         }
     }
 
     public void transfer(long fromAccountId, long toAccountId, BigDecimal amount) {
 
         if (fromAccountId == toAccountId) {
-            throw new RuntimeException("Cannot transfer to the same account");
+            throw new RuntimeException(
+                    "Not allowed transference to the same account" +
+                            "[fromAccountId=" + fromAccountId + ", " +
+                            "toAccountId=" + toAccountId + "]"
+
+            );
         }
 
-        try (Connection conn = connectionProvider.getConnection()){
+        try (Connection conn = connectionProvider.getConnection()) {
 
             conn.setAutoCommit(false);
 
@@ -120,7 +136,8 @@ public class AccountService {
                     .selectById(conn, fromAccountId)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Source account not found: " + fromAccountId
+                                    "Source account not found " +
+                                            "[fromAccountId=" + fromAccountId + "]"
                             )
                     );
 
@@ -128,7 +145,8 @@ public class AccountService {
                     .selectById(conn, toAccountId)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Destination account not found: " + toAccountId
+                                    "Destination account not found " +
+                                            "[toAccountId=" + toAccountId + "]"
                             )
                     );
 
@@ -147,7 +165,10 @@ public class AccountService {
             PrivateKey privateKey = privateKeyStorage.get(fromAccountId);
 
             if (privateKey == null) {
-                throw new RuntimeException("Private key not found for account: " + fromAccountId);
+                throw new RuntimeException(
+                        "Private key not found " +
+                                "[fromAccountId=" + fromAccountId + "]"
+                );
             }
 
             String signature = SignatureService.sign(message, privateKey);
@@ -175,8 +196,10 @@ public class AccountService {
             );
 
             if (debited == 0) {
-                throw new RuntimeException("Insufficient balance for account: "
-                        + fromAccount.getAccountNumber());
+                throw new RuntimeException(
+                        "Insufficient balance " +
+                                "[fromAccountId=" + fromAccountId + "]"
+                );
             }
 
             int credited = accountDAO.credit(
@@ -188,8 +211,11 @@ public class AccountService {
             );
 
             if (credited == 0) {
-                throw new RuntimeException("Failed to credit destination account: "
-                        + toAccount.getAccountNumber());
+                throw new RuntimeException(
+                        "Credit destination " +
+                                "[toAccountId=" + toAccountId + ", "
+                                + "amount=" + amount + "]"
+                );
             }
 
             transactionDAO.update(
@@ -203,7 +229,14 @@ public class AccountService {
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Update account", e);
+            throw new RuntimeException(
+                    "Service error while transferring" +
+                            "[fromAccountId=" + fromAccountId + ", "
+                            + "toAccountId=" + toAccountId + ", "
+                            + "amount=" + amount + "]",
+
+                    e
+            );
         }
     }
 
@@ -215,7 +248,11 @@ public class AccountService {
             Account account = accountDAO
                     .selectByNumber(conn, accountNumber)
                     .orElseThrow(() ->
-                            new RuntimeException("Account not found: " + accountNumber));
+                            new RuntimeException(
+                                    "Account not found " +
+                                            "[accountNumber=" + accountNumber + "]"
+                            )
+                    );
 
             Instant timestamp = Instant.now();
 
@@ -229,7 +266,10 @@ public class AccountService {
             PrivateKey privateKey = privateKeyStorage.get(account.getId());
 
             if (privateKey == null) {
-                throw new RuntimeException("Private key not found for account: " + account.getId());
+                throw new RuntimeException(
+                        "Private key not found " +
+                                "[accountNumber=" + accountNumber + "]"
+                );
             }
 
             String signature = SignatureService.sign(message, privateKey);
@@ -254,7 +294,11 @@ public class AccountService {
             );
 
             if (credited == 0) {
-                throw new RuntimeException("Failed to credit account");
+                throw new RuntimeException(
+                        "Credit account " +
+                                "[accountNumber=" + accountNumber + ", "
+                                + "amount=" + amount + "]"
+                );
             }
 
             transactionDAO.update(
@@ -265,7 +309,12 @@ public class AccountService {
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Credit account", e);
+            throw new RuntimeException(
+                    "Service error while crediting" +
+                            "[accountNumber=" + accountNumber + ", "
+                            + "amount=" + amount + "]",
+                    e
+            );
         }
     }
 
@@ -277,7 +326,11 @@ public class AccountService {
             Account account = accountDAO
                     .selectByNumber(conn, accountNumber)
                     .orElseThrow(() ->
-                            new RuntimeException("Account not found: " + accountNumber));
+                            new RuntimeException(
+                                    "Account not found " +
+                                            "[accountNumber=" + accountNumber + "]"
+                            )
+                    );
 
             Instant timestamp = Instant.now();
 
@@ -290,7 +343,10 @@ public class AccountService {
 
             PrivateKey privateKey = privateKeyStorage.get(account.getId());
             if (privateKey == null) {
-                throw new RuntimeException("Private key not found for account: " + account.getId());
+                throw new RuntimeException(
+                        "Private key not found " +
+                                "[accountNumber=" + accountNumber + "]"
+                );
             }
 
             String signature = SignatureService.sign(message, privateKey);
@@ -315,7 +371,11 @@ public class AccountService {
             );
 
             if (debited == 0) {
-                throw new RuntimeException("Insufficient balance for account: " + accountNumber);
+                throw new RuntimeException(
+                        "Insufficient balance " +
+                                "[accountNumber=" + accountNumber + ", "
+                                + "amount=" + amount + "]"
+                );
             }
 
             transactionDAO.update(
@@ -326,7 +386,12 @@ public class AccountService {
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Withdraw from account", e);
+            throw new RuntimeException(
+                    "Service error while debiting" +
+                            "[accountNumber=" + accountNumber + ", "
+                            + "amount=" + amount + "]",
+                    e
+            );
         }
     }
 }

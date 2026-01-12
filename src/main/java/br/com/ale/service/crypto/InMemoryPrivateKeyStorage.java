@@ -19,7 +19,10 @@ public class InMemoryPrivateKeyStorage implements PrivateKeyStorage {
             );
             storage.put(accountId, privateKey);
         } catch (Exception e) {
-            throw new RuntimeException("Error saving private key in memory", e);
+            throw new RuntimeException(
+                    "Saving private key in memory" + "[accountId=" + accountId + "]",
+                    e
+            );
         }
     }
 

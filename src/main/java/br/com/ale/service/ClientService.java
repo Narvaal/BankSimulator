@@ -25,8 +25,7 @@ public class ClientService {
 
             long id = clientDAO.insert(
                     conn,
-                    request.name(),
-                    request.document()
+                    request
             );
 
             conn.commit();
@@ -38,7 +37,12 @@ public class ClientService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Create client", e);
+            throw new RuntimeException(
+                    "Service error while creating client " +
+                            "[name=" + request.name() + ", " +
+                            "document=" + request.document() + "]",
+                    e
+            );
         }
     }
 
@@ -52,14 +56,20 @@ public class ClientService {
 
             if (rowsAffected == 0) {
                 throw new RuntimeException(
-                        "Client not found with id: " + request.id()
+                        "Client not found " +
+                                "[accountNumber=" + request.id() + "]"
                 );
             }
 
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Update client", e);
+            throw new RuntimeException(
+                    "Service error while updating client " +
+                            "[id=" + request.id() + ", " +
+                            "name=" + request.name() + "]",
+                    e
+            );
         }
     }
 
@@ -70,13 +80,16 @@ public class ClientService {
             return clientDAO.selectByDocument(conn, document)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Client not found with document: " + document
+                                    "Client not found " +
+                                            "[document=" + document + "]"
                             )
                     );
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Error - Select client by document", e
+                    "Service error while selecting client " +
+                            "[document=" + document + "]",
+                    e
             );
         }
     }
@@ -91,14 +104,19 @@ public class ClientService {
 
             if (rowsAffected == 0) {
                 throw new RuntimeException(
-                        "Client not found with id: " + id
+                        "Client not found " +
+                                "[id=" + id + "]"
                 );
             }
 
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Delete client", e);
+            throw new RuntimeException(
+                    "Service error while deleting client " +
+                            "[id=" + id + "]",
+                    e
+            );
         }
     }
 }

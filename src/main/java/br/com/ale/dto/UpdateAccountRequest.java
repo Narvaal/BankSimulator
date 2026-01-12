@@ -1,5 +1,8 @@
 package br.com.ale.dto;
 
-public record UpdateAccountRequest (long id, String accountNumber, String accountType, String status){
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
+
+public record UpdateAccountRequest(long id, String accountNumber, AccountType accountType, AccountStatus status) {
 
 }

@@ -1,25 +1,28 @@
 package br.com.ale.domain;
 
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Account {
 
-    private long id;
-    private long clientId;
-    private String accountNumber;
-    private String accountType;
+    private final long id;
+    private final long clientId;
+    private final String accountNumber;
+    private final AccountType accountType;
     private BigDecimal balance = BigDecimal.ZERO;
-    private String status;
+    private final AccountStatus status;
     private String publicKey;
 
     public Account(
             long id,
             long clientId,
             String accountNumber,
-            String accountType,
+            AccountType accountType,
             BigDecimal balance,
-            String status,
+            AccountStatus status,
             String publicKey
     ) {
         this.id = id;
@@ -35,8 +38,8 @@ public class Account {
             long id,
             long clientId,
             String accountNumber,
-            String accountType,
-            String status
+            AccountType accountType,
+            AccountStatus status
     ) {
         this.id = id;
         this.clientId = validateClientId(clientId);
@@ -48,21 +51,27 @@ public class Account {
 
     private long validateClientId(long clientId) {
         if (clientId <= 0) {
-            throw new IllegalArgumentException("Client id must be positive");
+            throw new IllegalArgumentException(
+                    "Client id must be positive " + "[clientId=" + clientId + "]"
+            );
         }
         return clientId;
     }
 
     private String validateAccountNumber(String accountNumber) {
         if (accountNumber == null || accountNumber.isBlank()) {
-            throw new IllegalArgumentException("Account number cannot be blank");
+            throw new IllegalArgumentException(
+                    "Account number cannot be blank" + "[accountNumber=" + accountNumber + "]"
+            );
         }
         return accountNumber;
     }
 
     private BigDecimal validateBalance(BigDecimal balance) {
         if (balance == null || balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Balance cannot be negative");
+            throw new IllegalArgumentException(
+                    "Account balance cannot be negative" + "[balance=" + balance + "]"
+            );
         }
         return balance;
     }
@@ -79,7 +88,7 @@ public class Account {
         return accountNumber;
     }
 
-    public String getAccountType() {
+    public AccountType getAccountType() {
         return accountType;
     }
 
@@ -87,11 +96,11 @@ public class Account {
         return balance;
     }
 
-    public String getStatus() {
+    public AccountStatus getStatus() {
         return status;
     }
 
     public String getPublicKey() {
-        return  publicKey;
+        return publicKey;
     }
 }

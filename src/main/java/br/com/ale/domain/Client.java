@@ -2,13 +2,9 @@ package br.com.ale.domain;
 
 public class Client {
 
-    private long id;
-    private String name;
-    private String document;
-
-    public Client(String name, String document) {
-        this(0, name, document);
-    }
+    private final long id;
+    private final String name;
+    private final String document;
 
     public Client(long id, String name, String document) {
         this.id = id;
@@ -18,14 +14,18 @@ public class Client {
 
     private String validateName(String name) {
         if (name == null || name.isBlank() || name.length() < 3) {
-            throw new IllegalArgumentException("Client name must have at least 3 characters");
+            throw new IllegalArgumentException(
+                    "Client name cannot be blank" + "[name=" + name + "]"
+            );
         }
         return name;
     }
 
     private String validateDocument(String document) {
         if (document == null || document.isBlank()) {
-            throw new IllegalArgumentException("Document cannot be blank");
+            throw new IllegalArgumentException(
+                    "Client document cannot be blank" + "[document=" + document + "]"
+            );
         }
         return document;
     }

@@ -41,7 +41,11 @@ public class SpyPrivateKeyStorage implements PrivateKeyStorage {
             return keyFactory.generatePrivate(spec);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error reconstructing private key for test", e);
+
+            throw new RuntimeException(
+                    "Reconstructing private key for test",
+                    e
+            );
         }
     }
 

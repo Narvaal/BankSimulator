@@ -17,7 +17,14 @@ public class SignatureService {
             return Base64.getEncoder().encodeToString(signedBytes);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Generating signature", e);
+
+
+            throw new RuntimeException(
+                    "Service error while generating signature " +
+                            "[message=" + message + ", "
+                            + "isPrivateKeyDestroyed=" + privateKey.isDestroyed() + "]",
+                    e
+            );
         }
     }
 }

@@ -7,9 +7,7 @@ import java.sql.Statement;
 
 public class TestConnectionProvider implements ConnectionProvider {
 
-    private static final String URL =
-            "jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1";
-
+    private static final String URL = "jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 

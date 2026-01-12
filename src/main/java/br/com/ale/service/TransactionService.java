@@ -1,6 +1,5 @@
 package br.com.ale.service;
 
-import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.TransactionDAO;
 import br.com.ale.domain.Transaction;
 import br.com.ale.dto.CreateTransactionRequest;
@@ -14,7 +13,7 @@ public class TransactionService {
     private final TransactionDAO transactionDAO = new TransactionDAO();
     private final ConnectionProvider connectionProvider;
 
-    public TransactionService (
+    public TransactionService(
             ConnectionProvider connectionProvider
     ) {
         this.connectionProvider = connectionProvider;
@@ -40,7 +39,14 @@ public class TransactionService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Create transaction", e);
+
+
+            throw new RuntimeException(
+                    "Service error while creating transaction " +
+                            "[fromAccountId=" + request.fromAccountId() + ", "
+                            + "toAccountId=" + request.toAccountId() + "]",
+                    e
+            );
         }
     }
 
@@ -54,14 +60,20 @@ public class TransactionService {
 
             if (rowsAffected == 0) {
                 throw new RuntimeException(
-                        "Account not found with id: " + request.id()
+                        "Transaction not found " +
+                                "[id=" + request.id() + "]"
                 );
             }
 
             conn.commit();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - Create transaction", e);
+            throw new RuntimeException(
+                    "Service error while updating transaction " +
+                            "[id=" + request.id() + ", "
+                            + "status=" + request.status().name() + "]",
+                    e
+            );
         }
     }
 }

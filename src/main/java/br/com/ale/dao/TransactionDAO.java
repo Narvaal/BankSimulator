@@ -11,22 +11,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionDAO {
-    public Long insert(Connection conn, CreateTransactionRequest request) {
-        String sql = """
-        INSERT INTO transactions (
-            from_account_id,
-            from_account_number,
-            to_account_id,
-            to_account_number,
-            amount,
-            type,
-            status,
-            signature
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql, new String[]{"id"})) {
+    public Long insert(Connection conn, CreateTransactionRequest request) {
+
+        String sql = """
+                INSERT INTO transactions (
+                    from_account_id,
+                    from_account_number,
+                    to_account_id,
+                    to_account_number,
+                    amount,
+                    type,
+                    status,
+                    signature
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+
+        try (PreparedStatement stmt =
+                     conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setObject(1, request.fromAccountId(), Types.BIGINT);
             stmt.setString(2, request.fromAccountNumber());
@@ -40,27 +43,42 @@ public class TransactionDAO {
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected == 0) {
-                throw new RuntimeException("Error - Insert transaction failed");
+                throw new RuntimeException(
+                        "Failed to insert transaction " +
+                                "[fromAccountId=" + request.fromAccountId() +
+                                ", toAccountId=" + request.toAccountId() + "]"
+                );
             }
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getLong("id");
                 }
-                throw new RuntimeException("Error - Failed to retrieve generated transaction id");
             }
 
+            throw new RuntimeException(
+                    "Failed to retrieve transaction id " +
+                            "[fromAccountId=" + request.fromAccountId() +
+                            ", toAccountId=" + request.toAccountId() + "]"
+            );
+
         } catch (SQLException e) {
-            throw new RuntimeException("Error - Insert transaction", e);
+            throw new RuntimeException(
+                    "Database error while inserting transaction " +
+                            "[fromAccountId=" + request.fromAccountId() +
+                            ", toAccountId=" + request.toAccountId() + "]",
+                    e
+            );
         }
     }
 
     public int update(Connection conn, UpdateTransactionRequest request) {
+
         String sql = """
-        UPDATE transactions
-        SET status = ?
-        WHERE id = ?
-        """;
+                UPDATE transactions
+                   SET status = ?
+                 WHERE id = ?
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -71,62 +89,106 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Error - Update transfer with id: " + request.id(), e
+                    "Database error while updating transaction " +
+                            "[transactionId=" + request.id() +
+                            ", status=" + request.status().name() + "]",
+                    e
             );
         }
     }
 
-    public List<Transaction> select(Connection conn, Long accountId) {
+    public List<Transaction> selectFromAccountId(Connection conn, Long fromAccountId) {
+
         String sql = """
-        SELECT id,
-        from_account_number,
-        to_account_id,
-        to_account_number,
-        amount,
-        type,
-        status,
-        signature
-        FROM transactions
-        WHERE from_account_id = ?
-        """;
+                SELECT id,
+                       from_account_id,
+                       from_account_number,
+                       to_account_id,
+                       to_account_number,
+                       amount,
+                       type,
+                       status,
+                       signature
+                  FROM transactions
+                 WHERE from_account_id = ?
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, accountId);
+            stmt.setObject(1, fromAccountId, Types.BIGINT);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
                 List<Transaction> transactions = new ArrayList<>();
 
                 while (rs.next()) {
-
-                    TransactionType type =
-                            TransactionType.valueOf(rs.getString("type"));
-
-                    TransactionStatus status =
-                            TransactionStatus.valueOf(rs.getString("status"));
-
-                    transactions.add(
-                        new Transaction(
-                                rs.getLong("id"),
-                                accountId,
-                                rs.getString("from_account_number"),
-                                rs.getLong("to_account_id"),
-                                rs.getString("to_account_number"),
-                                rs.getBigDecimal("amount"),
-                                type,
-                                status,
-                                rs.getString("signature")
-                        )
-                    );
+                    transactions.add(mapRow(rs));
                 }
+
                 return transactions;
             }
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Error - Select transactions from account number: " + accountId, e
+                    "Database error while selecting transactions " +
+                            "[fromAccountId=" + fromAccountId + "]",
+                    e
             );
         }
+    }
+
+    public List<Transaction> selectToAccountId(Connection conn, Long toAccountId) {
+
+        String sql = """
+                SELECT id,
+                       from_account_id,
+                       from_account_number,
+                       to_account_id,
+                       to_account_number,
+                       amount,
+                       type,
+                       status,
+                       signature
+                  FROM transactions
+                 WHERE to_account_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, toAccountId, Types.BIGINT);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<Transaction> transactions = new ArrayList<>();
+
+                while (rs.next()) {
+                    transactions.add(mapRow(rs));
+                }
+
+                return transactions;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting transactions " +
+                            "[toAccountId=" + toAccountId + "]",
+                    e
+            );
+        }
+    }
+
+    private Transaction mapRow(ResultSet rs) throws SQLException {
+
+        return new Transaction(
+                rs.getLong("id"),
+                rs.getObject("from_account_id", Long.class),
+                rs.getString("from_account_number"),
+                rs.getObject("to_account_id", Long.class),
+                rs.getString("to_account_number"),
+                rs.getBigDecimal("amount"),
+                TransactionType.valueOf(rs.getString("type")),
+                TransactionStatus.valueOf(rs.getString("status")),
+                rs.getString("signature")
+        );
     }
 }

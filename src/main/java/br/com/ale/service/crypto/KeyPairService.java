@@ -12,7 +12,10 @@ public class KeyPairService {
             generator.initialize(2048);
             return generator.generateKeyPair();
         } catch (Exception e) {
-            throw new RuntimeException("Error generating RSA key pair", e);
+            throw new RuntimeException(
+                    "Generating RSA key pair",
+                    e
+            );
         }
     }
 

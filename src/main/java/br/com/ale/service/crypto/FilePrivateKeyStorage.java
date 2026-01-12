@@ -22,7 +22,10 @@ public class FilePrivateKeyStorage implements PrivateKeyStorage {
             Files.writeString(keyFile, encoded);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error saving private key", e);
+            throw new RuntimeException(
+                    "Saving private key" + "[accountId=" + accountId + "]",
+                    e
+            );
         }
     }
 
@@ -36,11 +39,15 @@ public class FilePrivateKeyStorage implements PrivateKeyStorage {
                         .forEach(path -> {
                             try {
                                 Files.delete(path);
-                            } catch (IOException ignored) {}
+                            } catch (IOException ignored) {
+                            }
                         });
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error deleting private key", e);
+            throw new RuntimeException(
+                    "Deleting private key" + "[accountId=" + accountId + "]",
+                    e
+            );
         }
     }
 
@@ -56,7 +63,7 @@ public class FilePrivateKeyStorage implements PrivateKeyStorage {
 
             if (!Files.exists(keyFile)) {
                 throw new RuntimeException(
-                        "Error - Private key not found for account: " + accountId
+                        "Private key not found " + "[accountId=" + accountId + "]"
                 );
             }
 
@@ -73,8 +80,7 @@ public class FilePrivateKeyStorage implements PrivateKeyStorage {
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Error - loading private key for account: " + accountId,
-                    e
+                    "Private key not loading " + "[accountId=" + accountId + "]"
             );
         }
     }

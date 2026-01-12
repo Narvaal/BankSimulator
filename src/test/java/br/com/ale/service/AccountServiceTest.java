@@ -2,6 +2,8 @@ package br.com.ale.service;
 
 import br.com.ale.domain.Account;
 import br.com.ale.domain.Client;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateAccountRequest;
@@ -22,10 +24,10 @@ class AccountServiceTest {
 
     private static final String ACCOUNT_NUMBER = "999-999-999";
     private static final String UPDATED_ACCOUNT_NUMBER = "777-777-777";
-    private static final String ACCOUNT_TYPE = "Default";
-    private static final String UPDATED_ACCOUNT_TYPE = "Premium";
-    private static final String STATUS = "Active";
-    private static final String UPDATED_STATUS = "Inactive";
+    private static final AccountType ACCOUNT_TYPE = AccountType.DEFAULT;
+    private static final AccountType UPDATED_ACCOUNT_TYPE = AccountType.DEV;
+    private static final AccountStatus STATUS = AccountStatus.ACTIVE;
+    private static final AccountStatus UPDATED_STATUS = AccountStatus.INACTIVE;
 
     private ClientService clientService;
     private AccountService accountService;
@@ -217,7 +219,7 @@ class AccountServiceTest {
                 )
         );
 
-        assertTrue(exception.getMessage().contains("Cannot transfer to the same account"), exception.getMessage());
+        assertTrue(exception.getMessage().contains("Not allowed transference to the same account"), exception.getMessage());
     }
 
     @Test
@@ -291,7 +293,7 @@ class AccountServiceTest {
 
         assertNotNull(exception.getCause());
         assertTrue(
-                exception.getCause().getMessage().contains("Insufficient balance"),
+                exception.getCause().getMessage().contains("Insufficient balance "),
                 "Expected insufficient balance exception"
         );
     }

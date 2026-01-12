@@ -22,7 +22,10 @@ public class SignatureVerifier {
             return signature.verify(signatureBytes);
 
         } catch (Exception e) {
-            throw new RuntimeException("Error - verifying signature", e);
+            throw new RuntimeException(
+                    "Verifying signature",
+                    e
+            );
         }
     }
 }
