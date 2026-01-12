@@ -11,6 +11,8 @@ import br.com.ale.service.crypto.SpyPrivateKeyStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountServiceTest {
@@ -34,7 +36,7 @@ class AccountServiceTest {
 
         clientService = new ClientService(provider);
         accountService = new AccountService(
-                new TestConnectionProvider(),
+                provider,
                 new InMemoryPrivateKeyStorage()
         );
 
@@ -168,6 +170,130 @@ class AccountServiceTest {
         assertNotNull(persisted.getPublicKey());
         assertTrue(persisted.getPublicKey().startsWith("-----BEGIN PUBLIC KEY-----")
                 || persisted.getPublicKey().length() > 100);
+    }
+
+    @Test
+    void shouldTransferAmountBetweenAccounts() {
+
+        // given
+        Account from = accountService.createAccount(validAccount());
+        Account to = accountService.createAccount(
+                new CreateAccountRequest(
+                        from.getClientId(),
+                        "888-888-888",
+                        ACCOUNT_TYPE,
+                        STATUS
+                )
+        );
+
+        accountService.credit(from.getAccountNumber(), new BigDecimal("100.00"));
+
+        // when
+        accountService.transfer(
+                from.getId(),
+                to.getId(),
+                new BigDecimal("40.00")
+        );
+
+        // then
+        Account updatedFrom = accountService.getAccountByNumber(from.getAccountNumber());
+        Account updatedTo = accountService.getAccountByNumber(to.getAccountNumber());
+
+        assertEquals(new BigDecimal("60.00"), updatedFrom.getBalance());
+        assertEquals(new BigDecimal("40.00"), updatedTo.getBalance());
+    }
+
+    @Test
+    void shouldNotAllowTransferToSameAccount() {
+
+        Account account = accountService.createAccount(validAccount());
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> accountService.transfer(
+                        account.getId(),
+                        account.getId(),
+                        new BigDecimal("10.00")
+                )
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot transfer to the same account"), exception.getMessage());
+    }
+
+    @Test
+    void shouldFailTransferWhenInsufficientBalance() {
+
+        Account from = accountService.createAccount(validAccount());
+        Account to = accountService.createAccount(
+                new CreateAccountRequest(
+                        from.getClientId(),
+                        "888-888-888",
+                        ACCOUNT_TYPE,
+                        STATUS
+                )
+        );
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> accountService.transfer(
+                        from.getId(),
+                        to.getId(),
+                        new BigDecimal("50.00")
+                )
+        );
+
+        assertNotNull(ex.getCause());
+        assertTrue(
+                ex.getCause().getMessage().contains("Insufficient balance"),
+                "Expected insufficient balance exception"
+        );
+    }
+
+    @Test
+    void shouldCreditAccount() {
+
+        Account account = accountService.createAccount(validAccount());
+
+        accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
+
+        Account updated = accountService.getAccountByNumber(account.getAccountNumber());
+
+        assertEquals(new BigDecimal("100.00"), updated.getBalance());
+    }
+
+    @Test
+    void shouldDebitAccount() {
+
+        Account account = accountService.createAccount(validAccount());
+        accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
+
+        // when
+        accountService.debit(account.getAccountNumber(), new BigDecimal("30.00"));
+
+        // then
+        Account updated = accountService.getAccountByNumber(account.getAccountNumber());
+
+        assertEquals(new BigDecimal("70.00"), updated.getBalance());
+    }
+
+    @Test
+    void shouldFailDebitWhenInsufficientBalance() {
+
+        Account account = accountService.createAccount(validAccount());
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> accountService.debit(
+                        account.getAccountNumber(),
+                        new BigDecimal("10.00")
+                )
+        );
+
+        assertNotNull(exception.getCause());
+        assertTrue(
+                exception.getCause().getMessage().contains("Insufficient balance"),
+                "Expected insufficient balance exception"
+        );
     }
 
     private CreateAccountRequest validAccount() {

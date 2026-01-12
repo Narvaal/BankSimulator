@@ -1,4 +1,4 @@
 package br.com.ale.dto;
 
-public class DepositRequest {
+public record DepositRequest (){
 }

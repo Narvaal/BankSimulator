@@ -3,6 +3,7 @@ package br.com.ale.service.crypto;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.PrivateKey;
 import java.util.Base64;
 
 public class FilePrivateKeyStorage implements PrivateKeyStorage {
@@ -40,6 +41,41 @@ public class FilePrivateKeyStorage implements PrivateKeyStorage {
             }
         } catch (IOException e) {
             throw new RuntimeException("Error deleting private key", e);
+        }
+    }
+
+    @Override
+    public PrivateKey get(long accountId) {
+
+        try {
+            Path keyFile = Path.of(
+                    BASE_DIR,
+                    "account-" + accountId,
+                    "private.key"
+            );
+
+            if (!Files.exists(keyFile)) {
+                throw new RuntimeException(
+                        "Error - Private key not found for account: " + accountId
+                );
+            }
+
+            String encodedKey = Files.readString(keyFile);
+
+            byte[] keyBytes =
+                    Base64.getDecoder().decode(encodedKey);
+
+            var keySpec = new java.security.spec.PKCS8EncodedKeySpec(keyBytes);
+
+            var keyFactory = java.security.KeyFactory.getInstance("RSA");
+
+            return keyFactory.generatePrivate(keySpec);
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Error - loading private key for account: " + accountId,
+                    e
+            );
         }
     }
 }

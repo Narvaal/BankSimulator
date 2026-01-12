@@ -24,3 +24,33 @@ CREATE TABLE account (
                              FOREIGN KEY (client_id)
                                  REFERENCES client(id)
 );
+CREATE TYPE transaction_type AS ENUM (
+    'DEPOSIT',
+    'WITHDRAW',
+    'TRANSFERENCE'
+    );
+
+CREATE TYPE transaction_status AS ENUM (
+    'PENDING',
+    'COMPLETE',
+    'FAILED'
+    );
+
+CREATE TABLE transactions (
+                              id BIGSERIAL PRIMARY KEY,
+
+                              from_account_id BIGINT,
+                              to_account_id   BIGINT,
+
+                              from_account_number VARCHAR(20),
+                              to_account_number   VARCHAR(20),
+
+                              amount NUMERIC(15,2) NOT NULL,
+
+                              type VARCHAR(20) NOT NULL,
+                              status VARCHAR(20) NOT NULL,
+
+                              signature TEXT,
+
+                              created_at TIMESTAMP NOT NULL DEFAULT now()
+);

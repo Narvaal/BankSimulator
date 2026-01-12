@@ -2,6 +2,7 @@ package br.com.ale.dao;
 
 import br.com.ale.domain.Account;
 import br.com.ale.dto.CreateAccountRequest;
+import br.com.ale.dto.BalanceOperationRequest;
 import br.com.ale.dto.UpdateAccountRequest;
 
 import java.sql.Connection;
@@ -72,6 +73,50 @@ public class AccountDAO {
         }
     }
 
+    public Optional<Account> selectById(Connection conn, long accountId) {
+
+        String sql = """
+        SELECT id,
+               client_id,
+               account_number,
+               account_type,
+               balance,
+               status,
+               public_key
+          FROM account
+         WHERE id = ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(
+                            new Account(
+                                    rs.getLong("id"),
+                                    rs.getLong("client_id"),
+                                    rs.getString("account_number"),
+                                    rs.getString("account_type"),
+                                    rs.getBigDecimal("balance"),
+                                    rs.getString("status"),
+                                    rs.getString("public_key")
+                            )
+                    );
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Error - Select account with id: " + accountId, e
+            );
+        }
+    }
+
     public Optional<Account> selectByNumber(Connection conn, String accountNumber) {
 
         String sql = """
@@ -112,6 +157,54 @@ public class AccountDAO {
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Error - Select account with number: " + accountNumber, e
+            );
+        }
+    }
+
+    public int debit(Connection conn, BalanceOperationRequest request) {
+
+        String sql = """
+        UPDATE account
+        SET balance = balance - ?,
+            updated_at = now()
+        WHERE account_number = ?
+          AND balance >= ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBigDecimal(1, request.amount());
+            stmt.setString(2, request.accountNumber());
+            stmt.setBigDecimal(3, request.amount());
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Error - Debit from account: " + request.accountNumber(), e
+            );
+        }
+    }
+
+    public int credit(Connection conn, BalanceOperationRequest request) {
+
+        String sql = """
+        UPDATE account
+        SET balance = balance + ?,
+            updated_at = now()
+        WHERE account_number = ?
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBigDecimal(1, request.amount());
+            stmt.setString(2, request.accountNumber());
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Error - Credit to account: " + request.accountNumber(), e
             );
         }
     }
