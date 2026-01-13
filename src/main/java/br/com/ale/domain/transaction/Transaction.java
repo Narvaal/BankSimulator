@@ -1,7 +1,4 @@
-package br.com.ale.domain;
-
-import br.com.ale.domain.transaction.TransactionStatus;
-import br.com.ale.domain.transaction.TransactionType;
+package br.com.ale.domain.transaction;
 
 import java.math.BigDecimal;
 

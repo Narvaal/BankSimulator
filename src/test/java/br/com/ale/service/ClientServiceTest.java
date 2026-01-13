@@ -1,6 +1,6 @@
 package br.com.ale.service;
 
-import br.com.ale.domain.Client;
+import br.com.ale.domain.client.Client;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;

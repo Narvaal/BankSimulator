@@ -2,7 +2,7 @@ package br.com.ale.service;
 
 import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.TransactionDAO;
-import br.com.ale.domain.Account;
+import br.com.ale.domain.account.Account;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
 import br.com.ale.dto.*;

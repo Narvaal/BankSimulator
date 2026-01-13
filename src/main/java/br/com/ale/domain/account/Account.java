@@ -1,7 +1,4 @@
-package br.com.ale.domain;
-
-import br.com.ale.domain.account.AccountStatus;
-import br.com.ale.domain.account.AccountType;
+package br.com.ale.domain.account;
 
 import java.math.BigDecimal;
 import java.util.Objects;

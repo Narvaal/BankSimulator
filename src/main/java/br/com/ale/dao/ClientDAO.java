@@ -1,7 +1,7 @@
 package br.com.ale.dao;
 
-import br.com.ale.domain.Account;
-import br.com.ale.domain.Client;
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.client.Client;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.dto.CreateClientRequest;

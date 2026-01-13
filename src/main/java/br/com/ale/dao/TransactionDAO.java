@@ -1,6 +1,6 @@
 package br.com.ale.dao;
 
-import br.com.ale.domain.Transaction;
+import br.com.ale.domain.transaction.Transaction;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
 import br.com.ale.dto.CreateTransactionRequest;

@@ -1,7 +1,7 @@
 package br.com.ale.service;
 
 import br.com.ale.dao.TransactionDAO;
-import br.com.ale.domain.Transaction;
+import br.com.ale.domain.transaction.Transaction;
 import br.com.ale.dto.CreateTransactionRequest;
 import br.com.ale.dto.UpdateTransactionRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
