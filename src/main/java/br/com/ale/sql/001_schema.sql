@@ -38,26 +38,20 @@ CREATE TYPE transaction_status AS ENUM (
 );
 
 CREATE TABLE transactions (
-                             id BIGSERIAL PRIMARY KEY,
+                              id BIGSERIAL PRIMARY KEY,
 
-                             from_account_id BIGINT,
-                             to_account_id   BIGINT,
+                              from_account_id BIGINT,
+                              to_account_id   BIGINT,
 
-                             from_account_number VARCHAR(20),
-                             to_account_number   VARCHAR(20),
+                              from_account_number VARCHAR(20),
+                              to_account_number   VARCHAR(20),
 
-                             amount NUMERIC(15,2) NOT NULL,
+                              amount NUMERIC(15,2) NOT NULL,
 
-                             type VARCHAR(20) NOT NULL,
-                             status VARCHAR(20) NOT NULL,
+                              type VARCHAR(20) NOT NULL,
+                              status VARCHAR(20) NOT NULL,
 
-                             signature TEXT,
+                              signature TEXT,
 
-                             created_at TIMESTAMP NOT NULL DEFAULT now(),
-
-                             CONSTRAINT fk_tx_from_account
-                                 FOREIGN KEY (from_account_id) REFERENCES account(id),
-
-                             CONSTRAINT fk_tx_to_account
-                                 FOREIGN KEY (to_account_id) REFERENCES account(id)
+                              created_at TIMESTAMP NOT NULL DEFAULT now()
 );

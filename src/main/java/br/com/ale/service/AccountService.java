@@ -20,10 +20,10 @@ import java.time.Instant;
 public class AccountService {
 
     private final AccountDAO accountDAO = new AccountDAO();
+    private final TransactionDAO transactionDAO = new TransactionDAO();
     private final ConnectionProvider connectionProvider;
     private final KeyPairService keyPairService = new KeyPairService();
     private final PrivateKeyStorage privateKeyStorage;
-    private final TransactionDAO transactionDAO = new TransactionDAO();
 
     public AccountService(
             ConnectionProvider connectionProvider,
@@ -36,52 +36,49 @@ public class AccountService {
     public Account createAccount(CreateAccountRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            KeyPair keyPair = keyPairService.generate();
+            try {
+                KeyPair keyPair = keyPairService.generate();
+                String publicKey = keyPairService.encodePublicKey(keyPair);
 
-            String publicKey = keyPairService.encodePublicKey(keyPair);
+                long accountId = accountDAO.insert(conn, request, publicKey);
 
-            long accountId = accountDAO.insert(conn, request, publicKey);
+                privateKeyStorage.save(accountId, keyPair.getPrivate().getEncoded());
 
-            privateKeyStorage.save(
-                    accountId,
-                    keyPair.getPrivate().getEncoded()
-            );
+                conn.commit();
 
-            conn.commit();
+                return new Account(
+                        accountId,
+                        request.clientId(),
+                        request.accountNumber(),
+                        request.accountType(),
+                        request.status()
+                );
 
-            return new Account(
-                    accountId,
-                    request.clientId(),
-                    request.accountNumber(),
-                    request.accountType(),
-                    request.status()
-            );
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while creating account " +
-                            "[accountNumber=" + request.accountNumber() + ", " +
-                            "clientId=" + request.clientId() + "]",
+                            "[accountNumber=" + request.accountNumber() +
+                            ", clientId=" + request.clientId() + "]",
                     e
             );
         }
     }
 
     public Account getAccountByNumber(String accountNumber) {
-
         try (Connection conn = connectionProvider.getConnection()) {
-
             return accountDAO.selectByNumber(conn, accountNumber)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Account not found " +
-                                            "[accountNumber=" + accountNumber + "]"
+                                    "Account not found [accountNumber=" + accountNumber + "]"
                             )
                     );
-
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting account " +
@@ -92,21 +89,23 @@ public class AccountService {
     }
 
     public void updateAccount(UpdateAccountRequest request) {
-
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            int rowsAffected = accountDAO.update(conn, request);
+            try {
+                int rows = accountDAO.update(conn, request);
+                if (rows == 0) {
+                    throw new RuntimeException(
+                            "Account not found [accountId=" + request.id() + "]"
+                    );
+                }
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Account not found " +
-                                "[accountId=" + request.id() + "]"
-                );
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(
@@ -121,275 +120,282 @@ public class AccountService {
 
         if (fromAccountId == toAccountId) {
             throw new RuntimeException(
-                    "Not allowed transference to the same account" +
-                            "[fromAccountId=" + fromAccountId + ", " +
-                            "toAccountId=" + toAccountId + "]"
-
+                    "Not allowed transfer to the same account " +
+                            "[fromAccountId=" + fromAccountId +
+                            ", toAccountId=" + toAccountId + "]"
             );
         }
 
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            Account fromAccount = accountDAO
-                    .selectById(conn, fromAccountId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Source account not found " +
-                                            "[fromAccountId=" + fromAccountId + "]"
-                            )
+            try {
+                Account from = accountDAO.selectById(conn, fromAccountId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Source account not found " +
+                                                "[fromAccountId=" + fromAccountId + "]"
+                                )
+                        );
+
+                Account to = accountDAO.selectById(conn, toAccountId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Destination account not found " +
+                                                "[toAccountId=" + toAccountId + "]"
+                                )
+                        );
+
+                Instant timestamp = Instant.now();
+
+                String message = TransactionMessageBuilder.build(
+                        fromAccountId,
+                        toAccountId,
+                        amount,
+                        timestamp
+                );
+
+                PrivateKey privateKey = privateKeyStorage.get(fromAccountId);
+                if (privateKey == null) {
+                    throw new RuntimeException(
+                            "Private key not found [fromAccountId=" + fromAccountId + "]"
                     );
+                }
 
-            Account toAccount = accountDAO
-                    .selectById(conn, toAccountId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Destination account not found " +
-                                            "[toAccountId=" + toAccountId + "]"
-                            )
+                String signature = SignatureService.sign(message, privateKey);
+
+                long transactionId = transactionDAO.insert(
+                        conn,
+                        new CreateTransactionRequest(
+                                fromAccountId,
+                                from.getAccountNumber(),
+                                toAccountId,
+                                to.getAccountNumber(),
+                                amount,
+                                TransactionType.TRANSFERENCE,
+                                TransactionStatus.PENDING,
+                                signature
+                        )
+                );
+
+                int debited = accountDAO.debit(
+                        conn,
+                        new BalanceOperationRequest(from.getAccountNumber(), amount)
+                );
+
+                if (debited == 0) {
+                    transactionDAO.update(
+                            conn,
+                            new UpdateTransactionRequest(transactionId, TransactionStatus.FAILED)
                     );
+                    throw new RuntimeException(
+                            "Insufficient balance [fromAccountId=" + fromAccountId + "]"
+                    );
+                }
 
-            TransactionStatus transactionStatus = TransactionStatus.PENDING;
-            TransactionType transactionType = TransactionType.TRANSFERENCE;
-
-            Instant timestamp = Instant.now();
-
-            String message = TransactionMessageBuilder.build(
-                    fromAccountId,
-                    toAccountId,
-                    amount,
-                    timestamp
-            );
-
-            PrivateKey privateKey = privateKeyStorage.get(fromAccountId);
-
-            if (privateKey == null) {
-                throw new RuntimeException(
-                        "Private key not found " +
-                                "[fromAccountId=" + fromAccountId + "]"
+                int credited = accountDAO.credit(
+                        conn,
+                        new BalanceOperationRequest(to.getAccountNumber(), amount)
                 );
-            }
 
-            String signature = SignatureService.sign(message, privateKey);
+                if (credited == 0) {
+                    transactionDAO.update(
+                            conn,
+                            new UpdateTransactionRequest(transactionId, TransactionStatus.FAILED)
+                    );
+                    throw new RuntimeException(
+                            "Failed to credit destination [toAccountId=" + toAccountId + "]"
+                    );
+                }
 
-            long transactionId = transactionDAO.insert(
-                    conn,
-                    new CreateTransactionRequest(
-                            fromAccountId,
-                            fromAccount.getAccountNumber(),
-                            toAccountId,
-                            toAccount.getAccountNumber(),
-                            amount,
-                            transactionType,
-                            transactionStatus,
-                            signature
-                    )
-            );
-
-            int debited = accountDAO.debit(
-                    conn,
-                    new BalanceOperationRequest(
-                            fromAccount.getAccountNumber(),
-                            amount
-                    )
-            );
-
-            if (debited == 0) {
-                throw new RuntimeException(
-                        "Insufficient balance " +
-                                "[fromAccountId=" + fromAccountId + "]"
+                transactionDAO.update(
+                        conn,
+                        new UpdateTransactionRequest(transactionId, TransactionStatus.COMPLETE)
                 );
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            int credited = accountDAO.credit(
-                    conn,
-                    new BalanceOperationRequest(
-                            toAccount.getAccountNumber(),
-                            amount
-                    )
-            );
-
-            if (credited == 0) {
-                throw new RuntimeException(
-                        "Credit destination " +
-                                "[toAccountId=" + toAccountId + ", "
-                                + "amount=" + amount + "]"
-                );
-            }
-
-            transactionDAO.update(
-                    conn,
-                    new UpdateTransactionRequest(
-                            transactionId,
-                            TransactionStatus.COMPLETE
-                    )
-            );
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while transferring" +
-                            "[fromAccountId=" + fromAccountId + ", "
-                            + "toAccountId=" + toAccountId + ", "
-                            + "amount=" + amount + "]",
-
+                    "Service error while transferring " +
+                            "[fromAccountId=" + fromAccountId +
+                            ", toAccountId=" + toAccountId +
+                            ", amount=" + amount + "]",
                     e
             );
         }
     }
 
     public void credit(String accountNumber, BigDecimal amount) {
-        try (Connection conn = connectionProvider.getConnection()) {
 
+        try (Connection conn = connectionProvider.getConnection()) {
             conn.setAutoCommit(false);
 
-            Account account = accountDAO
-                    .selectByNumber(conn, accountNumber)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Account not found " +
-                                            "[accountNumber=" + accountNumber + "]"
-                            )
+            try {
+                Account account = accountDAO.selectByNumber(conn, accountNumber)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Account not found [accountNumber=" + accountNumber + "]"
+                                )
+                        );
+
+                Instant timestamp = Instant.now();
+
+                String message = TransactionMessageBuilder.build(
+                        null,
+                        account.getId(),
+                        amount,
+                        timestamp
+                );
+
+                PrivateKey privateKey = privateKeyStorage.get(account.getId());
+                if (privateKey == null) {
+                    throw new RuntimeException(
+                            "Private key not found [accountNumber=" + accountNumber + "]"
                     );
+                }
 
-            Instant timestamp = Instant.now();
+                String signature = SignatureService.sign(message, privateKey);
 
-            String message = TransactionMessageBuilder.build(
-                    null,
-                    account.getId(),
-                    amount,
-                    timestamp
-            );
-
-            PrivateKey privateKey = privateKeyStorage.get(account.getId());
-
-            if (privateKey == null) {
-                throw new RuntimeException(
-                        "Private key not found " +
-                                "[accountNumber=" + accountNumber + "]"
+                long transactionId = transactionDAO.insert(
+                        conn,
+                        new CreateTransactionRequest(
+                                null,
+                                null,
+                                account.getId(),
+                                account.getAccountNumber(),
+                                amount,
+                                TransactionType.DEPOSIT,
+                                TransactionStatus.PENDING,
+                                signature
+                        )
                 );
-            }
 
-            String signature = SignatureService.sign(message, privateKey);
-
-            long transactionId = transactionDAO.insert(
-                    conn,
-                    new CreateTransactionRequest(
-                            null,
-                            null,
-                            account.getId(),
-                            account.getAccountNumber(),
-                            amount,
-                            TransactionType.DEPOSIT,
-                            TransactionStatus.PENDING,
-                            signature
-                    )
-            );
-
-            int credited = accountDAO.credit(
-                    conn,
-                    new BalanceOperationRequest(accountNumber, amount)
-            );
-
-            if (credited == 0) {
-                throw new RuntimeException(
-                        "Credit account " +
-                                "[accountNumber=" + accountNumber + ", "
-                                + "amount=" + amount + "]"
+                int credited = accountDAO.credit(
+                        conn,
+                        new BalanceOperationRequest(accountNumber, amount)
                 );
+
+                if (credited == 0) {
+                    transactionDAO.update(
+                            conn,
+                            new UpdateTransactionRequest(transactionId, TransactionStatus.FAILED)
+                    );
+                    throw new RuntimeException(
+                            "Failed to credit account [accountNumber=" + accountNumber +
+                                    ", amount=" + amount + "]"
+                    );
+                }
+
+                transactionDAO.update(
+                        conn,
+                        new UpdateTransactionRequest(transactionId, TransactionStatus.COMPLETE)
+                );
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            transactionDAO.update(
-                    conn,
-                    new UpdateTransactionRequest(transactionId, TransactionStatus.COMPLETE)
-            );
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while crediting" +
-                            "[accountNumber=" + accountNumber + ", "
-                            + "amount=" + amount + "]",
+                    "Service error while crediting " +
+                            "[accountNumber=" + accountNumber +
+                            ", amount=" + amount + "]",
                     e
             );
         }
     }
 
-    public void debit(String accountNumber, BigDecimal amount) {
-        try (Connection conn = connectionProvider.getConnection()) {
+    /* =========================
+       DEBIT
+       ========================= */
 
+    public void debit(String accountNumber, BigDecimal amount) {
+
+        try (Connection conn = connectionProvider.getConnection()) {
             conn.setAutoCommit(false);
 
-            Account account = accountDAO
-                    .selectByNumber(conn, accountNumber)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Account not found " +
-                                            "[accountNumber=" + accountNumber + "]"
-                            )
+            try {
+                Account account = accountDAO.selectByNumber(conn, accountNumber)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Account not found [accountNumber=" + accountNumber + "]"
+                                )
+                        );
+
+                Instant timestamp = Instant.now();
+
+                String message = TransactionMessageBuilder.build(
+                        account.getId(),
+                        null,
+                        amount,
+                        timestamp
+                );
+
+                PrivateKey privateKey = privateKeyStorage.get(account.getId());
+                if (privateKey == null) {
+                    throw new RuntimeException(
+                            "Private key not found [accountNumber=" + accountNumber + "]"
                     );
+                }
 
-            Instant timestamp = Instant.now();
+                String signature = SignatureService.sign(message, privateKey);
 
-            String message = TransactionMessageBuilder.build(
-                    account.getId(), // from
-                    null,            // to
-                    amount,
-                    timestamp
-            );
-
-            PrivateKey privateKey = privateKeyStorage.get(account.getId());
-            if (privateKey == null) {
-                throw new RuntimeException(
-                        "Private key not found " +
-                                "[accountNumber=" + accountNumber + "]"
+                long transactionId = transactionDAO.insert(
+                        conn,
+                        new CreateTransactionRequest(
+                                account.getId(),
+                                account.getAccountNumber(),
+                                null,
+                                null,
+                                amount,
+                                TransactionType.WITHDRAW,
+                                TransactionStatus.PENDING,
+                                signature
+                        )
                 );
-            }
 
-            String signature = SignatureService.sign(message, privateKey);
-
-            long transactionId = transactionDAO.insert(
-                    conn,
-                    new CreateTransactionRequest(
-                            account.getId(),
-                            account.getAccountNumber(),
-                            null,
-                            null,
-                            amount,
-                            TransactionType.WITHDRAW,
-                            TransactionStatus.PENDING,
-                            signature
-                    )
-            );
-
-            int debited = accountDAO.debit(
-                    conn,
-                    new BalanceOperationRequest(accountNumber, amount)
-            );
-
-            if (debited == 0) {
-                throw new RuntimeException(
-                        "Insufficient balance " +
-                                "[accountNumber=" + accountNumber + ", "
-                                + "amount=" + amount + "]"
+                int debited = accountDAO.debit(
+                        conn,
+                        new BalanceOperationRequest(accountNumber, amount)
                 );
+
+                if (debited == 0) {
+                    transactionDAO.update(
+                            conn,
+                            new UpdateTransactionRequest(transactionId, TransactionStatus.FAILED)
+                    );
+                    throw new RuntimeException(
+                            "Insufficient balance [accountNumber=" + accountNumber +
+                                    ", amount=" + amount + "]"
+                    );
+                }
+
+                transactionDAO.update(
+                        conn,
+                        new UpdateTransactionRequest(transactionId, TransactionStatus.COMPLETE)
+                );
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            transactionDAO.update(
-                    conn,
-                    new UpdateTransactionRequest(transactionId, TransactionStatus.COMPLETE)
-            );
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while debiting" +
-                            "[accountNumber=" + accountNumber + ", "
-                            + "amount=" + amount + "]",
+                    "Service error while debiting " +
+                            "[accountNumber=" + accountNumber +
+                            ", amount=" + amount + "]",
                     e
             );
         }

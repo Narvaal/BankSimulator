@@ -20,27 +20,29 @@ public class ClientService {
     public Client createClient(CreateClientRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            long id = clientDAO.insert(
-                    conn,
-                    request
-            );
+            try {
+                long id = clientDAO.insert(conn, request);
 
-            conn.commit();
+                conn.commit();
 
-            return new Client(
-                    id,
-                    request.name(),
-                    request.document()
-            );
+                return new Client(
+                        id,
+                        request.name(),
+                        request.document()
+                );
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while creating client " +
-                            "[name=" + request.name() + ", " +
-                            "document=" + request.document() + "]",
+                            "[name=" + request.name() +
+                            ", document=" + request.document() + "]",
                     e
             );
         }
@@ -49,25 +51,29 @@ public class ClientService {
     public void updateClient(UpdateClientRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            int rowsAffected = clientDAO.update(conn, request);
+            try {
+                int rowsAffected = clientDAO.update(conn, request);
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Client not found " +
-                                "[accountNumber=" + request.id() + "]"
-                );
+                if (rowsAffected == 0) {
+                    throw new RuntimeException(
+                            "Client not found [clientId=" + request.id() + "]"
+                    );
+                }
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while updating client " +
-                            "[id=" + request.id() + ", " +
-                            "name=" + request.name() + "]",
+                            "[id=" + request.id() +
+                            ", name=" + request.name() + "]",
                     e
             );
         }
@@ -80,8 +86,7 @@ public class ClientService {
             return clientDAO.selectByDocument(conn, document)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Client not found " +
-                                            "[document=" + document + "]"
+                                    "Client not found [document=" + document + "]"
                             )
                     );
 
@@ -97,19 +102,23 @@ public class ClientService {
     public void deleteClient(long id) {
 
         try (Connection conn = connectionProvider.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            int rowsAffected = clientDAO.deleteById(conn, id);
+            try {
+                int rowsAffected = clientDAO.deleteById(conn, id);
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Client not found " +
-                                "[id=" + id + "]"
-                );
+                if (rowsAffected == 0) {
+                    throw new RuntimeException(
+                            "Client not found [id=" + id + "]"
+                    );
+                }
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
-
-            conn.commit();
 
         } catch (Exception e) {
             throw new RuntimeException(

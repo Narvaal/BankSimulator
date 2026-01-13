@@ -219,7 +219,7 @@ class AccountServiceTest {
                 )
         );
 
-        assertTrue(exception.getMessage().contains("Not allowed transference to the same account"), exception.getMessage());
+        assertTrue(exception.getMessage().contains("Not allowed transfer to the same account"), exception.getMessage());
     }
 
     @Test
