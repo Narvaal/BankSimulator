@@ -180,7 +180,7 @@ public class AccountService {
 
                 int debited = accountDAO.debit(
                         conn,
-                        new BalanceOperationRequest(from.getAccountNumber(), amount)
+                        new CreateBalanceOperationRequest(from.getAccountNumber(), amount)
                 );
 
                 if (debited == 0) {
@@ -195,7 +195,7 @@ public class AccountService {
 
                 int credited = accountDAO.credit(
                         conn,
-                        new BalanceOperationRequest(to.getAccountNumber(), amount)
+                        new CreateBalanceOperationRequest(to.getAccountNumber(), amount)
                 );
 
                 if (credited == 0) {
@@ -278,7 +278,7 @@ public class AccountService {
 
                 int credited = accountDAO.credit(
                         conn,
-                        new BalanceOperationRequest(accountNumber, amount)
+                        new CreateBalanceOperationRequest(accountNumber, amount)
                 );
 
                 if (credited == 0) {
@@ -361,7 +361,7 @@ public class AccountService {
 
                 int debited = accountDAO.debit(
                         conn,
-                        new BalanceOperationRequest(accountNumber, amount)
+                        new CreateBalanceOperationRequest(accountNumber, amount)
                 );
 
                 if (debited == 0) {

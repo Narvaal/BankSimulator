@@ -4,7 +4,7 @@ import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.dto.CreateAccountRequest;
-import br.com.ale.dto.BalanceOperationRequest;
+import br.com.ale.dto.CreateBalanceOperationRequest;
 import br.com.ale.dto.UpdateAccountRequest;
 
 import java.sql.Connection;
@@ -179,7 +179,7 @@ public class AccountDAO {
         }
     }
 
-    public int debit(Connection conn, BalanceOperationRequest request) {
+    public int debit(Connection conn, CreateBalanceOperationRequest request) {
 
         String sql = """
                 UPDATE account
@@ -207,7 +207,7 @@ public class AccountDAO {
         }
     }
 
-    public int credit(Connection conn, BalanceOperationRequest request) {
+    public int credit(Connection conn, CreateBalanceOperationRequest request) {
 
         String sql = """
                 UPDATE account
