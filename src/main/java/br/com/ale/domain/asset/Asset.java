@@ -9,31 +9,30 @@ public class Asset {
     private final int totalSupply;
     private final Instant createdAt;
 
-    public Asset(
-            Long id,
-            String text,
-            int totalSupply,
-            Instant createdAt
-    ) {
+    public Asset(Long id, String text, int totalSupply, Instant createAt) {
         this.id = id;
         this.text = validateText(text);
         this.totalSupply = validateTotalSupply(totalSupply);
-        this.createdAt = createdAt;
+        this.createdAt = createAt;
     }
 
-    public String validateText(String text) {
+    public Asset(String text, int totalSupply) {
+        this(null, text, totalSupply, null);
+    }
+
+    private String validateText(String text) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException(
-                    "Asset text cannot be blank" + "[text=" + text + "]"
+                    "Asset text cannot be blank [text=" + text + "]"
             );
         }
         return text;
     }
 
-    public int validateTotalSupply(int totalSupply) {
+    private int validateTotalSupply(int totalSupply) {
         if (totalSupply < 1) {
             throw new IllegalArgumentException(
-                    "Asset total supply cannot be less than one" + "[totalSupply=" + totalSupply + "]"
+                    "Asset total supply cannot be less than one [totalSupply=" + totalSupply + "]"
             );
         }
         return totalSupply;
@@ -42,5 +41,8 @@ public class Asset {
     public Long getId() { return id; }
     public String getText() { return text; }
     public int getTotalSupply() { return totalSupply; }
-    public Instant getCreatedAt() { return createdAt; }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -314,10 +314,6 @@ public class AccountService {
         }
     }
 
-    /* =========================
-       DEBIT
-       ========================= */
-
     public void debit(String accountNumber, BigDecimal amount) {
 
         try (Connection conn = connectionProvider.getConnection()) {

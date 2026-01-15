@@ -37,10 +37,8 @@ public class AssetGenerationService {
 
     private Asset generate(String phrase) {
         return new Asset(
-                null,
                 phrase + " • " + UUID.randomUUID().toString().substring(0, 6),
-                100,
-                Instant.now()
+                100
         );
     }
 }
