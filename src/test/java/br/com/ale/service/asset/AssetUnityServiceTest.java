@@ -165,7 +165,7 @@ class AssetUnityServiceTest {
                 RuntimeException.class,
                 () -> assetUnityService.createAssetUnity(
                         new CreateAssetUnityRequest(
-                                -1L, // asset inexistente
+                                -1L,
                                 ownerAccountId
                         )
                 )

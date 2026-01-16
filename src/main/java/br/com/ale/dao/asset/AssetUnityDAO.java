@@ -101,4 +101,28 @@ public class AssetUnityDAO {
                 rs.getTimestamp("created_at").toInstant()
         );
     }
+
+    public int updateOwner(Connection conn, long assetId, long ownerAccount) {
+
+        String sql = """
+                UPDATE asset_unit
+                SET owner_account_id = ?
+                WHERE id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, ownerAccount);
+            stmt.setLong(2, assetId);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while updating asset unity owner " +
+                            "[assetId=" + assetId + "]",
+                    e
+            );
+        }
+    }
 }

@@ -101,6 +101,29 @@ CREATE TABLE asset_listing
             REFERENCES account (id)
 );
 
+CREATE TABLE asset_price_history (
+                                     id BIGSERIAL PRIMARY KEY,
+                                     asset_listing_id BIGINT NOT NULL,
+                                     asset_unity_id BIGINT NOT NULL,
+                                     old_price DECIMAL(19, 2),
+                                     new_price DECIMAL(19, 2) NOT NULL,
+                                     changed_by_account_id BIGINT NOT NULL,
+                                     reason VARCHAR(50) NOT NULL,
+                                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                                     CONSTRAINT fk_price_history_listing
+                                         FOREIGN KEY (asset_listing_id)
+                                             REFERENCES asset_listing(id),
+
+                                     CONSTRAINT fk_price_history_unity
+                                         FOREIGN KEY (asset_unity_id)
+                                             REFERENCES asset_unit(id),
+
+                                     CONSTRAINT fk_price_history_account
+                                         FOREIGN KEY (changed_by_account_id)
+                                             REFERENCES account(id)
+);
+
 CREATE INDEX idx_asset_unit_owner
     ON asset_unit (owner_account_id);
 

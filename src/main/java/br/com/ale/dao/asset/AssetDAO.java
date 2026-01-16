@@ -104,4 +104,29 @@ public class AssetDAO {
                 rs.getTimestamp("created_at").toInstant()
         );
     }
+
+    public int updateTotalSupply(Connection conn, long assetId, int supplyUsed) {
+
+        String sql = """
+                UPDATE asset
+                SET total_supply = total_supply - ?
+                WHERE id = ? AND total_supply >= ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, assetId);
+            stmt.setInt(2, supplyUsed);
+            stmt.setInt(3, supplyUsed);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while updating asset supply " +
+                            "[assetId=" + assetId + "]",
+                    e
+            );
+        }
+    }
 }

@@ -4,6 +4,7 @@ import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
 import br.com.ale.dto.CreateAssetListingRequest;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -160,5 +161,84 @@ public class AssetListingDAO {
                 rs.getTimestamp("created_at").toInstant(),
                 updatedAt != null ? updatedAt.toInstant() : null
         );
+    }
+
+    public int updateStatus(Connection conn, long assetId, AssetListingStatus status) {
+
+        String sql = """
+                UPDATE asset_listing
+                SET status = ?
+                WHERE id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status.name());
+            stmt.setLong(2, assetId);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while updating asset listing status " +
+                            "[assetId=" + assetId + ", "
+                            + "[status=" + status.name() + "]",
+                    e
+            );
+        }
+    }
+
+
+    public int updatePrice(Connection conn, long assetListingId, BigDecimal price) {
+
+        String sql = """
+                UPDATE asset_listing
+                SET price = ?
+                WHERE id ?;
+                """;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBigDecimal(1, price);
+            stmt.setLong(2, assetListingId);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while updating asset listing price " +
+                            "[price=" + price + ", "
+                            + "[assetListingId=" + assetListingId + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<AssetListing> selectByIdForUpdate(Connection conn, long assetListingId) {
+
+        String sql = """
+                SELECT * FROM asset_listing
+                WHERE id = ?
+                FOR UPDATE;
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, assetListingId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting asset listings " +
+                            "[id=" + assetListingId + "]",
+                    e
+            );
+        }
     }
 }
