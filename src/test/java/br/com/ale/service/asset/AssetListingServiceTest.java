@@ -210,7 +210,7 @@ class AssetListingServiceTest {
         );
 
         List<AssetListing> listings =
-                assetListingService.selectById(AssetListingStatus.ACTIVE);
+                assetListingService.selectByIdStatus(AssetListingStatus.ACTIVE);
 
         assertEquals(2, listings.size());
         assertTrue(
@@ -234,7 +234,7 @@ class AssetListingServiceTest {
         );
 
         List<AssetListing> listings =
-                assetListingService.selectById(AssetListingStatus.ACTIVE);
+                assetListingService.selectByIdStatus(AssetListingStatus.ACTIVE);
 
         assertTrue(listings.isEmpty());
     }

@@ -88,6 +88,23 @@ public class AccountService {
         }
     }
 
+    public Account getAccountById(long accountId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.selectById(conn, accountId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Account not found [accountId=" + accountId + "]"
+                            )
+                    );
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting account " +
+                            "[accountId=" + accountId + "]",
+                    e
+            );
+        }
+    }
+
     public void updateAccount(UpdateAccountRequest request) {
         try (Connection conn = connectionProvider.getConnection()) {
             conn.setAutoCommit(false);

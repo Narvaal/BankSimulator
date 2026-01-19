@@ -121,7 +121,7 @@ public class AssetListingService {
         }
     }
 
-    public List<AssetListing> selectById(AssetListingStatus status) {
+    public List<AssetListing> selectByIdStatus(AssetListingStatus status) {
         try (Connection conn = connectionProvider.getConnection()) {
             return assetListingDAO.selectByStatus(conn, status);
         } catch (Exception e) {
@@ -132,4 +132,20 @@ public class AssetListingService {
             );
         }
     }
+
+
+    public int updateStatus(long assetListingId, AssetListingStatus status) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetListingDAO.updateStatus(conn, assetListingId, status);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while updating asset listing " +
+                            "[status=" + status.name() + ", "
+                            + "assetListingId= " + assetListingId + "]",
+                    e
+            );
+        }
+    }
+
+
 }
