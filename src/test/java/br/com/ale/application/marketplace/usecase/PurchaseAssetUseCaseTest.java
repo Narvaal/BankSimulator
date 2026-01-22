@@ -1,5 +1,6 @@
-package br.com.ale.application.marketplace;
+package br.com.ale.application.marketplace.usecase;
 
+import br.com.ale.application.marketplace.command.PurchaseAssetCommand;
 import br.com.ale.domain.account.*;
 import br.com.ale.domain.client.*;
 import br.com.ale.domain.asset.*;
@@ -57,7 +58,6 @@ class PurchaseAssetUseCaseTest {
                         accountService,
                         assetListingService,
                         assetPurchaseService,
-                        null,
                         assetPriceHistoryService
                 );
 

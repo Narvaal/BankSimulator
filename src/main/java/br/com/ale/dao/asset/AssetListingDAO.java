@@ -241,4 +241,75 @@ public class AssetListingDAO {
             );
         }
     }
+
+    public Optional<AssetListing> selectByAssetUnitId(Connection conn, long assetUnityId) {
+        String sql = """
+                SELECT id,
+                       asset_unit_id,
+                       seller_account_id,
+                       price,
+                       status,
+                       created_at,
+                       updated_at
+                  FROM asset_listing
+                 WHERE asset_unit_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, assetUnityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting asset listings " +
+                            "[assetUnityId=" + assetUnityId + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetListing> selectByOwnerAccount(Connection conn, long ownerAccountId, AssetListingStatus status) {
+        String sql = """
+                SELECT id,
+                       asset_unit_id,
+                       seller_account_id,
+                       price,
+                       status,
+                       created_at,
+                       updated_at
+                  FROM asset_listing
+                 WHERE seller_account_id = ? AND status = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, ownerAccountId);
+            stmt.setString(2, status.name());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<AssetListing> assetListings = new ArrayList<>();
+                if (rs.next()) {
+                    assetListings.add(mapRow(rs));
+                }
+                return assetListings;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting asset listings " +
+                            "[ownerAccountId=" + ownerAccountId + ", "
+                            + "[status=" + status.name() + "]",
+                    e
+            );
+        }
+    }
 }

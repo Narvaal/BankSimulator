@@ -121,7 +121,7 @@ public class AssetListingService {
         }
     }
 
-    public List<AssetListing> selectByIdStatus(AssetListingStatus status) {
+    public List<AssetListing> selectByStatus(AssetListingStatus status) {
         try (Connection conn = connectionProvider.getConnection()) {
             return assetListingDAO.selectByStatus(conn, status);
         } catch (Exception e) {
@@ -132,7 +132,6 @@ public class AssetListingService {
             );
         }
     }
-
 
     public int updateStatus(long assetListingId, AssetListingStatus status) {
         try (Connection conn = connectionProvider.getConnection()) {
@@ -147,5 +146,32 @@ public class AssetListingService {
         }
     }
 
+    public AssetListing selectByAssetUnitId(long assetUnityId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetListingDAO.selectByAssetUnitId(conn, assetUnityId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Asset listing not found [assetUnityId=" + assetUnityId + "]"
+                            ));
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting asset listing " +
+                            "[assetUnityId=" + assetUnityId + "]",
+                    e
+            );
+        }
+    }
 
+    public List<AssetListing> selectByOwnerAccount(long ownerAccountId, AssetListingStatus status) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetListingDAO.selectByOwnerAccount(conn, ownerAccountId, status);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting asset listing " +
+                            "[ownerAccountId=" + ownerAccountId + ", "
+                            + "status=" + status.name() + "]",
+                    e
+            );
+        }
+    }
 }

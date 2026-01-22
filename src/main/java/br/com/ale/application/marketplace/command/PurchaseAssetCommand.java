@@ -1,4 +1,4 @@
-package br.com.ale.application.marketplace;
+package br.com.ale.application.marketplace.command;
 
 public record PurchaseAssetCommand(long listingId, long buyerAccountId) {
 }
