@@ -135,3 +135,22 @@ CREATE INDEX idx_asset_listing_unit
 
 CREATE INDEX idx_asset_transfer_unit
     ON asset_transfer (asset_unit_id);
+
+CREATE TABLE credential (
+                            id BIGSERIAL PRIMARY KEY,
+                            client_id BIGINT NOT NULL,
+                            document VARCHAR(50) NOT NULL,
+                            password_hash VARCHAR(255) NOT NULL,
+                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                            CONSTRAINT fk_credential_client
+                                FOREIGN KEY (client_id)
+                                    REFERENCES client(id)
+                                    ON DELETE CASCADE,
+
+                            CONSTRAINT uk_credential_document
+                                UNIQUE (document),
+
+                            CONSTRAINT uk_credential_client
+                                UNIQUE (client_id)
+);

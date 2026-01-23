@@ -4,6 +4,7 @@ import br.com.ale.application.marketplace.command.CancelAssetCommand;
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
 import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.exception.InvalidAssetListingStateException;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetUnityService;
 
@@ -26,14 +27,14 @@ public class CancelAssetOfferUseCase {
                 assetListingService.selectById(command.assetListingId());
 
         if (listing.getStatus() != AssetListingStatus.ACTIVE) {
-            throw new RuntimeException("Only active listings can be canceled");
+            throw new InvalidAssetListingStateException(command.assetListingId());
         }
 
         AssetUnity unity =
                 assetUnityService.selectById(listing.getAssetUnityId());
 
         if (unity.getOwnerAccountId() != command.accountId()) {
-            throw new RuntimeException("Account is not the owner of this asset");
+            throw new UnsupportedOperationException("Account is not the owner of this asset");
         }
 
         assetListingService.updateStatus(

@@ -2,6 +2,8 @@ package br.com.ale.application.marketplace.usecase;
 
 import br.com.ale.application.marketplace.command.PurchaseAssetCommand;
 import br.com.ale.domain.asset.*;
+import br.com.ale.domain.exception.InvalidAssetListingStateException;
+import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.CreateAssetPurchaseRequest;
 import br.com.ale.service.AccountService;
 import br.com.ale.service.asset.AssetListingService;
@@ -33,11 +35,11 @@ public class PurchaseAssetUseCase {
                 assetListingService.selectById(command.listingId());
 
         if (listing.getStatus() != AssetListingStatus.ACTIVE) {
-            throw new RuntimeException("Listing not active");
+            throw new InvalidAssetListingStateException(command.listingId());
         }
 
         if (listing.getSellerAccountId() == command.buyerAccountId()) {
-            throw new RuntimeException("Buyer cannot be seller");
+            throw new UnauthorizedOperationException("Buyer cannot be seller");
         }
 
         accountService.transfer(

@@ -4,6 +4,7 @@ import br.com.ale.application.marketplace.command.CreateAssetOfferCommand;
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
 import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.CreateAssetListingRequest;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetUnityService;
@@ -26,7 +27,7 @@ public class CreateAssetOfferUseCase {
         AssetUnity assetUnity = assetUnityService.selectById(command.assetUnityId());
 
         if (!assetUnity.getOwnerAccountId().equals(command.accountId())) {
-            throw new RuntimeException("Account is not the owner of this asset");
+            throw new UnauthorizedOperationException("Account is not the owner of this asset");
         }
 
         return assetListingService.createAssetListing(
