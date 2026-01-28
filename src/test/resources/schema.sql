@@ -94,11 +94,13 @@ CREATE TABLE asset_listing
 
     CONSTRAINT fk_asset_listing_unit
         FOREIGN KEY (asset_unit_id)
-            REFERENCES asset_unit (id),
+            REFERENCES asset_unit (id)
+            ON DELETE RESTRICT,
 
     CONSTRAINT fk_asset_listing_seller
         FOREIGN KEY (seller_account_id)
             REFERENCES account (id)
+            ON DELETE RESTRICT
 );
 
 CREATE TABLE asset_price_history (

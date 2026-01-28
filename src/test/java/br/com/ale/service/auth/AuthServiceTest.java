@@ -6,10 +6,15 @@ import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.CreateCredentialRequest;
+import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.ClientService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,12 +23,28 @@ class AuthServiceTest {
     private ClientService clientService;
     private TestConnectionProvider provider;
     private AuthService authService;
+    private SimpleTokenGenerator simpleTokenGenerator;
 
     @BeforeEach
     void setup() {
         provider = new TestConnectionProvider();
-        authService = new AuthService(provider);
+
+        KeyPair keyPair = generateKeyPair();
+
+        simpleTokenGenerator =
+                new SimpleTokenGenerator(
+                        keyPair.getPrivate(),
+                        keyPair.getPublic()
+                );
+
+        authService =
+                new AuthService(
+                        provider,
+                        simpleTokenGenerator
+                );
+
         clientService = new ClientService(provider);
+
         cleanDatabase();
     }
 
@@ -31,6 +52,13 @@ class AuthServiceTest {
         try (var conn = provider.getConnection();
              var stmt = conn.createStatement()) {
 
+            stmt.execute("DELETE FROM asset_price_history");
+            stmt.execute("DELETE FROM asset_transfer");
+            stmt.execute("DELETE FROM asset_listing");
+            stmt.execute("DELETE FROM asset_unit");
+            stmt.execute("DELETE FROM asset");
+            stmt.execute("DELETE FROM transactions");
+            stmt.execute("DELETE FROM account");
             stmt.execute("DELETE FROM credential");
             stmt.execute("DELETE FROM client");
 
@@ -43,24 +71,20 @@ class AuthServiceTest {
     void shouldRegisterCredentialSuccessfully() {
 
         Client client = clientService.createClient(validClient());
-        String password = "password123";
-
-        CreateCredentialRequest request =
-                new CreateCredentialRequest(
-                        client.getDocument(),
-                        password
-                );
 
         long credentialId =
-                assertDoesNotThrow(() ->
-                        authService.register(request)
+                authService.register(
+                        new CreateCredentialRequest(
+                                client.getDocument(),
+                                "password123"
+                        )
                 );
 
         assertTrue(credentialId > 0);
     }
 
     @Test
-    void shouldAuthenticateSuccessfully() {
+    void shouldAuthenticateAndValidateTokenSuccessfully() {
 
         Client client = clientService.createClient(validClient());
         String password = "password123";
@@ -73,32 +97,35 @@ class AuthServiceTest {
         );
 
         AuthToken token =
-                assertDoesNotThrow(() ->
-                        authService.authenticate(
-                                new CreateAuthenticationRequest(
-                                        client.getDocument(),
-                                        password
-                                )
+                authService.authenticate(
+                        new CreateAuthenticationRequest(
+                                client.getDocument(),
+                                password
                         )
                 );
 
         assertNotNull(token);
         assertNotNull(token.getToken());
-        assertEquals(client.getId(), token.getClientID());
+        assertEquals(client.getId(), token.getClientId());
+
+        var claims =
+                simpleTokenGenerator.validate(token.getToken());
+
+        assertEquals(client.getId(), claims.clientId());
+        assertTrue(claims.expiresAt().isAfter(Instant.now()));
     }
 
     @Test
     void shouldFailWhenDocumentDoesNotExist() {
 
-        CreateAuthenticationRequest request =
-                new CreateAuthenticationRequest(
-                        "99999999999",
-                        "any-password"
-                );
-
         assertThrows(
                 InvalidCredentialsException.class,
-                () -> authService.authenticate(request)
+                () -> authService.authenticate(
+                        new CreateAuthenticationRequest(
+                                "99999999999",
+                                "any-password"
+                        )
+                )
         );
     }
 
@@ -131,5 +158,18 @@ class AuthServiceTest {
                 "123456789"
         );
     }
-}
 
+    private KeyPair generateKeyPair() {
+        try {
+            KeyPairGenerator generator =
+                    KeyPairGenerator.getInstance("RSA");
+
+            generator.initialize(2048);
+
+            return generator.generateKeyPair();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}

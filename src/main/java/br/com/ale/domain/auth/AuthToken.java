@@ -3,7 +3,7 @@ package br.com.ale.domain.auth;
 import java.time.Instant;
 
 public class AuthToken {
-    private final long clientID;
+    private final long clientId;
     private final String token;
     private final Instant date;
 
@@ -13,7 +13,7 @@ public class AuthToken {
             String document,
             Instant date
     ) {
-        this.clientID = clientID;
+        this.clientId = clientID;
         this.token = validateToken(document);
         this.date = date;
     }
@@ -27,8 +27,8 @@ public class AuthToken {
         return token;
     }
 
-    public long getClientID() {
-        return clientID;
+    public long getClientId() {
+        return clientId;
     }
 
     public String getToken() {

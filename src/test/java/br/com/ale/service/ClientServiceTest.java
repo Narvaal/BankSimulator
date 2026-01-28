@@ -27,7 +27,14 @@ class ClientServiceTest {
         try (var conn = new TestConnectionProvider().getConnection();
              var stmt = conn.createStatement()) {
 
+            stmt.execute("DELETE FROM asset_price_history");
+            stmt.execute("DELETE FROM asset_transfer");
+            stmt.execute("DELETE FROM asset_listing");
+            stmt.execute("DELETE FROM asset_unit");
+            stmt.execute("DELETE FROM asset");
+            stmt.execute("DELETE FROM transactions");
             stmt.execute("DELETE FROM account");
+            stmt.execute("DELETE FROM credential");
             stmt.execute("DELETE FROM client");
 
         } catch (Exception e) {

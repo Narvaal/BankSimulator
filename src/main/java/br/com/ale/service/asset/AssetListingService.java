@@ -81,11 +81,8 @@ public class AssetListingService {
             conn.setAutoCommit(false);
 
             try {
-
                 AssetListing asset = assetListingDAO.insert(conn, request);
-
                 conn.commit();
-
                 return asset;
 
             } catch (Exception e) {
@@ -95,10 +92,12 @@ public class AssetListingService {
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while creating asset listing [assetUnityId=" + request.assetUnityId() +
-                            ", sellerAccountId=" + request.sellerAccountId() + ", " +
-                            ", price=" + request.price() + ", " +
-                            ", status=" + request.status().name() + "]"
+                    "Service error while creating asset listing " +
+                            "[assetUnityId=" + request.assetUnityId() +
+                            ", sellerAccountId=" + request.sellerAccountId() +
+                            ", price=" + request.price() +
+                            ", status=" + request.status().name() + "]",
+                    e
             );
         }
     }

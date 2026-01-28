@@ -14,12 +14,12 @@ public class AssetListingDAO {
     public AssetListing insert(Connection conn, CreateAssetListingRequest request) {
 
         String sql = """
-                INSERT INTO asset_listing (asset_unit_id, seller_account_id, price, status)
-                VALUES (?, ?, ?, ?)
-                """;
+        INSERT INTO asset_listing (asset_unit_id, seller_account_id, price, status)
+        VALUES (?, ?, ?, ?)
+        """;
 
         try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, new String[]{"id"})) {
+                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setLong(1, request.assetUnityId());
             stmt.setLong(2, request.sellerAccountId());
@@ -29,33 +29,21 @@ public class AssetListingDAO {
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Failed to insert asset listing " +
-                                "[assetUnitId=" + request.assetUnityId() +
-                                ", sellerAccountId=" + request.sellerAccountId() +
-                                ", price=" + request.price() +
-                                ", status=" + request.status().name() + "]"
-                );
+                throw new RuntimeException("Failed to insert asset listing");
             }
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
+
                 if (!rs.next()) {
-                    throw new RuntimeException(
-                            "Failed to retrieve asset listing id " +
-                                    "[assetUnitId=" + request.assetUnityId() +
-                                    ", sellerAccountId=" + request.sellerAccountId() +
-                                    ", price=" + request.price() +
-                                    ", status=" + request.status().name() + "]"
-                    );
+                    throw new RuntimeException("Failed to retrieve generated asset listing id");
                 }
 
-                long assetListingId = rs.getLong("id");
+                long assetListingId = rs.getLong(1);
 
                 return selectById(conn, assetListingId)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Asset listing inserted but not found " +
-                                                "[id=" + assetListingId + "]"
+                                        "Asset listing inserted but not found [id=" + assetListingId + "]"
                                 )
                         );
             }
@@ -194,7 +182,7 @@ public class AssetListingDAO {
         String sql = """
                 UPDATE asset_listing
                 SET price = ?
-                WHERE id ?;
+                WHERE id = ?;
                 """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -208,6 +196,41 @@ public class AssetListingDAO {
                     "Database error while updating asset listing price " +
                             "[price=" + price + ", "
                             + "[assetListingId=" + assetListingId + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<AssetListing> selectActiveByAssetUnitId(Connection conn, long assetUnityId) {
+        String sql = """
+                SELECT id,
+                       asset_unit_id,
+                       seller_account_id,
+                       price,
+                       status,
+                       created_at,
+                       updated_at
+                  FROM asset_listing
+                 WHERE asset_unit_id = ?
+                   AND status = 'ACTIVE'
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, assetUnityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting active asset listing " +
+                            "[assetUnityId=" + assetUnityId + "]",
                     e
             );
         }
@@ -297,7 +320,7 @@ public class AssetListingDAO {
             try (ResultSet rs = stmt.executeQuery()) {
 
                 List<AssetListing> assetListings = new ArrayList<>();
-                if (rs.next()) {
+                while (rs.next()) {
                     assetListings.add(mapRow(rs));
                 }
                 return assetListings;

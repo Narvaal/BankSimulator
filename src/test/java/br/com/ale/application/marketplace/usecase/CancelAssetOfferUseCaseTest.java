@@ -1,12 +1,13 @@
 package br.com.ale.application.marketplace.usecase;
 
-import br.com.ale.application.marketplace.command.CreateAssetOfferCommand;
+import br.com.ale.application.marketplace.command.CancelAssetCommand;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.asset.*;
 import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.domain.client.Client;
+import br.com.ale.domain.exception.InvalidAssetListingStateException;
 import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.*;
@@ -27,7 +28,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CreateAssetOfferUseCaseTest {
+class CancelAssetOfferUseCaseTest {
 
     private TestConnectionProvider provider;
 
@@ -39,7 +40,7 @@ class CreateAssetOfferUseCaseTest {
     private AssetListingService assetListingService;
 
     private AuthService authService;
-    private CreateAssetOfferUseCase useCase;
+    private CancelAssetOfferUseCase useCase;
 
     @BeforeEach
     void setup() {
@@ -57,6 +58,7 @@ class CreateAssetOfferUseCaseTest {
 
         cleanDatabase();
     }
+
 
     private void cleanDatabase() {
         try (var conn = provider.getConnection();
@@ -78,7 +80,7 @@ class CreateAssetOfferUseCaseTest {
     }
 
     @Test
-    void shouldCreateAssetOfferSuccessfully() {
+    void shouldCancelOfferSuccessfully() {
 
         Client client = createClient();
         Account owner = createAccountWithCredential(client);
@@ -102,7 +104,7 @@ class CreateAssetOfferUseCaseTest {
 
         authService = new AuthService(provider, tokenGenerator);
 
-        useCase = new CreateAssetOfferUseCase(
+        useCase = new CancelAssetOfferUseCase(
                 accountService,
                 assetListingService,
                 assetUnityService,
@@ -119,127 +121,29 @@ class CreateAssetOfferUseCaseTest {
                         )
                 );
 
-        CreateAssetOfferCommand command =
-                new CreateAssetOfferCommand(
-                        owner.getId(),
-                        unity.getId(),
-                        new BigDecimal("100.00"),
-                        token.getToken()
-                );
-
-        AssetListing listing = useCase.execute(command);
-
-        assertNotNull(listing);
-        assertEquals(AssetListingStatus.ACTIVE, listing.getStatus());
-        assertEquals(owner.getId(), listing.getSellerAccountId());
-        assertEquals(unity.getId(), listing.getAssetUnityId());
-    }
-
-    @Test
-    void shouldFailWhenTokenIsInvalid() {
-
-        Client client = createClient();
-        Account owner = createAccountWithCredential(client);
-
-        KeyPairService keyPairService = new KeyPairService();
-        var keyPair = keyPairService.generate();
-
-        InMemoryPrivateKeyStorage privateKeyStorage =
-                new InMemoryPrivateKeyStorage();
-
-        privateKeyStorage.save(
-                owner.getId(),
-                keyPair.getPrivate().getEncoded()
-        );
-
-        SimpleTokenGenerator tokenGenerator =
-                new SimpleTokenGenerator(
-                        keyPair.getPrivate(),
-                        keyPair.getPublic()
-                );
-
-        authService = new AuthService(provider, tokenGenerator);
-
-        useCase = new CreateAssetOfferUseCase(
-                accountService,
-                assetListingService,
-                assetUnityService,
-                authService
-        );
-
-        AssetUnity unity = createAssetUnity(owner);
-
-        CreateAssetOfferCommand command =
-                new CreateAssetOfferCommand(
-                        owner.getId(),
-                        unity.getId(),
-                        new BigDecimal("100.00"),
-                        "invalid.token.value"
-                );
-
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> useCase.execute(command)
-        );
-    }
-
-    @Test
-    void shouldFailWhenAuthenticatedClientIsNotOwner() {
-
-        Client ownerClient = createClient();
-        Account owner = createAccountWithCredential(ownerClient);
-
-        Client attackerClient = createClient();
-        Account attacker = createAccountWithCredential(attackerClient);
-
-        KeyPairService keyPairService = new KeyPairService();
-        var keyPair = keyPairService.generate();
-
-        InMemoryPrivateKeyStorage privateKeyStorage =
-                new InMemoryPrivateKeyStorage();
-
-        privateKeyStorage.save(
-                attacker.getId(),
-                keyPair.getPrivate().getEncoded()
-        );
-
-        SimpleTokenGenerator tokenGenerator =
-                new SimpleTokenGenerator(
-                        keyPair.getPrivate(),
-                        keyPair.getPublic()
-                );
-
-        authService = new AuthService(provider, tokenGenerator);
-
-        useCase = new CreateAssetOfferUseCase(
-                accountService,
-                assetListingService,
-                assetUnityService,
-                authService
-        );
-
-        AssetUnity unity = createAssetUnity(owner);
-
-        AuthToken attackerToken =
-                authService.authenticate(
-                        new CreateAuthenticationRequest(
-                                attackerClient.getDocument(),
-                                "password"
+        AssetListing listing =
+                assetListingService.createAssetListing(
+                        new CreateAssetListingRequest(
+                                unity.getId(),
+                                owner.getId(),
+                                new BigDecimal("100.00"),
+                                AssetListingStatus.ACTIVE
                         )
                 );
 
-        CreateAssetOfferCommand command =
-                new CreateAssetOfferCommand(
+        CancelAssetCommand command =
+                new CancelAssetCommand(
                         owner.getId(),
-                        unity.getId(),
-                        new BigDecimal("100.00"),
-                        attackerToken.getToken()
+                        listing.getId(),
+                        token.getToken()
                 );
 
-        assertThrows(
-                UnauthorizedOperationException.class,
-                () -> useCase.execute(command)
-        );
+        assertDoesNotThrow(() -> useCase.execute(command));
+
+        AssetListing updated =
+                assetListingService.selectById(listing.getId());
+
+        assertEquals(AssetListingStatus.CANCELED, updated.getStatus());
     }
 
     private Account createAccountWithCredential(Client client) {
@@ -288,6 +192,202 @@ class CreateAssetOfferUseCaseTest {
                         "Client " + System.nanoTime(),
                         String.valueOf(System.nanoTime())
                 )
+        );
+    }
+
+    @Test
+    void shouldFailWhenTokenIsInvalid() {
+
+        Client client = createClient();
+        Account owner = createAccountWithCredential(client);
+
+        KeyPairService keyPairService = new KeyPairService();
+        var keyPair = keyPairService.generate();
+
+        InMemoryPrivateKeyStorage privateKeyStorage =
+                new InMemoryPrivateKeyStorage();
+
+        privateKeyStorage.save(
+                owner.getId(),
+                keyPair.getPrivate().getEncoded()
+        );
+
+        SimpleTokenGenerator tokenGenerator =
+                new SimpleTokenGenerator(
+                        keyPair.getPrivate(),
+                        keyPair.getPublic()
+                );
+
+        authService = new AuthService(provider, tokenGenerator);
+
+        useCase = new CancelAssetOfferUseCase(
+                accountService,
+                assetListingService,
+                assetUnityService,
+                authService
+        );
+
+        AssetUnity unity = createAssetUnity(owner);
+
+        AssetListing listing =
+                assetListingService.createAssetListing(
+                        new CreateAssetListingRequest(
+                                unity.getId(),
+                                owner.getId(),
+                                new BigDecimal("100.00"),
+                                AssetListingStatus.ACTIVE
+                        )
+                );
+
+        CancelAssetCommand command =
+                new CancelAssetCommand(
+                        owner.getId(),
+                        listing.getId(),
+                        "invalid.token.value"
+                );
+
+        assertThrows(
+                InvalidCredentialsException.class,
+                () -> useCase.execute(command)
+        );
+    }
+
+    @Test
+    void shouldFailWhenAuthenticatedClientIsNotOwner() {
+
+        Client ownerClient = createClient();
+        Client attackerClient = createClient();
+
+        Account owner = createAccountWithCredential(ownerClient);
+        Account attacker = createAccountWithCredential(attackerClient);
+
+        KeyPairService keyPairService = new KeyPairService();
+        var keyPair = keyPairService.generate();
+
+        InMemoryPrivateKeyStorage privateKeyStorage =
+                new InMemoryPrivateKeyStorage();
+
+        privateKeyStorage.save(
+                attacker.getId(),
+                keyPair.getPrivate().getEncoded()
+        );
+
+        SimpleTokenGenerator tokenGenerator =
+                new SimpleTokenGenerator(
+                        keyPair.getPrivate(),
+                        keyPair.getPublic()
+                );
+
+        authService = new AuthService(provider, tokenGenerator);
+
+        useCase = new CancelAssetOfferUseCase(
+                accountService,
+                assetListingService,
+                assetUnityService,
+                authService
+        );
+
+        AssetUnity unity = createAssetUnity(owner);
+
+        AssetListing listing =
+                assetListingService.createAssetListing(
+                        new CreateAssetListingRequest(
+                                unity.getId(),
+                                owner.getId(),
+                                new BigDecimal("100.00"),
+                                AssetListingStatus.ACTIVE
+                        )
+                );
+
+        AuthToken attackerToken =
+                authService.authenticate(
+                        new CreateAuthenticationRequest(
+                                attackerClient.getDocument(),
+                                "password"
+                        )
+                );
+
+        CancelAssetCommand command =
+                new CancelAssetCommand(
+                        attacker.getId(),
+                        listing.getId(),
+                        attackerToken.getToken()
+                );
+
+        assertThrows(
+                UnauthorizedOperationException.class,
+                () -> useCase.execute(command)
+        );
+    }
+
+    @Test
+    void shouldFailWhenListingIsNotActive() {
+
+        Client client = createClient();
+        Account owner = createAccountWithCredential(client);
+
+        KeyPairService keyPairService = new KeyPairService();
+        var keyPair = keyPairService.generate();
+
+        InMemoryPrivateKeyStorage privateKeyStorage =
+                new InMemoryPrivateKeyStorage();
+
+        privateKeyStorage.save(
+                owner.getId(),
+                keyPair.getPrivate().getEncoded()
+        );
+
+        SimpleTokenGenerator tokenGenerator =
+                new SimpleTokenGenerator(
+                        keyPair.getPrivate(),
+                        keyPair.getPublic()
+                );
+
+        authService = new AuthService(provider, tokenGenerator);
+
+        useCase = new CancelAssetOfferUseCase(
+                accountService,
+                assetListingService,
+                assetUnityService,
+                authService
+        );
+
+        AssetUnity unity = createAssetUnity(owner);
+
+        AuthToken token =
+                authService.authenticate(
+                        new CreateAuthenticationRequest(
+                                client.getDocument(),
+                                "password"
+                        )
+                );
+
+        AssetListing listing =
+                assetListingService.createAssetListing(
+                        new CreateAssetListingRequest(
+                                unity.getId(),
+                                owner.getId(),
+                                new BigDecimal("100.00"),
+                                AssetListingStatus.ACTIVE
+                        )
+                );
+
+        // muda o estado para CANCELED
+        assetListingService.updateStatus(
+                listing.getId(),
+                AssetListingStatus.CANCELED
+        );
+
+        CancelAssetCommand command =
+                new CancelAssetCommand(
+                        owner.getId(),
+                        listing.getId(),
+                        token.getToken()
+                );
+
+        assertThrows(
+                InvalidAssetListingStateException.class,
+                () -> useCase.execute(command)
         );
     }
 }

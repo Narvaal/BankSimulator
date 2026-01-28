@@ -4,11 +4,13 @@ import br.com.ale.dao.ClientDAO;
 import br.com.ale.dao.CredentialDAO;
 import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.domain.auth.Credential;
+import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.dto.CreateCredentialRequest;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
+import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 
 import java.sql.Connection;
@@ -18,13 +20,54 @@ public class AuthService {
     private final ConnectionProvider connectionProvider;
     private final CredentialDAO credentialDAO = new CredentialDAO();
     private final ClientDAO clientDAO = new ClientDAO();
-    private final SimpleTokenGenerator simpleTokenGenerator = new SimpleTokenGenerator();
+    private TokenGenerator tokenGenerator;
     private final PlainTextPasswordEncoder passwordEncoder = new PlainTextPasswordEncoder();
 
+    public AuthService(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
+    }
+
     public AuthService(
-            ConnectionProvider connectionProvider
+            ConnectionProvider connectionProvider,
+            TokenGenerator tokenGenerator
     ) {
         this.connectionProvider = connectionProvider;
+        this.tokenGenerator = tokenGenerator;
+    }
+
+    public AuthToken authenticate(CreateAuthenticationRequest request) {
+
+        try (Connection conn = connectionProvider.getConnection()) {
+
+            Credential credential =
+                    credentialDAO.selectByDocument(conn, request.document())
+                            .orElseThrow(() ->
+                                    new InvalidCredentialsException(
+                                            "Invalid credential [document="
+                                                    + request.document() + "]"
+                                    )
+                            );
+
+            if (!passwordEncoder.matches(
+                    request.password(),
+                    credential.getPasswordHash())
+            ) {
+                throw new InvalidCredentialsException(
+                        "Invalid credential [document=" + request.document() + "]"
+                );
+            }
+
+            return tokenGenerator.generate(credential.getClientId());
+
+        } catch (InvalidCredentialsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while authentication client " +
+                            "[document=" + request.document() + "]",
+                    e
+            );
+        }
     }
 
     public long register(CreateCredentialRequest request) {
@@ -59,31 +102,7 @@ public class AuthService {
         }
     }
 
-    public AuthToken authenticate(CreateAuthenticationRequest request) {
-
-        try (Connection conn = connectionProvider.getConnection()) {
-
-            Credential credential = credentialDAO.selectByDocument(conn, request.document())
-                    .orElseThrow(() -> new InvalidCredentialsException(
-                            "Invalid credential [document=" + request.document() + "]"
-                    ));
-
-            if (!passwordEncoder.matches(request.password(), credential.getPasswordHash())) {
-                throw new InvalidCredentialsException(
-                        "Invalid credential [document=" + request.document() + "]"
-                );
-            }
-
-            return simpleTokenGenerator.generate(credential.getClientId());
-
-        } catch (InvalidCredentialsException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Service error while authentication client " +
-                            "[document=" + request.document() + "]",
-                    e
-            );
-        }
+    public TokenClaims validateToken(String token) {
+        return tokenGenerator.validate(token);
     }
 }

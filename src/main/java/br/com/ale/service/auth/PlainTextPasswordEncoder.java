@@ -1,5 +1,5 @@
 package br.com.ale.service.auth;
-
+// TODO: FIX ENCODER
 public class PlainTextPasswordEncoder implements PasswordEncoder {
 
     @Override
