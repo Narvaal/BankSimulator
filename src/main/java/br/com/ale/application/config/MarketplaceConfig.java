@@ -1,0 +1,147 @@
+package br.com.ale.application.config;
+
+import br.com.ale.application.marketplace.query.GetAssetByIdUseCase;
+import br.com.ale.application.marketplace.query.GetAssetListingByIdUseCase;
+import br.com.ale.application.marketplace.query.ListActiveAssetListingsUseCase;
+import br.com.ale.application.marketplace.query.ListAssetListingsByOwnerUseCase;
+import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUseCase;
+import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByListingUseCase;
+import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
+import br.com.ale.application.marketplace.usecase.CancelAssetOfferUseCase;
+import br.com.ale.application.marketplace.usecase.CreateAssetOfferUseCase;
+import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
+import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.AccountService;
+import br.com.ale.service.asset.AssetService;
+import br.com.ale.service.asset.AssetListingService;
+import br.com.ale.service.asset.AssetUnityService;
+import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.marketplace.AssetPriceHistoryService;
+import br.com.ale.service.marketplace.AssetPurchaseService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MarketplaceConfig {
+
+    @Bean
+    public AssetListingService assetListingService(ConnectionProvider connectionProvider) {
+        return new AssetListingService(connectionProvider);
+    }
+
+    @Bean
+    public AssetService assetService(ConnectionProvider connectionProvider) {
+        return new AssetService(connectionProvider);
+    }
+
+    @Bean
+    public AssetUnityService assetUnityService(ConnectionProvider connectionProvider) {
+        return new AssetUnityService(connectionProvider);
+    }
+
+    @Bean
+    public GetAssetListingByIdUseCase getAssetListingByIdUseCase(
+            AssetListingService assetListingService
+    ) {
+        return new GetAssetListingByIdUseCase(assetListingService);
+    }
+
+    @Bean
+    public GetAssetByIdUseCase getAssetByIdUseCase(AssetService assetService) {
+        return new GetAssetByIdUseCase(assetService);
+    }
+
+    @Bean
+    public ListActiveAssetListingsUseCase listActiveAssetListingsUseCase(
+            AssetListingService assetListingService
+    ) {
+        return new ListActiveAssetListingsUseCase(assetListingService);
+    }
+
+    @Bean
+    public ListAssetListingsByOwnerUseCase listAssetListingsByOwnerUseCase(
+            AssetListingService assetListingService
+    ) {
+        return new ListAssetListingsByOwnerUseCase(assetListingService);
+    }
+
+    @Bean
+    public ListAssetUnitsByOwnerUseCase listAssetUnitsByOwnerUseCase(
+            AssetUnityService assetUnityService
+    ) {
+        return new ListAssetUnitsByOwnerUseCase(assetUnityService);
+    }
+
+    @Bean
+    public AssetPurchaseService assetPurchaseService(ConnectionProvider connectionProvider) {
+        return new AssetPurchaseService(connectionProvider);
+    }
+
+    @Bean
+    public AssetPriceHistoryService assetPriceHistoryService(
+            ConnectionProvider connectionProvider
+    ) {
+        return new AssetPriceHistoryService(connectionProvider);
+    }
+
+    @Bean
+    public PurchaseAssetUseCase purchaseAssetUseCase(
+            AccountService accountService,
+            AssetListingService assetListingService,
+            AssetPurchaseService assetPurchaseService,
+            AssetPriceHistoryService assetPriceHistoryService,
+            AuthService authService
+    ) {
+        return new PurchaseAssetUseCase(
+                accountService,
+                assetListingService,
+                assetPurchaseService,
+                assetPriceHistoryService,
+                authService
+        );
+    }
+
+    @Bean
+    public ListAssetPriceHistoryByListingUseCase listAssetPriceHistoryByListingUseCase(
+            AssetPriceHistoryService assetPriceHistoryService
+    ) {
+        return new ListAssetPriceHistoryByListingUseCase(assetPriceHistoryService);
+    }
+
+    @Bean
+    public ListAssetPriceHistoryByAssetIdUseCase listAssetPriceHistoryByAssetIdUseCase(
+            AssetPriceHistoryService assetPriceHistoryService
+    ) {
+        return new ListAssetPriceHistoryByAssetIdUseCase(assetPriceHistoryService);
+    }
+
+    @Bean
+    public CreateAssetOfferUseCase createAssetOfferUseCase(
+            AccountService accountService,
+            AssetListingService assetListingService,
+            AssetUnityService assetUnityService,
+            AuthService authService
+    ) {
+        return new CreateAssetOfferUseCase(
+                accountService,
+                assetListingService,
+                assetUnityService,
+                authService
+        );
+    }
+
+    @Bean
+    public CancelAssetOfferUseCase cancelAssetOfferUseCase(
+            AccountService accountService,
+            AssetListingService assetListingService,
+            AssetUnityService assetUnityService,
+            AuthService authService
+    ) {
+        return new CancelAssetOfferUseCase(
+                accountService,
+                assetListingService,
+                assetUnityService,
+                authService
+        );
+    }
+}

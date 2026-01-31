@@ -3,6 +3,7 @@ package br.com.ale.dao;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateBalanceOperationRequest;
 import br.com.ale.dto.UpdateAccountRequest;
@@ -139,6 +140,54 @@ public class AccountDAO {
                 AccountStatus.valueOf(rs.getString("status")),
                 rs.getString("public_key")
         );
+    }
+
+    public Optional<AccountDetailsResponse> selectDetailsById(Connection conn, long accountId) {
+
+        String sql = """
+                SELECT id,
+                       client_id,
+                       account_number,
+                       account_type,
+                       balance,
+                       status,
+                       public_key,
+                       created_at,
+                       updated_at
+                  FROM account
+                 WHERE id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(
+                            new AccountDetailsResponse(
+                                    rs.getLong("id"),
+                                    rs.getLong("client_id"),
+                                    rs.getString("account_number"),
+                                    AccountType.valueOf(rs.getString("account_type")),
+                                    rs.getBigDecimal("balance"),
+                                    AccountStatus.valueOf(rs.getString("status")),
+                                    rs.getString("public_key"),
+                                    rs.getTimestamp("created_at").toInstant(),
+                                    rs.getTimestamp("updated_at").toInstant()
+                            )
+                    );
+                }
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting account details " +
+                            "[accountId=" + accountId + "]",
+                    e
+            );
+        }
     }
 
     public Optional<Account> selectByNumber(Connection conn, String accountNumber) {

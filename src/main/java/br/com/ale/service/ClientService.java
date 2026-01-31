@@ -99,6 +99,23 @@ public class ClientService {
         }
     }
 
+    public Client getClientById(long clientId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.selectById(conn, clientId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Client not found [clientId=" + clientId + "]"
+                            )
+                    );
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client " +
+                            "[clientId=" + clientId + "]",
+                    e
+            );
+        }
+    }
+
     public void deleteClient(long id) {
 
         try (Connection conn = connectionProvider.getConnection()) {

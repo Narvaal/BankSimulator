@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class AssetUnityDAO {
@@ -121,6 +123,35 @@ public class AssetUnityDAO {
             throw new RuntimeException(
                     "Database error while updating asset unity owner " +
                             "[assetId=" + assetId + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetUnity> selectByOwnerAccount(Connection conn, long ownerAccountId) {
+        String sql = """
+                SELECT id,
+                       asset_id,
+                       owner_account_id,
+                       created_at
+                  FROM asset_unit
+                 WHERE owner_account_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, ownerAccountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<AssetUnity> result = new ArrayList<>();
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting asset unity by owner " +
+                            "[ownerAccountId=" + ownerAccountId + "]",
                     e
             );
         }

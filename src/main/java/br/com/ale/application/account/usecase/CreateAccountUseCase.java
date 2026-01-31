@@ -7,7 +7,9 @@ import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.client.Client;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateClientRequest;
+import br.com.ale.dto.CreateCredentialRequest;
 import br.com.ale.service.AccountService;
+import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.account.AccountNumberGenerator;
 
@@ -16,15 +18,18 @@ public class CreateAccountUseCase {
     private final AccountService accountService;
     private final ClientService clientService;
     private final AccountNumberGenerator accountNumberGenerator;
+    private final AuthService authService;
 
     public CreateAccountUseCase(
             AccountService accountService,
             ClientService clientService,
-            AccountNumberGenerator accountNumberGenerator
+            AccountNumberGenerator accountNumberGenerator,
+            AuthService authService
     ) {
         this.accountService = accountService;
         this.clientService = clientService;
         this.accountNumberGenerator = accountNumberGenerator;
+        this.authService = authService;
     }
 
     public Account execute(CreateAccountCommand command) {
@@ -33,6 +38,13 @@ public class CreateAccountUseCase {
                 new CreateClientRequest(
                         command.name(),
                         command.document()
+                )
+        );
+
+        authService.register(
+                new CreateCredentialRequest(
+                        command.document(),
+                        command.password()
                 )
         );
 

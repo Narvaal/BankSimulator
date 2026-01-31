@@ -7,6 +7,7 @@ import br.com.ale.dto.UpdateTransactionRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class TransactionService {
 
@@ -72,6 +73,18 @@ public class TransactionService {
                     "Service error while updating transaction " +
                             "[id=" + request.id() + ", "
                             + "status=" + request.status().name() + "]",
+                    e
+            );
+        }
+    }
+
+    public List<Transaction> listTransfersByAccount(long accountId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return transactionDAO.selectByAccountId(conn, accountId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting transactions " +
+                            "[accountId=" + accountId + "]",
                     e
             );
         }

@@ -177,6 +177,48 @@ public class TransactionDAO {
         }
     }
 
+    public List<Transaction> selectByAccountId(Connection conn, Long accountId) {
+
+        String sql = """
+                SELECT id,
+                       from_account_id,
+                       from_account_number,
+                       to_account_id,
+                       to_account_number,
+                       amount,
+                       type,
+                       status,
+                       signature
+                  FROM transactions
+                 WHERE from_account_id = ?
+                    OR to_account_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, accountId, Types.BIGINT);
+            stmt.setObject(2, accountId, Types.BIGINT);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<Transaction> transactions = new ArrayList<>();
+
+                while (rs.next()) {
+                    transactions.add(mapRow(rs));
+                }
+
+                return transactions;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting transactions " +
+                            "[accountId=" + accountId + "]",
+                    e
+            );
+        }
+    }
+
     private Transaction mapRow(ResultSet rs) throws SQLException {
 
         return new Transaction(

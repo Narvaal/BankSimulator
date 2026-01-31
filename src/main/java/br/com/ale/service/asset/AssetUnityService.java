@@ -6,6 +6,7 @@ import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class AssetUnityService {
 
@@ -59,6 +60,18 @@ public class AssetUnityService {
             throw new RuntimeException(
                     "Service error while selecting assetUnity " +
                             "[assetId=" + assetUnityId + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetUnity> selectByOwnerAccount(long ownerAccountId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetUnityDAO.selectByOwnerAccount(conn, ownerAccountId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting asset unity " +
+                            "[ownerAccountId=" + ownerAccountId + "]",
                     e
             );
         }

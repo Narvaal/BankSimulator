@@ -5,6 +5,7 @@ import br.com.ale.dao.TransactionDAO;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
+import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.crypto.KeyPairService;
@@ -53,7 +54,9 @@ public class AccountService {
                         request.clientId(),
                         request.accountNumber(),
                         request.accountType(),
-                        request.status()
+                        java.math.BigDecimal.ZERO,
+                        request.status(),
+                        publicKey
                 );
 
             } catch (Exception e) {
@@ -99,6 +102,23 @@ public class AccountService {
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting account " +
+                            "[accountId=" + accountId + "]",
+                    e
+            );
+        }
+    }
+
+    public AccountDetailsResponse getAccountDetailsById(long accountId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.selectDetailsById(conn, accountId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Account not found [accountId=" + accountId + "]"
+                            )
+                    );
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting account details " +
                             "[accountId=" + accountId + "]",
                     e
             );

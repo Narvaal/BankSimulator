@@ -10,6 +10,7 @@ import br.com.ale.infrastructure.db.ConnectionProvider;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.util.List;
 
 public class AssetPriceHistoryService {
 
@@ -46,6 +47,15 @@ public class AssetPriceHistoryService {
                                 );
 
                 BigDecimal oldPrice = listing.getPrice();
+                if (reason == ReasonType.SOLD) {
+                    oldPrice = assetPriceHistoryDAO
+                            .selectLatestByAssetUnityId(
+                                    conn,
+                                    listing.getAssetUnityId()
+                            )
+                            .map(AssetPriceHistory::getNewPrice)
+                            .orElse(oldPrice);
+                }
 
                 AssetPriceHistory persisted =
                         assetPriceHistoryDAO.insert(
@@ -75,6 +85,30 @@ public class AssetPriceHistoryService {
                             ", newPrice=" + newPrice +
                             ", changedByAccountId=" + changedByAccountId +
                             ", reason=" + reason + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetPriceHistory> listByAssetListingId(long assetListingId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetPriceHistoryDAO.selectByAssetListingId(conn, assetListingId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while listing asset price history " +
+                            "[assetListingId=" + assetListingId + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetPriceHistory> listByAssetId(long assetId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetPriceHistoryDAO.selectByAssetId(conn, assetId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while listing asset price history " +
+                            "[assetId=" + assetId + "]",
                     e
             );
         }
