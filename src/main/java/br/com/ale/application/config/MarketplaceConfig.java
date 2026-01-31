@@ -26,6 +26,8 @@ import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;
 import br.com.ale.service.marketplace.AssetPurchaseService;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -53,6 +55,14 @@ public class MarketplaceConfig {
     }
 
     @Bean
+    public AssetWebhookNotifier assetWebhookNotifier(
+            @Value("${webhook.asset.url:}") String webhookUrl,
+            @Value("${webhook.asset.enabled:false}") boolean enabled
+    ) {
+        return new AssetWebhookNotifier(webhookUrl, enabled);
+    }
+
+    @Bean
     public AssetGenerationManager assetGenerationManager(
             AssetGenerationService assetGenerationService,
             AssetBundleService assetBundleService
@@ -61,8 +71,11 @@ public class MarketplaceConfig {
     }
 
     @Bean
-    public AssetUnityService assetUnityService(ConnectionProvider connectionProvider) {
-        return new AssetUnityService(connectionProvider);
+    public AssetUnityService assetUnityService(
+            ConnectionProvider connectionProvider,
+            AssetWebhookNotifier webhookNotifier
+    ) {
+        return new AssetUnityService(connectionProvider, webhookNotifier);
     }
 
     @Bean
@@ -123,8 +136,11 @@ public class MarketplaceConfig {
     }
 
     @Bean
-    public AssetPurchaseService assetPurchaseService(ConnectionProvider connectionProvider) {
-        return new AssetPurchaseService(connectionProvider);
+    public AssetPurchaseService assetPurchaseService(
+            ConnectionProvider connectionProvider,
+            AssetWebhookNotifier webhookNotifier
+    ) {
+        return new AssetPurchaseService(connectionProvider, webhookNotifier);
     }
 
     @Bean

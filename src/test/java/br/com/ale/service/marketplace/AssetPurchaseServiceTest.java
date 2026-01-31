@@ -13,6 +13,7 @@ import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetService;
 import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,7 @@ class AssetPurchaseServiceTest {
     private AssetUnityService assetUnityService;
     private AssetListingService assetListingService;
     private AssetPurchaseService assetPurchaseService;
+    private AssetWebhookNotifier webhookNotifier;
 
     private Account seller;
     private Account buyer;
@@ -38,16 +40,18 @@ class AssetPurchaseServiceTest {
     void setup() {
         InMemoryPrivateKeyStorage inMemoryPrivateKeyStorage = new InMemoryPrivateKeyStorage();
         provider = new TestConnectionProvider();
+        webhookNotifier = new AssetWebhookNotifier("", false);
 
         clientService = new ClientService(provider);
         accountService = new AccountService(provider, inMemoryPrivateKeyStorage);
         assetService = new AssetService(provider);
-        assetUnityService = new AssetUnityService(provider);
+        assetUnityService = new AssetUnityService(provider, webhookNotifier);
         assetListingService = new AssetListingService(provider);
 
         assetPurchaseService =
                 new AssetPurchaseService(
-                        provider
+                        provider,
+                        webhookNotifier
                 );
 
         cleanDatabase();

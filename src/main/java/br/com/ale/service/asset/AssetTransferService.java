@@ -4,18 +4,22 @@ import br.com.ale.dao.asset.AssetTransferDAO;
 import br.com.ale.domain.asset.AssetTransfer;
 import br.com.ale.dto.CreateAssetTransferRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 
 import java.sql.Connection;
 
 public class AssetTransferService {
 
     private final ConnectionProvider connectionProvider;
+    private final AssetWebhookNotifier webhookNotifier;
     private final AssetTransferDAO assetTransferDAO = new AssetTransferDAO();
 
     public AssetTransferService(
-            ConnectionProvider connectionProvider
+            ConnectionProvider connectionProvider,
+            AssetWebhookNotifier webhookNotifier
     ) {
         this.connectionProvider = connectionProvider;
+        this.webhookNotifier = webhookNotifier;
     }
 
     public AssetTransfer createAsset(CreateAssetTransferRequest request) {
@@ -36,6 +40,8 @@ public class AssetTransferService {
                 AssetTransfer asset = assetTransferDAO.insert(conn, request);
 
                 conn.commit();
+
+                webhookNotifier.notifyAssetTransferCreated(asset);
 
                 return asset;
 

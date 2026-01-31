@@ -20,6 +20,7 @@ import br.com.ale.service.asset.AssetUnityService;
 
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.PrivateKeyStorage;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
@@ -34,15 +35,17 @@ class AssetPriceHistoryServiceTest {
     private AssetUnityService assetUnityService;
     private AssetListingService assetListingService;
     private AssetPriceHistoryService assetPriceHistoryService;
+    private AssetWebhookNotifier webhookNotifier;
 
     @BeforeEach
     void setup() {
         ConnectionProvider connectionProvider = new TestConnectionProvider();
+        webhookNotifier = new AssetWebhookNotifier("", false);
         PrivateKeyStorage privateKeyStorage = new InMemoryPrivateKeyStorage();
         clientService = new ClientService(connectionProvider);
         accountService = new AccountService(connectionProvider, privateKeyStorage);
         assetService = new AssetService(connectionProvider);
-        assetUnityService = new AssetUnityService(connectionProvider);
+        assetUnityService = new AssetUnityService(connectionProvider, webhookNotifier);
         assetListingService = new AssetListingService(connectionProvider);
         assetPriceHistoryService = new AssetPriceHistoryService(connectionProvider);
     }

@@ -20,6 +20,7 @@ import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.KeyPairService;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,7 @@ class CreateAssetOfferUseCaseTest {
     private AssetService assetService;
     private AssetUnityService assetUnityService;
     private AssetListingService assetListingService;
+    private AssetWebhookNotifier webhookNotifier;
 
     private AuthService authService;
     private CreateAssetOfferUseCase useCase;
@@ -45,12 +47,13 @@ class CreateAssetOfferUseCaseTest {
     void setup() {
 
         provider = new TestConnectionProvider();
+        webhookNotifier = new AssetWebhookNotifier("", false);
 
         clientService = new ClientService(provider);
         accountService = new AccountService(provider, new InMemoryPrivateKeyStorage());
 
         assetService = new AssetService(provider);
-        assetUnityService = new AssetUnityService(provider);
+        assetUnityService = new AssetUnityService(provider, webhookNotifier);
         assetListingService = new AssetListingService(provider);
 
         authService = new AuthService(provider);

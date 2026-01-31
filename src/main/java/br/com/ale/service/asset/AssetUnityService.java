@@ -5,6 +5,7 @@ import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 
 import java.sql.Connection;
 import java.util.List;
@@ -12,13 +13,16 @@ import java.util.List;
 public class AssetUnityService {
 
     private final ConnectionProvider connectionProvider;
+    private final AssetWebhookNotifier webhookNotifier;
     private final AssetDAO assetDAO = new AssetDAO();
     private final AssetUnityDAO assetUnityDAO = new AssetUnityDAO();
 
     public AssetUnityService(
-            ConnectionProvider connectionProvider
+            ConnectionProvider connectionProvider,
+            AssetWebhookNotifier webhookNotifier
     ) {
         this.connectionProvider = connectionProvider;
+        this.webhookNotifier = webhookNotifier;
     }
 
     public AssetUnity createAssetUnity(CreateAssetUnityRequest request) {
@@ -38,6 +42,8 @@ public class AssetUnityService {
                 AssetUnity asset = assetUnityDAO.insert(conn, request);
 
                 conn.commit();
+
+                webhookNotifier.notifyAssetUnityCreated(asset);
 
                 return asset;
 

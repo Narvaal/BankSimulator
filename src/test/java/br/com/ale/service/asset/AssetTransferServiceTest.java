@@ -7,6 +7,7 @@ import br.com.ale.dto.CreateAssetRequest;
 import br.com.ale.dto.CreateAssetTransferRequest;
 import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ class AssetTransferServiceTest {
     private AssetService assetService;
     private AssetUnityService assetUnityService;
     private AssetTransferService assetTransferService;
+    private AssetWebhookNotifier webhookNotifier;
 
     private long fromAccountId;
     private long toAccountId;
@@ -28,10 +30,11 @@ class AssetTransferServiceTest {
     @BeforeEach
     void setup() {
         provider = new TestConnectionProvider();
+        webhookNotifier = new AssetWebhookNotifier("", false);
 
         assetService = new AssetService(provider);
-        assetUnityService = new AssetUnityService(provider);
-        assetTransferService = new AssetTransferService(provider);
+        assetUnityService = new AssetUnityService(provider, webhookNotifier);
+        assetTransferService = new AssetTransferService(provider, webhookNotifier);
 
         cleanDatabase();
         createAccounts();

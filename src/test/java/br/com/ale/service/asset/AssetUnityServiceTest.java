@@ -5,6 +5,7 @@ import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.dto.CreateAssetRequest;
 import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,15 +19,17 @@ class AssetUnityServiceTest {
 
     private AssetService assetService;
     private AssetUnityService assetUnityService;
+    private AssetWebhookNotifier webhookNotifier;
 
     private long ownerAccountId;
 
     @BeforeEach
     void setup() {
         provider = new TestConnectionProvider();
+        webhookNotifier = new AssetWebhookNotifier("", false);
 
         assetService = new AssetService(provider);
-        assetUnityService = new AssetUnityService(provider);
+        assetUnityService = new AssetUnityService(provider, webhookNotifier);
 
         cleanDatabase();
         ownerAccountId = createAccount();

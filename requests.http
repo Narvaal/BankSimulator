@@ -6,7 +6,7 @@ POST http://localhost:8080/auth/login
 Content-Type: application/json
 
 {
-  "document": "12345672930",
+  "document": "12346572930",
   "password": "pass"
 }
 
@@ -16,17 +16,17 @@ Content-Type: application/json
 
 {
   "name": "John Doe",
-  "document": "12346672930",
+  "document": "12346572930",
   "password": "pass"
 }
 
 ### Purchase asset
-POST http://localhost:8080/asset-listings/5/purchase
+POST http://localhost:8080/asset-listings/1/purchase
 Content-Type: application/json
-Authorization: Bearer NzoxNzY5ODI4MzkzNzE1OjE3Njk4MzE5OTM3MTU6OThiZjg0OTgtMzY1Ni00ODVhLTg0YTgtNDQ5NTYwMTkzMzg0.WrckjbTC8smyulG8Z+qUmXXhTZYsD+P5u0P52Ukhvk5cUshPxxVBcbcbMvYiw9kmIMoDndOzSTkyImdCmYcmIrWgwQXhx581LEZmV3lEUDm7OtS4IjUAmsamBz7jbkwsVyuLFqByLaiTv8STzdtAdrSX3vb8y5NNoqLUJ6rXenD+DrruXgtOW4HiJJrm4SJPi5IbkU5YvncMtZDrenTaU+s4vk+R1iFBGsEuhg/EMudG59+zu2mffrIlWOzWXFTSI2L3nnCbxyiBaG1eKIWPQWHF59moUBCBC4pqInywqqnMDinI/TH+YaLcxm3gyK5Un6MF0OWmtOTme3EKhyupVg==
+Authorization: Bearer MjoxNzY5ODkzMTgxOTQzOjE3Njk4OTY3ODE5NDM6OTg3MjBjZjUtYzdjYy00YzkzLWFjODktMTMzYTYzY2Y3MmU3.a4fvnjDP/4NsWCbi3S8slfTV5l/V/W4SWyrVxYVVSXSaR0YJoRuPxlPm5JjjTxH4KfdpL4Aiqcp/usp9UgUFP/bsS1MFvXUb/feMQvDXzhdSkEIsiI9wZaLtFVK01RA0xwZgZL4BeMazMKJtqtnUef4ueiy4It1EYlKFGwnL3bDPPpXsRvdjIT/i0HGiqoPYep4Ir1UzFcvayX0ORk6MrWqw77yTqgjcspUAo28oUJmOeM2lrQtcvguocSEl3U/qAs3rw4FtiLiWOusxF4GuccEk/V1vV8f4o4+rrVV4amj3tyPOTapuqyjMDAOsPsnbK+kAPrwVmgkeStQ3zlxxxg==
 
 {
-  "buyerAccountId": 5
+  "buyerAccountId": 2
 }
 
 ### Post assetOffer
@@ -36,7 +36,7 @@ Content-Type: application/json
 {
   "assetUnityId": 1,
   "price": 200.00,
-  "token": "MTA6MTc2OTgyODIyMTM3ODoxNzY5ODMxODIxMzc4OjkyYjA1YTFlLWVlODgtNDQ3NS1hYzg1LWNjOGNmNzBhMDQwNA==.hkQ5c9jaw7BH5/Diunrv3YIDPcGq//tHV6CZ3fd/aaP1Io+GNJHRnA5S0R3WXHowtNLQE6WxcY/dxu5j202zBrnso2sKN8LEAbdQkMoZith0k9l7XXVaaIgflETX+37rqONeQ+d4yINVSeOLJ1h2C7TBIbMeiwUwBMQbyunYjwUo5wYX2yWlXtgnV7d/ccOVOCTwj9S0FDQP7wtRTyEsjQyyEweiLPXsMUR8uzsspiqh8PeLzltAYi5hHyBE4suCrV5LBoAjLufITBxqjoewZBWYIFKo5S11G4ZzP4EWomP3OVjtTt4xUAd2MRgFL13gc3boM8h79e7gXEGqladkIQ=="
+  "token": "MToxNzY5ODkyNjgwOTA1OjE3Njk4OTYyODA5MDU6YzAwNzRhOTgtZDk3MS00OGQwLThlMDUtM2Y5YzgyMTE1Yjdi.jglqagABEbtCTYmHJH3ZYJDW+39uWLswDOyvjp4WY1YZNuBUgkJKI/yWP8hp3gMEghukHTz8pWsZGkMvJQwt6z0RCaVRXKmIIv/ooMkrzQhSVzPJVbHIBzqdi+r1llukS/bz8nLphW7WFv0Q+ERx+//d2e9eCJ7R8jFb9Szcr8dPPRE+KKEsJpNhCzf7HNUxHvU/inVylC+y0/XZAZHAcyDPtkPoXp0cQ910xDp1C3Ua6iq2hcgNvFUub/NAJm5Fp3GpCCZCbg7ntABKxFEFMtkkVuMENNtiKAyToooi5pH7idSkb51+NFj1qspFKjg5IM0F1VLM36oua69IQ1C42g=="
 }
 
 ### Cancel assetOffer
@@ -49,21 +49,21 @@ Content-Type: application/json
 }
 
 ### Account Deposit
-POST http://localhost:8080/accounts/5/deposit
+POST http://localhost:8080/accounts/2/deposit
 Content-Type: application/json
 
 {
   "amount": 500.00,
-  "token": "NzoxNzY5ODMzMDE4MDQ4OjE3Njk4MzY2MTgwNDg6Yzg3ZmYwMTgtNTE3Yi00N2JmLThjMGMtOThlMDlhN2NmMWM3.bhMCkouqx0h+LrWQKhhKpS75dBM4RgnVqgNS/KRe3Sfe6tDvQ0lXulkJYYGc4qAd03Jjehm7V4941zA5Dda6XNCq1krY49RpRbl/qJAnXoNfV6zRdWNsM1iXvOdwbwjjMZ4ikH4uD6xn24BLmQfp48X0+zXGM13yMahjLJQlQIxnJiDb1e8Rw+pDo+OYqjlvnmvOkW33Z/5cRgQd2CYrJAvUPB0MiaCTAhxWl9A+5mbHHNaObaIY1/VvOKuwVuLCFd0OMfMHtWIiZ5kxKnHM3uAgdx9BLXfGWeX23bOlz0RG8IpttqPUdwDgLoJZaNXR5E9eu4gq3oLJVpEJqhejog=="
+  "token": "MjoxNzY5ODkzMDUyNzA1OjE3Njk4OTY2NTI3MDU6M2YzYmY2MWQtYTgyMy00YmQ2LTgwODktNjA4YjBkYTlmYTE5.HXCuQT60TqsOP2dcvwubIC0n2PEcREVw/btD9tv9gQpg5HSydYfSZZ3/L0XiKga11aBxNgDP/5/Q/m48VCHfPuFaZ/a/cwypgY8oZ5xuqIprFtEtPpuJxqjH+IGQbRtD8PTP7BZdjcnD/JYByqxb6g3EnNNyeq5kAyhP6RdZ5Rlo61ZHA7nF96wpreFi+m8yV/uUbGS7gGn2grhQ6VdhjWxvB9YqqVsv/PRHurKQO6uPZlGl14j7nh8JlY2xI3zdOoJ4GNarsBzVT6/H8yB7mK4bt53KULLWxEM9Vv4D/T8GANpEOpWbBfsKN7e9Thg5Md4i44cfsNair1w3w60I7Q=="
 }
 
 ### Give assetUnity
-POST http://localhost:8080/assets/2/units
+POST http://localhost:8080/assets/1/units
 Content-Type: application/json
 
 {
-  "ownerAccountId": 5,
-  "token": "NzoxNzY5ODM4MDkxNDY4OjE3Njk4NDE2OTE0Njg6YjNhZDZmNjItYTk1OC00MzEzLThiODItYWE2YWIyMTJjNDNk.aWasOhTl6BmD+EzuxA9ZwHXCP/kpCzg7eh5V0Dh9X6XnOinDE8rbUl8BRkKwz6N/tHE1S+JTFrb8BWk38Ifrah8zA98eKAPrZS2lVoWdrEZUu5XgNj27QCKnqG1aThZLIQ5istoD8WrrFizGbCryHT5zbNOpc70nMQeubpLh+hHAJPQLqIjDn9tVK5uhVoRMJsViqd76NcmtGJAlG88H67iQ1qL8+4i4yqB2bo+xEwpSTtdJjZ/kKl/N85jJsJxRWRXx6cwL/WMvLd0zTLBvRqW0Pbpg3+cYZ6ZA2kTE8yRo/cNkUTzw3jpnmluWNG7+Xyx3/tC4DeoQhAI/vfJ37g=="
+  "ownerAccountId": 1,
+  "token": "MToxNzY5ODkyNjgwOTA1OjE3Njk4OTYyODA5MDU6YzAwNzRhOTgtZDk3MS00OGQwLThlMDUtM2Y5YzgyMTE1Yjdi.jglqagABEbtCTYmHJH3ZYJDW+39uWLswDOyvjp4WY1YZNuBUgkJKI/yWP8hp3gMEghukHTz8pWsZGkMvJQwt6z0RCaVRXKmIIv/ooMkrzQhSVzPJVbHIBzqdi+r1llukS/bz8nLphW7WFv0Q+ERx+//d2e9eCJ7R8jFb9Szcr8dPPRE+KKEsJpNhCzf7HNUxHvU/inVylC+y0/XZAZHAcyDPtkPoXp0cQ910xDp1C3Ua6iq2hcgNvFUub/NAJm5Fp3GpCCZCbg7ntABKxFEFMtkkVuMENNtiKAyToooi5pH7idSkb51+NFj1qspFKjg5IM0F1VLM36oua69IQ1C42g=="
 }
 
 ### Create Asset bundle
@@ -83,7 +83,7 @@ X-Admin-Token: root
 GET http://localhost:8080/assets/bundles
 
 ### Get Asset bundle itemns
-GET http://localhost:8080/assets/bundles/6/items
+GET http://localhost:8080/assets/bundles/1/items
 
 ### Generate Assets
 POST http://localhost:8080/admin/assets/generate
