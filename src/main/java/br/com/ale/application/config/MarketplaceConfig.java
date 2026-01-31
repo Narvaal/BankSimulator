@@ -11,6 +11,7 @@ import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUs
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByListingUseCase;
 import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
 import br.com.ale.application.marketplace.usecase.CancelAssetOfferUseCase;
+import br.com.ale.application.marketplace.usecase.CreateAssetBundleUseCase;
 import br.com.ale.application.marketplace.usecase.CreateAssetOfferUseCase;
 import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseCase;
 import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
@@ -91,6 +92,13 @@ public class MarketplaceConfig {
             AssetBundleService assetBundleService
     ) {
         return new ListAssetBundleItemsUseCase(assetBundleService);
+    }
+
+    @Bean
+    public CreateAssetBundleUseCase createAssetBundleUseCase(
+            AssetBundleService assetBundleService
+    ) {
+        return new CreateAssetBundleUseCase(assetBundleService);
     }
 
     @Bean

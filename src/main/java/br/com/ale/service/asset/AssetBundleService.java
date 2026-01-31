@@ -31,42 +31,24 @@ public class AssetBundleService {
     }
 
     public List<Asset> createWeeklyBundle(List<Asset> generatedAssets) {
-        String identifier = generateIdentifier();
-
-        try (Connection conn = connectionProvider.getConnection()) {
-            conn.setAutoCommit(false);
-
-            try {
-                AssetBundle bundle = assetBundleDAO.insert(conn, identifier);
-
-                List<Asset> persisted = new ArrayList<>(generatedAssets.size());
-                for (Asset asset : generatedAssets) {
-                    persisted.add(assetDAO.insert(
-                            conn,
-                            new CreateAssetRequest(asset.getText(), asset.getTotalSupply())
-                    ));
-                }
-
-                List<Long> assetIds = new ArrayList<>(persisted.size());
-                for (Asset asset : persisted) {
-                    assetIds.add(asset.getId());
-                }
-
-                assetBundleItemDAO.insertItems(conn, bundle.getId(), assetIds);
-
-                conn.commit();
-                return persisted;
-            } catch (Exception e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Service error while creating asset bundle " +
-                            "[identifier=" + identifier + "]",
-                    e
-            );
+        List<CreateAssetRequest> requests = new ArrayList<>(generatedAssets.size());
+        for (Asset asset : generatedAssets) {
+            requests.add(new CreateAssetRequest(asset.getText(), asset.getTotalSupply()));
         }
+        return createBundleInternal(requests, null).assets();
+    }
+
+    public AssetBundleResponse createBundle(
+            List<CreateAssetRequest> assetRequests,
+            String identifier
+    ) {
+        CreatedBundle created = createBundleInternal(assetRequests, identifier);
+        AssetBundle bundle = created.bundle();
+        return new AssetBundleResponse(
+                bundle.getId(),
+                bundle.getIdentifier(),
+                bundle.getCreatedAt()
+        );
     }
 
     public List<AssetBundleResponse> listBundles() {
@@ -99,5 +81,53 @@ public class AssetBundleService {
 
     private String generateIdentifier() {
         return RandomUtils.pickRandom(words) + " " + RandomUtils.pickRandom(emoji);
+    }
+
+    private CreatedBundle createBundleInternal(
+            List<CreateAssetRequest> assetRequests,
+            String identifier
+    ) {
+        if (assetRequests == null || assetRequests.isEmpty()) {
+            throw new IllegalArgumentException("Asset bundle must include at least one asset");
+        }
+
+        String bundleIdentifier = (identifier == null || identifier.isBlank())
+                ? generateIdentifier()
+                : identifier;
+
+        try (Connection conn = connectionProvider.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                AssetBundle bundle = assetBundleDAO.insert(conn, bundleIdentifier);
+
+                List<Asset> persisted = new ArrayList<>(assetRequests.size());
+                for (CreateAssetRequest request : assetRequests) {
+                    persisted.add(assetDAO.insert(conn, request));
+                }
+
+                List<Long> assetIds = new ArrayList<>(persisted.size());
+                for (Asset asset : persisted) {
+                    assetIds.add(asset.getId());
+                }
+
+                assetBundleItemDAO.insertItems(conn, bundle.getId(), assetIds);
+
+                conn.commit();
+                return new CreatedBundle(bundle, persisted);
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while creating asset bundle " +
+                            "[identifier=" + bundleIdentifier + "]",
+                    e
+            );
+        }
+    }
+
+    private record CreatedBundle(AssetBundle bundle, List<Asset> assets) {
     }
 }

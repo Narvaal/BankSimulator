@@ -10,6 +10,7 @@ import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.infrastructure.db.DefaultConnectionProvider;
+import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.AccountService;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.TransactionService;
@@ -20,6 +21,7 @@ import br.com.ale.service.account.HashAccountNumberGenerator;
 import br.com.ale.service.crypto.FilePrivateKeyStorage;
 import br.com.ale.service.crypto.PrivateKeyStorage;
 import java.security.KeyPair;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,8 +29,16 @@ import org.springframework.context.annotation.Configuration;
 public class AuthConfig {
 
     @Bean
-    public ConnectionProvider connectionProvider() {
-        return new DefaultConnectionProvider();
+    public ConnectionProvider connectionProvider(
+            @Value("${db.default.url}") String url,
+            @Value("${db.default.user}") String user,
+            @Value("${db.default.password:}") String password,
+            @Value("${db.use.test:false}") boolean useTestDb
+    ) {
+        if (useTestDb) {
+            return new TestConnectionProvider();
+        }
+        return new DefaultConnectionProvider(url, user, password);
     }
 
     @Bean

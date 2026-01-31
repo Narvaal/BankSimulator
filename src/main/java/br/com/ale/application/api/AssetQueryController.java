@@ -5,6 +5,7 @@ import br.com.ale.application.marketplace.query.ListAssetsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetBundlesUseCase;
 import br.com.ale.application.marketplace.query.ListAssetBundleItemsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUseCase;
+import br.com.ale.application.marketplace.usecase.CreateAssetBundleUseCase;
 import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseCase;
 import br.com.ale.domain.asset.Asset;
 import br.com.ale.domain.asset.AssetPriceHistory;
@@ -12,6 +13,7 @@ import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.dto.AssetBundleItemResponse;
 import br.com.ale.dto.AssetBundleResponse;
 import br.com.ale.dto.AssetSummaryResponse;
+import br.com.ale.dto.CreateAssetBundleApiRequest;
 import br.com.ale.dto.CreateAssetUnityApiRequest;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +35,7 @@ public class AssetQueryController {
     private final ListAssetBundlesUseCase listAssetBundlesUseCase;
     private final ListAssetBundleItemsUseCase listAssetBundleItemsUseCase;
     private final CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase;
+    private final CreateAssetBundleUseCase createAssetBundleUseCase;
 
     public AssetQueryController(
             GetAssetByIdUseCase getAssetByIdUseCase,
@@ -40,7 +43,8 @@ public class AssetQueryController {
             ListAssetsUseCase listAssetsUseCase,
             ListAssetBundlesUseCase listAssetBundlesUseCase,
             ListAssetBundleItemsUseCase listAssetBundleItemsUseCase,
-            CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase
+            CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase,
+            CreateAssetBundleUseCase createAssetBundleUseCase
     ) {
         this.getAssetByIdUseCase = getAssetByIdUseCase;
         this.listAssetPriceHistoryByAssetIdUseCase = listAssetPriceHistoryByAssetIdUseCase;
@@ -48,6 +52,7 @@ public class AssetQueryController {
         this.listAssetBundlesUseCase = listAssetBundlesUseCase;
         this.listAssetBundleItemsUseCase = listAssetBundleItemsUseCase;
         this.createAssetUnityForAccountUseCase = createAssetUnityForAccountUseCase;
+        this.createAssetBundleUseCase = createAssetBundleUseCase;
     }
 
     @GetMapping("/{id}")
@@ -77,6 +82,11 @@ public class AssetQueryController {
     @GetMapping("/bundles")
     public List<AssetBundleResponse> listBundles() {
         return listAssetBundlesUseCase.execute();
+    }
+
+    @PostMapping("/bundles")
+    public AssetBundleResponse createBundle(@RequestBody CreateAssetBundleApiRequest request) {
+        return createAssetBundleUseCase.execute(request.assets(), request.identifier());
     }
 
     @GetMapping("/bundles/{id}/items")
