@@ -45,6 +45,30 @@ CREATE TABLE asset
     created_at   TIMESTAMP NOT NULL DEFAULT now()
 );
 
+CREATE TABLE asset_bundle
+(
+    id         BIGSERIAL PRIMARY KEY,
+    identifier VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE asset_bundle_item
+(
+    id        BIGSERIAL PRIMARY KEY,
+    bundle_id BIGINT NOT NULL,
+    asset_id  BIGINT NOT NULL UNIQUE,
+
+    CONSTRAINT fk_bundle_item_bundle
+        FOREIGN KEY (bundle_id)
+            REFERENCES asset_bundle (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_bundle_item_asset
+        FOREIGN KEY (asset_id)
+            REFERENCES asset (id)
+            ON DELETE CASCADE
+);
+
 CREATE TABLE asset_unit
 (
     id               BIGSERIAL PRIMARY KEY,

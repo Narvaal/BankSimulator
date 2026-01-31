@@ -8,29 +8,18 @@ import java.util.List;
 public class AssetGenerationManager {
 
     private final AssetGenerationService assetGenerationService;
-    private final AssetService assetService;
+    private final AssetBundleService assetBundleService;
 
     public AssetGenerationManager(
             AssetGenerationService assetGenerationService,
-            AssetService assetService
+            AssetBundleService assetBundleService
     ) {
         this.assetGenerationService = assetGenerationService;
-        this.assetService = assetService;
+        this.assetBundleService = assetBundleService;
     }
 
     public List<Asset> generateWeeklyAssets() {
         List<Asset> generated = assetGenerationService.generateWeeklyAssets();
-        List<Asset> persisted = new ArrayList<>(generated.size());
-        for (Asset asset : generated) {
-            persisted.add(
-                    assetService.createAsset(
-                            new CreateAssetRequest(
-                                    asset.getText(),
-                                    asset.getTotalSupply()
-                            )
-                    )
-            );
-        }
-        return persisted;
+        return assetBundleService.createWeeklyBundle(generated);
     }
 }

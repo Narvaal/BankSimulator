@@ -5,6 +5,8 @@ import br.com.ale.application.marketplace.query.GetAssetListingByIdUseCase;
 import br.com.ale.application.marketplace.query.ListActiveAssetListingsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetListingsByOwnerUseCase;
+import br.com.ale.application.marketplace.query.ListAssetBundlesUseCase;
+import br.com.ale.application.marketplace.query.ListAssetBundleItemsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUseCase;
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByListingUseCase;
 import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
@@ -14,6 +16,7 @@ import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseC
 import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.AccountService;
+import br.com.ale.service.asset.AssetBundleService;
 import br.com.ale.service.asset.AssetGenerationManager;
 import br.com.ale.service.asset.AssetGenerationService;
 import br.com.ale.service.asset.AssetService;
@@ -44,11 +47,16 @@ public class MarketplaceConfig {
     }
 
     @Bean
+    public AssetBundleService assetBundleService(ConnectionProvider connectionProvider) {
+        return new AssetBundleService(connectionProvider);
+    }
+
+    @Bean
     public AssetGenerationManager assetGenerationManager(
             AssetGenerationService assetGenerationService,
-            AssetService assetService
+            AssetBundleService assetBundleService
     ) {
-        return new AssetGenerationManager(assetGenerationService, assetService);
+        return new AssetGenerationManager(assetGenerationService, assetBundleService);
     }
 
     @Bean
@@ -71,6 +79,18 @@ public class MarketplaceConfig {
     @Bean
     public ListAssetsUseCase listAssetsUseCase(AssetService assetService) {
         return new ListAssetsUseCase(assetService);
+    }
+
+    @Bean
+    public ListAssetBundlesUseCase listAssetBundlesUseCase(AssetBundleService assetBundleService) {
+        return new ListAssetBundlesUseCase(assetBundleService);
+    }
+
+    @Bean
+    public ListAssetBundleItemsUseCase listAssetBundleItemsUseCase(
+            AssetBundleService assetBundleService
+    ) {
+        return new ListAssetBundleItemsUseCase(assetBundleService);
     }
 
     @Bean
