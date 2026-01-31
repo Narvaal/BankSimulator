@@ -38,13 +38,15 @@ public class AuthService {
     public AuthToken authenticate(CreateAuthenticationRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
+            if (tokenGenerator == null) {
+                throw new IllegalStateException("Token generator not configured");
+            }
 
             Credential credential =
                     credentialDAO.selectByDocument(conn, request.document())
                             .orElseThrow(() ->
                                     new InvalidCredentialsException(
-                                            "Invalid credential [document="
-                                                    + request.document() + "]"
+                                            "Invalid credentials"
                                     )
                             );
 
@@ -53,7 +55,7 @@ public class AuthService {
                     credential.getPasswordHash())
             ) {
                 throw new InvalidCredentialsException(
-                        "Invalid credential [document=" + request.document() + "]"
+                        "Invalid credentials"
                 );
             }
 
@@ -103,6 +105,9 @@ public class AuthService {
     }
 
     public TokenClaims validateToken(String token) {
+        if (tokenGenerator == null) {
+            throw new IllegalStateException("Token generator not configured");
+        }
         return tokenGenerator.validate(token);
     }
 }

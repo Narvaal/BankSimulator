@@ -11,6 +11,7 @@ import java.security.PublicKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.UUID;
 
 public class SimpleTokenGenerator implements TokenGenerator {
 
@@ -31,8 +32,12 @@ public class SimpleTokenGenerator implements TokenGenerator {
         Instant expiresAt =
                 Instant.now().plus(1, ChronoUnit.HOURS);
 
+        Instant issuedAt = Instant.now();
+        String tokenId = UUID.randomUUID().toString();
+
         String payload =
-                clientId + ":" + expiresAt.toEpochMilli();
+                clientId + ":" + issuedAt.toEpochMilli() + ":" +
+                        expiresAt.toEpochMilli() + ":" + tokenId;
 
         String signature =
                 SignatureService.sign(payload, privateKey);
@@ -74,12 +79,12 @@ public class SimpleTokenGenerator implements TokenGenerator {
             }
 
             String[] fields = payload.split(":");
-            if (fields.length != 2) {
+            if (fields.length != 4) {
                 throw new InvalidCredentialsException("Invalid token payload");
             }
 
             long clientId = Long.parseLong(fields[0]);
-            long expiresAtMillis = Long.parseLong(fields[1]);
+            long expiresAtMillis = Long.parseLong(fields[2]);
 
             Instant expiresAt =
                     Instant.ofEpochMilli(expiresAtMillis);

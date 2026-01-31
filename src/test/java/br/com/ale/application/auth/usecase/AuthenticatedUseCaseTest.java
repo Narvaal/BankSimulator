@@ -58,7 +58,10 @@ class AuthenticatedUseCaseTest {
     void shouldFailWhenTokenIsExpired() {
 
         String payload =
-                "10:" + Instant.now().minusSeconds(60).toEpochMilli();
+                "10:" +
+                        Instant.now().minusSeconds(120).toEpochMilli() + ":" +
+                        Instant.now().minusSeconds(60).toEpochMilli() + ":" +
+                        "token-id";
 
         String signature =
                 ((SimpleTokenGenerator) tokenGenerator)
