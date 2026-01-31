@@ -2,10 +2,12 @@ package br.com.ale.service.asset;
 
 import br.com.ale.dao.asset.AssetDAO;
 import br.com.ale.domain.asset.Asset;
+import br.com.ale.dto.AssetSummaryResponse;
 import br.com.ale.dto.CreateAssetRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class AssetService {
 
@@ -68,6 +70,14 @@ public class AssetService {
                             "[assetId=" + assetId + "]",
                     e
             );
+        }
+    }
+
+    public List<AssetSummaryResponse> listAssets() {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetDAO.selectAllSummaries(conn);
+        } catch (Exception e) {
+            throw new RuntimeException("Service error while selecting assets", e);
         }
     }
 }

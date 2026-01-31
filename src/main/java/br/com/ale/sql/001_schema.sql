@@ -41,7 +41,7 @@ CREATE TABLE asset
 (
     id           BIGSERIAL PRIMARY KEY,
     text         TEXT      NOT NULL UNIQUE,
-    total_supply INT       NOT NULL CHECK (total_supply > 0),
+    total_supply INT       NOT NULL CHECK (total_supply >= 0),
     created_at   TIMESTAMP NOT NULL DEFAULT now()
 );
 

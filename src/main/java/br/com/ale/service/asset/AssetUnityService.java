@@ -1,5 +1,6 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.dao.asset.AssetDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.dto.CreateAssetUnityRequest;
@@ -11,6 +12,7 @@ import java.util.List;
 public class AssetUnityService {
 
     private final ConnectionProvider connectionProvider;
+    private final AssetDAO assetDAO = new AssetDAO();
     private final AssetUnityDAO assetUnityDAO = new AssetUnityDAO();
 
     public AssetUnityService(
@@ -25,6 +27,13 @@ public class AssetUnityService {
             conn.setAutoCommit(false);
 
             try {
+                int updated = assetDAO.updateTotalSupply(conn, request.assetId(), 1);
+                if (updated == 0) {
+                    throw new RuntimeException(
+                            "Asset supply not available " +
+                                    "[assetId=" + request.assetId() + "]"
+                    );
+                }
 
                 AssetUnity asset = assetUnityDAO.insert(conn, request);
 

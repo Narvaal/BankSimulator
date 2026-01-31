@@ -3,15 +3,19 @@ package br.com.ale.application.config;
 import br.com.ale.application.marketplace.query.GetAssetByIdUseCase;
 import br.com.ale.application.marketplace.query.GetAssetListingByIdUseCase;
 import br.com.ale.application.marketplace.query.ListActiveAssetListingsUseCase;
+import br.com.ale.application.marketplace.query.ListAssetsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetListingsByOwnerUseCase;
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUseCase;
 import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByListingUseCase;
 import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
 import br.com.ale.application.marketplace.usecase.CancelAssetOfferUseCase;
 import br.com.ale.application.marketplace.usecase.CreateAssetOfferUseCase;
+import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseCase;
 import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.AccountService;
+import br.com.ale.service.asset.AssetGenerationManager;
+import br.com.ale.service.asset.AssetGenerationService;
 import br.com.ale.service.asset.AssetService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetUnityService;
@@ -35,6 +39,19 @@ public class MarketplaceConfig {
     }
 
     @Bean
+    public AssetGenerationService assetGenerationService() {
+        return new AssetGenerationService();
+    }
+
+    @Bean
+    public AssetGenerationManager assetGenerationManager(
+            AssetGenerationService assetGenerationService,
+            AssetService assetService
+    ) {
+        return new AssetGenerationManager(assetGenerationService, assetService);
+    }
+
+    @Bean
     public AssetUnityService assetUnityService(ConnectionProvider connectionProvider) {
         return new AssetUnityService(connectionProvider);
     }
@@ -49,6 +66,11 @@ public class MarketplaceConfig {
     @Bean
     public GetAssetByIdUseCase getAssetByIdUseCase(AssetService assetService) {
         return new GetAssetByIdUseCase(assetService);
+    }
+
+    @Bean
+    public ListAssetsUseCase listAssetsUseCase(AssetService assetService) {
+        return new ListAssetsUseCase(assetService);
     }
 
     @Bean
@@ -126,6 +148,19 @@ public class MarketplaceConfig {
                 accountService,
                 assetListingService,
                 assetUnityService,
+                authService
+        );
+    }
+
+    @Bean
+    public CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase(
+            AssetUnityService assetUnityService,
+            AccountService accountService,
+            AuthService authService
+    ) {
+        return new CreateAssetUnityForAccountUseCase(
+                assetUnityService,
+                accountService,
                 authService
         );
     }

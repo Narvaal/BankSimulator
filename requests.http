@@ -49,13 +49,27 @@ Content-Type: application/json
 }
 
 ### Account Deposit
-POST localhost:8080//accounts/5/deposit
+POST http://localhost:8080/accounts/5/deposit
 Content-Type: application/json
 
 {
   "amount": 500.00,
   "token": "NzoxNzY5ODMzMDE4MDQ4OjE3Njk4MzY2MTgwNDg6Yzg3ZmYwMTgtNTE3Yi00N2JmLThjMGMtOThlMDlhN2NmMWM3.bhMCkouqx0h+LrWQKhhKpS75dBM4RgnVqgNS/KRe3Sfe6tDvQ0lXulkJYYGc4qAd03Jjehm7V4941zA5Dda6XNCq1krY49RpRbl/qJAnXoNfV6zRdWNsM1iXvOdwbwjjMZ4ikH4uD6xn24BLmQfp48X0+zXGM13yMahjLJQlQIxnJiDb1e8Rw+pDo+OYqjlvnmvOkW33Z/5cRgQd2CYrJAvUPB0MiaCTAhxWl9A+5mbHHNaObaIY1/VvOKuwVuLCFd0OMfMHtWIiZ5kxKnHM3uAgdx9BLXfGWeX23bOlz0RG8IpttqPUdwDgLoJZaNXR5E9eu4gq3oLJVpEJqhejog=="
 }
+
+
+### Give assetUnity
+POST http://localhost:8080/assets/2/units
+Content-Type: application/json
+
+{
+  "ownerAccountId": 5,
+  "token": "NzoxNzY5ODM4MDkxNDY4OjE3Njk4NDE2OTE0Njg6YjNhZDZmNjItYTk1OC00MzEzLThiODItYWE2YWIyMTJjNDNk.aWasOhTl6BmD+EzuxA9ZwHXCP/kpCzg7eh5V0Dh9X6XnOinDE8rbUl8BRkKwz6N/tHE1S+JTFrb8BWk38Ifrah8zA98eKAPrZS2lVoWdrEZUu5XgNj27QCKnqG1aThZLIQ5istoD8WrrFizGbCryHT5zbNOpc70nMQeubpLh+hHAJPQLqIjDn9tVK5uhVoRMJsViqd76NcmtGJAlG88H67iQ1qL8+4i4yqB2bo+xEwpSTtdJjZ/kKl/N85jJsJxRWRXx6cwL/WMvLd0zTLBvRqW0Pbpg3+cYZ6ZA2kTE8yRo/cNkUTzw3jpnmluWNG7+Xyx3/tC4DeoQhAI/vfJ37g=="
+}
+
+### Generate Assets
+POST http://localhost:8080/admin/assets/generate
+X-Admin-Token: root
 
 ### Account Details
 GET http://localhost:8080/accounts/5
@@ -86,6 +100,9 @@ GET localhost:8080/asset-listings
 
 ### Get asset listing by owner
 GET localhost:8080/asset-listings?ownerId=5
+
+### Get assets
+GET localhost:8080/assets
 
 ### Get asset-units by owner
 GET localhost:8080//asset-units?ownerId=5
