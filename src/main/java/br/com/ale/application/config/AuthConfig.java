@@ -10,6 +10,7 @@ import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.infrastructure.db.DefaultConnectionProvider;
+import br.com.ale.infrastructure.db.SchemaInitializer;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.AccountService;
 import br.com.ale.service.auth.AuthService;
@@ -19,6 +20,7 @@ import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.account.AccountNumberGenerator;
 import br.com.ale.service.account.HashAccountNumberGenerator;
 import br.com.ale.service.crypto.FilePrivateKeyStorage;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.PrivateKeyStorage;
 import java.security.KeyPair;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +41,14 @@ public class AuthConfig {
             return new TestConnectionProvider();
         }
         return new DefaultConnectionProvider(url, user, password);
+    }
+
+    @Bean
+    public SchemaInitializer schemaInitializer(
+            ConnectionProvider connectionProvider,
+            @Value("${db.schema.auto-create:false}") boolean autoCreate
+    ) {
+        return new SchemaInitializer(connectionProvider, autoCreate);
     }
 
     @Bean
@@ -66,7 +76,12 @@ public class AuthConfig {
     }
 
     @Bean
-    public PrivateKeyStorage privateKeyStorage() {
+    public PrivateKeyStorage privateKeyStorage(
+            @Value("${db.use.test:false}") boolean useTestDb
+    ) {
+        if (useTestDb) {
+            return new InMemoryPrivateKeyStorage();
+        }
         return new FilePrivateKeyStorage();
     }
 
