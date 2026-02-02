@@ -20,7 +20,7 @@ public class ClientDAO {
     public long insert(Connection conn, CreateClientRequest request) {
 
         String sql = """
-                INSERT INTO client (name, document)
+                INSERT INTO client (name, email)
                 VALUES (?, ?)
                 """;
 
@@ -28,7 +28,7 @@ public class ClientDAO {
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setString(1, request.name());
-            stmt.setString(2, request.document());
+            stmt.setString(2, request.email());
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -36,7 +36,7 @@ public class ClientDAO {
 
                 throw new RuntimeException(
                         "Failed to insert client [name=" + request.name() +
-                                ", document=" + request.document() + "]"
+                                ", email=" + request.email() + "]"
                 );
             }
 
@@ -47,7 +47,7 @@ public class ClientDAO {
 
                 throw new RuntimeException(
                         "Failed to retrieve client id [name=" + request.name() +
-                                ", document=" + request.document() + "]"
+                                ", email=" + request.email() + "]"
                 );
             }
 
@@ -55,7 +55,7 @@ public class ClientDAO {
             throw new RuntimeException(
                     "Database error while inserting client " +
                             "[name=" + request.name() +
-                            ", document=" + request.document() + "]",
+                            ", email=" + request.email() + "]",
                     e
             );
         }
@@ -111,7 +111,7 @@ public class ClientDAO {
     public Optional<Client> selectById(Connection conn, long id) {
 
         String sql = """
-                SELECT id, name, document
+                SELECT id, name, email
                   FROM client
                  WHERE id = ?
                 """;
@@ -127,7 +127,7 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("document")
+                                    rs.getString("email")
                             )
                     );
                 }
@@ -144,17 +144,17 @@ public class ClientDAO {
         }
     }
 
-    public Optional<Client> selectByDocument(Connection conn, String document) {
+    public Optional<Client> selectByEmail(Connection conn, String email) {
 
         String sql = """
-                SELECT id, name, document
+                SELECT id, name, email
                   FROM client
-                 WHERE document = ?
+                 WHERE email = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, document);
+            stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
@@ -163,7 +163,7 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("document")
+                                    rs.getString("email")
                             )
                     );
                 }
@@ -174,7 +174,7 @@ public class ClientDAO {
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Database error while selecting client " +
-                            "[clientDocument=" + document + "]",
+                            "[clientEmail=" + email + "]",
                     e
             );
         }

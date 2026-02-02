@@ -105,7 +105,7 @@ class AccountServiceTest {
                 new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
         );
 
-        Client client = clientService.getClientByDocument(VALID_DOCUMENT);
+        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
         CreateAccountRequest request = new CreateAccountRequest(
                 client.getId(),
@@ -138,7 +138,7 @@ class AccountServiceTest {
                 new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
         );
 
-        Client client = clientService.getClientByDocument(VALID_DOCUMENT);
+        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
         CreateAccountRequest request = new CreateAccountRequest(
                 client.getId(),
@@ -162,7 +162,7 @@ class AccountServiceTest {
                 new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
         );
 
-        Client client = clientService.getClientByDocument(VALID_DOCUMENT);
+        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
         Account account = accountService.createAccount(
                 new CreateAccountRequest(
@@ -310,7 +310,7 @@ class AccountServiceTest {
                 new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
         );
 
-        Client client = clientService.getClientByDocument(VALID_DOCUMENT);
+        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
         return new CreateAccountRequest(
                 client.getId(),

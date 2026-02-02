@@ -1,4 +1,4 @@
 package br.com.ale.dto;
 
-public record CreateClientRequest(String name, String document) {
+public record CreateClientRequest(String name, String email) {
 }

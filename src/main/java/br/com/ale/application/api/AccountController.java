@@ -36,7 +36,7 @@ public class AccountController {
         CreateAccountCommand command =
                 new CreateAccountCommand(
                         request.name(),
-                        request.document(),
+                        request.email(),
                         request.password()
                 );
         return createAccountUseCase.execute(command);

@@ -132,7 +132,7 @@ class PurchaseAssetUseCaseTest {
         AuthToken buyerToken =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                buyerClient.getDocument(),
+                                buyerClient.getEmail(),
                                 "password"
                         )
                 );
@@ -246,7 +246,7 @@ class PurchaseAssetUseCaseTest {
         AuthToken attackerToken =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                attackerClient.getDocument(),
+                                attackerClient.getEmail(),
                                 "password"
                         )
                 );
@@ -305,7 +305,7 @@ class PurchaseAssetUseCaseTest {
         AuthToken buyerToken =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                buyerClient.getDocument(),
+                                buyerClient.getEmail(),
                                 "password"
                         )
                 );
@@ -338,7 +338,7 @@ class PurchaseAssetUseCaseTest {
 
         authService.register(
                 new CreateCredentialRequest(
-                        client.getDocument(),
+                        client.getEmail(),
                         "password"
                 )
         );

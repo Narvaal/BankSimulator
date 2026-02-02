@@ -47,18 +47,18 @@ class ClientServiceTest {
         Client client = clientService.createClient(validClient());
 
         assertEquals(VALID_NAME, client.getName());
-        assertEquals(VALID_DOCUMENT, client.getDocument());
+        assertEquals(VALID_DOCUMENT, client.getEmail());
     }
 
     @Test
-    void shouldSelectClientByDocument() {
+    void shouldSelectClientByEmail() {
         clientService.createClient(validClient());
 
         Client client =
-                clientService.getClientByDocument(VALID_DOCUMENT);
+                clientService.getClientByEmail(VALID_DOCUMENT);
 
         assertEquals(VALID_NAME, client.getName());
-        assertEquals(VALID_DOCUMENT, client.getDocument());
+        assertEquals(VALID_DOCUMENT, client.getEmail());
     }
 
     @Test
@@ -68,10 +68,10 @@ class ClientServiceTest {
         clientService.updateClient(validUpdate(client));
 
         Client updatedClient =
-                clientService.getClientByDocument(VALID_DOCUMENT);
+                clientService.getClientByEmail(VALID_DOCUMENT);
 
         assertEquals(UPDATED_NAME, updatedClient.getName());
-        assertEquals(VALID_DOCUMENT, updatedClient.getDocument());
+        assertEquals(VALID_DOCUMENT, updatedClient.getEmail());
     }
 
     @Test
@@ -101,7 +101,7 @@ class ClientServiceTest {
         assertNotNull(client);
         assertTrue(client.getId() > 0);
         assertEquals(VALID_NAME, client.getName());
-        assertEquals(VALID_DOCUMENT, client.getDocument());
+        assertEquals(VALID_DOCUMENT, client.getEmail());
     }
 
 

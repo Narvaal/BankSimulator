@@ -43,7 +43,7 @@ public class AuthService {
             }
 
             Credential credential =
-                    credentialDAO.selectByDocument(conn, request.document())
+                    credentialDAO.selectByEmail(conn, request.email())
                             .orElseThrow(() ->
                                     new InvalidCredentialsException(
                                             "Invalid credentials"
@@ -66,7 +66,7 @@ public class AuthService {
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while authentication client " +
-                            "[document=" + request.document() + "]",
+                            "[email=" + request.email() + "]",
                     e
             );
         }
@@ -76,10 +76,10 @@ public class AuthService {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            Client client = clientDAO.selectByDocument(conn, request.document())
+            Client client = clientDAO.selectByEmail(conn, request.email())
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Client not found [document=" + request.document() + "]"
+                                    "Client not found [email=" + request.email() + "]"
                             )
                     );
 
@@ -89,7 +89,7 @@ public class AuthService {
                     credentialDAO.insert(
                             conn,
                             client.getId(),
-                            client.getDocument(),
+                            client.getEmail(),
                             hashPassword
                     );
 
@@ -98,7 +98,7 @@ public class AuthService {
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while registering client " +
-                            "[document=" + request.document() + "]",
+                            "[email=" + request.email() + "]",
                     e
             );
         }

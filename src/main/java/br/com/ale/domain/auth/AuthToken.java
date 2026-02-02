@@ -10,11 +10,11 @@ public class AuthToken {
 
     public AuthToken(
             long clientID,
-            String document,
+            String email,
             Instant date
     ) {
         this.clientId = clientID;
-        this.token = validateToken(document);
+        this.token = validateToken(email);
         this.date = date;
     }
 

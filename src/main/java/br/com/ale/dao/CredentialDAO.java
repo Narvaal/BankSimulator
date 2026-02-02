@@ -11,16 +11,16 @@ import java.util.Optional;
 
 public class CredentialDAO {
 
-    public Optional<Credential> selectByDocument(Connection conn, String document) {
+    public Optional<Credential> selectByEmail(Connection conn, String email) {
 
         String sql = """
                 SELECT * FROM credential
-                WHERE document = ?
+                WHERE email = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, document);
+            stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -28,7 +28,7 @@ public class CredentialDAO {
                             new Credential(
                                     rs.getLong("id"),
                                     rs.getLong("client_id"),
-                                    rs.getString("document"),
+                                    rs.getString("email"),
                                     rs.getString("password_hash")
                             )
                     );
@@ -39,23 +39,23 @@ public class CredentialDAO {
         } catch (Exception e) {
             throw new RuntimeException(
                     "Database error while selecting credential ["
-                            + ", document=" + document + "]",
+                            + ", email=" + email + "]",
                     e
             );
         }
     }
 
-    public long insert(Connection conn, long clientId, String document, String passwordHash) {
+    public long insert(Connection conn, long clientId, String email, String passwordHash) {
 
         String sql = """
-                INSERT INTO credential (client_id, document, password_hash)
+                INSERT INTO credential (client_id, email, password_hash)
                 VALUES (?, ?, ?)
                 """;
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setLong(1, clientId);
-            stmt.setString(2, document);
+            stmt.setString(2, email);
             stmt.setString(3, passwordHash);
 
             int rowsAffected = stmt.executeUpdate();
@@ -63,7 +63,7 @@ public class CredentialDAO {
             if (rowsAffected == 0) {
                 throw new RuntimeException(
                         "Failed to insert credential [clientId=" + clientId
-                                + ", document=" + document + ", "
+                                + ", email=" + email + ", "
                                 + "passwordHash=" + passwordHash + "]"
                 );
             }
@@ -74,7 +74,7 @@ public class CredentialDAO {
                 }
                 throw new RuntimeException(
                         "Failed to retrieve credential id [clientId=" + clientId
-                                + ", document=" + document + ", "
+                                + ", email=" + email + ", "
                                 + "passwordHash=" + passwordHash + "]"
                 );
             }
@@ -82,7 +82,7 @@ public class CredentialDAO {
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Database error while inserting credential "
-                            + "[document=" + document + ", "
+                            + "[email=" + email + ", "
                             + "passwordHash=" + passwordHash + "]",
                     e
             );

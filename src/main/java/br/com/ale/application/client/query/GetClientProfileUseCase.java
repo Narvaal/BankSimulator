@@ -19,6 +19,6 @@ public class GetClientProfileUseCase {
     public ClientProfileResponse execute(String token) {
         TokenClaims claims = authService.validateToken(token);
         Client client = clientService.getClientById(claims.clientId());
-        return new ClientProfileResponse(client.getName(), client.getDocument());
+        return new ClientProfileResponse(client.getName(), client.getEmail());
     }
 }

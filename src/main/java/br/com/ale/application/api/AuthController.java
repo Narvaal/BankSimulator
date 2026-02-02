@@ -21,7 +21,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthToken login(@RequestBody CreateAuthenticationRequest request) {
-        LoginCommand command = new LoginCommand(request.document(), request.password());
+        LoginCommand command = new LoginCommand(request.email(), request.password());
         return loginUseCase.execute(command);
     }
 }

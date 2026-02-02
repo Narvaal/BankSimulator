@@ -117,7 +117,7 @@ class CreateAssetOfferUseCaseTest {
         AuthToken token =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                client.getDocument(),
+                                client.getEmail(),
                                 "password"
                         )
                 );
@@ -226,7 +226,7 @@ class CreateAssetOfferUseCaseTest {
         AuthToken attackerToken =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                attackerClient.getDocument(),
+                                attackerClient.getEmail(),
                                 "password"
                         )
                 );
@@ -259,7 +259,7 @@ class CreateAssetOfferUseCaseTest {
 
         authService.register(
                 new CreateCredentialRequest(
-                        client.getDocument(),
+                        client.getEmail(),
                         "password"
                 )
         );

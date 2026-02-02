@@ -119,7 +119,7 @@ class CancelAssetOfferUseCaseTest {
         AuthToken token =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                client.getDocument(),
+                                client.getEmail(),
                                 "password"
                         )
                 );
@@ -163,7 +163,7 @@ class CancelAssetOfferUseCaseTest {
 
         authService.register(
                 new CreateCredentialRequest(
-                        client.getDocument(),
+                        client.getEmail(),
                         "password"
                 )
         );
@@ -305,7 +305,7 @@ class CancelAssetOfferUseCaseTest {
         AuthToken attackerToken =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                attackerClient.getDocument(),
+                                attackerClient.getEmail(),
                                 "password"
                         )
                 );
@@ -360,7 +360,7 @@ class CancelAssetOfferUseCaseTest {
         AuthToken token =
                 authService.authenticate(
                         new CreateAuthenticationRequest(
-                                client.getDocument(),
+                                client.getEmail(),
                                 "password"
                         )
                 );

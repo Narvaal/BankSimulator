@@ -37,13 +37,13 @@ public class CreateAccountUseCase {
         Client client = clientService.createClient(
                 new CreateClientRequest(
                         command.name(),
-                        command.document()
+                        command.email()
                 )
         );
 
         authService.register(
                 new CreateCredentialRequest(
-                        command.document(),
+                        command.email(),
                         command.password()
                 )
         );

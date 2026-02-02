@@ -4,18 +4,18 @@ public class Credential {
 
     private final long id;
     private final long clientId;
-    private final String document;
+    private final String email;
     private final String passwordHash;
 
     public Credential(
             long id,
             long clientId,
-            String document,
+            String email,
             String passwordHash
     ) {
         this.id = id;
         this.clientId = clientId;
-        this.document = document;
+        this.email = email;
         this.passwordHash = passwordHash;
     }
 
@@ -23,8 +23,8 @@ public class Credential {
         return clientId;
     }
 
-    public String getDocument() {
-        return document;
+    public String getEmail() {
+        return email;
     }
 
     public String getPasswordHash() {

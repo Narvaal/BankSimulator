@@ -14,7 +14,7 @@ public class HashAccountNumberGenerator implements AccountNumberGenerator {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            String input = client.getDocument() + "|BANK|SALT";
+            String input = client.getEmail() + "|BANK|SALT";
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
 
             return PREFIX + bytesToHex(hash).substring(0, 12).toUpperCase();

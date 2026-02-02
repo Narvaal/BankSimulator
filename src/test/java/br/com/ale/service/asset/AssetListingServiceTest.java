@@ -67,7 +67,7 @@ class AssetListingServiceTest {
 
             long clientId;
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO client (name, document) VALUES (?, ?)",
+                    "INSERT INTO client (name, email) VALUES (?, ?)",
                     new String[]{"id"}
             )) {
                 stmt.setString(1, "Test Client");

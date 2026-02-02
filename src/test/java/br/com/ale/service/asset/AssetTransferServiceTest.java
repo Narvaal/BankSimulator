@@ -69,7 +69,7 @@ class AssetTransferServiceTest {
 
             long clientId;
             try (var stmt = conn.prepareStatement(
-                    "INSERT INTO client (name, document) VALUES (?, ?)",
+                    "INSERT INTO client (name, email) VALUES (?, ?)",
                     new String[]{"id"}
             )) {
                 stmt.setString(1, "Client " + suffix);

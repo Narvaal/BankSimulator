@@ -4,12 +4,12 @@ public class Client {
 
     private final long id;
     private final String name;
-    private final String document;
+    private final String email;
 
-    public Client(long id, String name, String document) {
+    public Client(long id, String name, String email) {
         this.id = id;
         this.name = validateName(name);
-        this.document = validateDocument(document);
+        this.email = validateEmail(email);
     }
 
     private String validateName(String name) {
@@ -21,13 +21,13 @@ public class Client {
         return name;
     }
 
-    private String validateDocument(String document) {
-        if (document == null || document.isBlank()) {
+    private String validateEmail(String email) {
+        if (email == null || email.isBlank()) {
             throw new IllegalArgumentException(
-                    "Client document cannot be blank" + "[document=" + document + "]"
+                    "Client email cannot be blank" + "[email=" + email + "]"
             );
         }
-        return document;
+        return email;
     }
 
     public long getId() {
@@ -38,7 +38,7 @@ public class Client {
         return name;
     }
 
-    public String getDocument() {
-        return document;
+    public String getEmail() {
+        return email;
     }
 }

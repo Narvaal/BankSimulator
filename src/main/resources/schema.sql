@@ -2,7 +2,7 @@ CREATE TABLE client
 (
     id         BIGSERIAL PRIMARY KEY,
     name       VARCHAR(255) NOT NULL,
-    document   VARCHAR(50)  NOT NULL UNIQUE,
+    email   VARCHAR(50)  NOT NULL UNIQUE,
     created_at TIMESTAMP    NOT NULL DEFAULT now()
 );
 
@@ -165,7 +165,7 @@ CREATE INDEX idx_asset_transfer_unit
 CREATE TABLE credential (
                             id BIGSERIAL PRIMARY KEY,
                             client_id BIGINT NOT NULL,
-                            document VARCHAR(50) NOT NULL,
+                            email VARCHAR(50) NOT NULL,
                             password_hash VARCHAR(255) NOT NULL,
                             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -174,8 +174,8 @@ CREATE TABLE credential (
                                     REFERENCES client(id)
                                     ON DELETE CASCADE,
 
-                            CONSTRAINT uk_credential_document
-                                UNIQUE (document),
+                            CONSTRAINT uk_credential_email
+                                UNIQUE (email),
 
                             CONSTRAINT uk_credential_client
                                 UNIQUE (client_id)

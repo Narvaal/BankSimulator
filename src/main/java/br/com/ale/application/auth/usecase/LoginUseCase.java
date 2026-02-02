@@ -16,7 +16,7 @@ public class LoginUseCase {
     public AuthToken execute(LoginCommand command) {
         return authService.authenticate(
                 new CreateAuthenticationRequest(
-                        command.document(),
+                        command.email(),
                         command.password()
                 )
         );

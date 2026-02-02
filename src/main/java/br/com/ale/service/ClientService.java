@@ -30,7 +30,7 @@ public class ClientService {
                 return new Client(
                         id,
                         request.name(),
-                        request.document()
+                        request.email()
                 );
 
             } catch (Exception e) {
@@ -42,7 +42,7 @@ public class ClientService {
             throw new RuntimeException(
                     "Service error while creating client " +
                             "[name=" + request.name() +
-                            ", document=" + request.document() + "]",
+                            ", email=" + request.email() + "]",
                     e
             );
         }
@@ -79,21 +79,21 @@ public class ClientService {
         }
     }
 
-    public Client getClientByDocument(String document) {
+    public Client getClientByEmail(String email) {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            return clientDAO.selectByDocument(conn, document)
+            return clientDAO.selectByEmail(conn, email)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Client not found [document=" + document + "]"
+                                    "Client not found [email=" + email + "]"
                             )
                     );
 
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting client " +
-                            "[document=" + document + "]",
+                            "[email=" + email + "]",
                     e
             );
         }
