@@ -7,12 +7,13 @@ import br.com.ale.domain.asset.Asset;
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
 import br.com.ale.domain.asset.ReasonType;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 
 
 import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetService;
@@ -96,7 +97,12 @@ class AssetPriceHistoryServiceTest {
                 clientService.createClient(
                         new CreateClientRequest(
                                 "Client " + System.nanoTime(),
-                                String.valueOf(System.nanoTime())
+                                String.valueOf(System.nanoTime()),
+                                "pass",
+                                Provider.LOCAL,
+                                null,
+                                false,
+                                null
                         )
                 );
 

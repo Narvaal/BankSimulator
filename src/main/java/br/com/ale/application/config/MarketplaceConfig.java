@@ -16,7 +16,7 @@ import br.com.ale.application.marketplace.usecase.CreateAssetOfferUseCase;
 import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseCase;
 import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
 import br.com.ale.infrastructure.db.ConnectionProvider;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.asset.AssetBundleService;
 import br.com.ale.service.asset.AssetGenerationManager;
 import br.com.ale.service.asset.AssetGenerationService;

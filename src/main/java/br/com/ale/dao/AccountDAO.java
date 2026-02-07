@@ -129,6 +129,44 @@ public class AccountDAO {
         }
     }
 
+    public Optional<Account> selectByClientId(Connection conn, long clientId) {
+
+        String sql = """
+                SELECT id,
+                       client_id,
+                       account_number,
+                       account_type,
+                       balance,
+                       status,
+                       public_key
+                  FROM account
+                 WHERE client_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, clientId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(
+                            mapRow(rs)
+                    );
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting account " +
+                            "[clientId=" + clientId + "]",
+                    e
+            );
+        }
+    }
+
     private static Account mapRow(ResultSet rs) throws SQLException {
 
         return new Account(

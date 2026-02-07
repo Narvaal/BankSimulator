@@ -4,6 +4,7 @@ import br.com.ale.domain.account.Account;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 
@@ -20,15 +21,28 @@ public class ClientDAO {
     public long insert(Connection conn, CreateClientRequest request) {
 
         String sql = """
-                INSERT INTO client (name, email)
-                VALUES (?, ?)
-                """;
+        INSERT INTO client (
+            name,
+            email,
+            password,
+            provider,
+            provider_id,
+            email_verified,
+            picture
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """;
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setString(1, request.name());
             stmt.setString(2, request.email());
+            stmt.setString(3, request.password());
+            stmt.setString(4, String.valueOf(request.provider()));
+            stmt.setString(5, request.providerId());
+            stmt.setBoolean(6, request.emailVerified());
+            stmt.setString(7, request.picture());
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -111,10 +125,16 @@ public class ClientDAO {
     public Optional<Client> selectById(Connection conn, long id) {
 
         String sql = """
-                SELECT id, name, email
-                  FROM client
-                 WHERE id = ?
-                """;
+          SELECT  id,
+                  name,
+                  email,
+                  password,
+                  provider,
+                  provider_id,
+                  email_verified,
+                  picture
+          FROM client WHERE id = ?
+          """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -127,7 +147,12 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("email")
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
                             )
                     );
                 }
@@ -147,10 +172,16 @@ public class ClientDAO {
     public Optional<Client> selectByEmail(Connection conn, String email) {
 
         String sql = """
-                SELECT id, name, email
-                  FROM client
-                 WHERE email = ?
-                """;
+          SELECT  id,
+                  name,
+                  email,
+                  password,
+                  provider,
+                  provider_id,
+                  email_verified,
+                  picture
+          FROM client WHERE email = ?
+          """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -163,7 +194,12 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("email")
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
                             )
                     );
                 }
@@ -175,6 +211,55 @@ public class ClientDAO {
             throw new RuntimeException(
                     "Database error while selecting client " +
                             "[clientEmail=" + email + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Client> selectByProviderAndId(Connection conn, Provider provider, String providerId) {
+
+        String sql = """
+          SELECT  id,
+                  name,
+                  email,
+                  password,
+                  provider,
+                  provider_id,
+                  email_verified,
+                  picture
+          FROM client WHERE provider = ? AND provider_id = ?
+          """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, String.valueOf(provider));
+            stmt.setString(2, providerId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(
+                            new Client(
+                                    rs.getLong("id"),
+                                    rs.getString("name"),
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
+                            )
+                    );
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting client " +
+                            "[provider=" + String.valueOf(provider) + ", "
+                            + "providerId=" + providerId + "]",
                     e
             );
         }

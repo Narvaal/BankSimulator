@@ -1,9 +1,15 @@
 CREATE TABLE client
 (
-    id         BIGSERIAL PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
-    email   VARCHAR(50)  NOT NULL UNIQUE,
-    created_at TIMESTAMP    NOT NULL DEFAULT now()
+    id              BIGSERIAL PRIMARY KEY,
+    name            VARCHAR(255),
+    email           VARCHAR(255) NOT NULL UNIQUE,
+    password        VARCHAR(255),
+    provider        VARCHAR(20) NOT NULL,
+    provider_id     VARCHAR(255),
+    email_verified  BOOLEAN NOT NULL DEFAULT false,
+    picture         TEXT,
+    created_at      TIMESTAMP NOT NULL DEFAULT now(),
+    CONSTRAINT uq_provider UNIQUE (provider, provider_id)
 );
 
 CREATE TABLE account

@@ -6,13 +6,15 @@ import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.asset.*;
 import br.com.ale.domain.auth.AuthToken;
+import br.com.ale.domain.auth.PasswordHasher;
 import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetService;
@@ -114,13 +116,13 @@ class CreateAssetOfferUseCaseTest {
 
         AssetUnity unity = createAssetUnity(owner);
 
-        AuthToken token =
-                authService.authenticate(
-                        new CreateAuthenticationRequest(
-                                client.getEmail(),
-                                "password"
-                        )
-                );
+
+        AuthToken token = authService.authenticate(
+                new CreateAuthenticationRequest(
+                        client.getEmail(),
+                        "pass"
+                )
+        );
 
         CreateAssetOfferCommand command =
                 new CreateAssetOfferCommand(
@@ -227,7 +229,7 @@ class CreateAssetOfferUseCaseTest {
                 authService.authenticate(
                         new CreateAuthenticationRequest(
                                 attackerClient.getEmail(),
-                                "password"
+                                "pass"
                         )
                 );
 
@@ -257,13 +259,6 @@ class CreateAssetOfferUseCaseTest {
                         )
                 );
 
-        authService.register(
-                new CreateCredentialRequest(
-                        client.getEmail(),
-                        "password"
-                )
-        );
-
         return account;
     }
 
@@ -286,10 +281,18 @@ class CreateAssetOfferUseCaseTest {
     }
 
     private Client createClient() {
+
+        String hashed = PasswordHasher.hash("pass");
+
         return clientService.createClient(
                 new CreateClientRequest(
                         "Client " + System.nanoTime(),
-                        String.valueOf(System.nanoTime())
+                        "client" + System.nanoTime() + "@test.com",
+                        hashed,
+                        Provider.LOCAL,
+                        null,
+                        false,
+                        null
                 )
         );
     }

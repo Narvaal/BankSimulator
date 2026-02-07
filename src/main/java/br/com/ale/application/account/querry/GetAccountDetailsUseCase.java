@@ -1,10 +1,10 @@
-package br.com.ale.application.account.usecase;
+package br.com.ale.application.account.querry;
 
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.AccountDetailsResponse;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.auth.AuthService;
 
 public class GetAccountDetailsUseCase {

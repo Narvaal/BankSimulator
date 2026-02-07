@@ -3,25 +3,25 @@ package br.com.ale.domain.auth;
 import java.time.Instant;
 
 public class AuthToken {
+
     private final long clientId;
     private final String token;
     private final Instant date;
 
-
     public AuthToken(
-            long clientID,
-            String email,
+            long clientId,
+            String token,
             Instant date
     ) {
-        this.clientId = clientID;
-        this.token = validateToken(email);
+        this.clientId = clientId;
+        this.token = validateToken(token);
         this.date = date;
     }
 
     private String validateToken(String token) {
-        if (token.isBlank()) {
+        if (token == null || token.isBlank()) {
             throw new IllegalArgumentException(
-                    "token cannot be blank" + "[token=" + token + "]"
+                    "token cannot be blank [token=" + token + "]"
             );
         }
         return token;
@@ -38,5 +38,4 @@ public class AuthToken {
     public Instant getDate() {
         return date;
     }
-
 }

@@ -7,7 +7,7 @@ import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.exception.InvalidAssetListingStateException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.CreateAssetPurchaseRequest;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;

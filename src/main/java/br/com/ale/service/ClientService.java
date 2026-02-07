@@ -2,19 +2,23 @@ package br.com.ale.service;
 
 import br.com.ale.dao.ClientDAO;
 import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.account.HashAccountNumberGenerator;
 
 import java.sql.Connection;
+import java.util.Optional;
 
 public class ClientService {
 
     private final ClientDAO clientDAO = new ClientDAO();
+    private final HashAccountNumberGenerator hashAccountNumberGenerator = new HashAccountNumberGenerator();
     private final ConnectionProvider connectionProvider;
-
     public ClientService(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
+
     }
 
     public Client createClient(CreateClientRequest request) {
@@ -30,7 +34,12 @@ public class ClientService {
                 return new Client(
                         id,
                         request.name(),
-                        request.email()
+                        request.email(),
+                        request.password(),
+                        request.provider(),
+                        request.providerId(),
+                        request.emailVerified(),
+                        request.picture()
                 );
 
             } catch (Exception e) {
@@ -94,6 +103,18 @@ public class ClientService {
             throw new RuntimeException(
                     "Service error while selecting client " +
                             "[email=" + email + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Client> getClientByProviderAndId(Provider provider, String providerId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.selectByProviderAndId(conn, provider,providerId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client " +
+                            "[providerId=" + providerId + "]",
                     e
             );
         }

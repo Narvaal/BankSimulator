@@ -4,10 +4,12 @@ import br.com.ale.domain.account.Account;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateAccountRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.SpyPrivateKeyStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,7 +104,8 @@ class AccountServiceTest {
     void shouldCreateAccountAndReturnId() {
 
         clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
+                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
+                        null, false, null)
         );
 
         Client client = clientService.getClientByEmail(VALID_DOCUMENT);
@@ -135,7 +138,8 @@ class AccountServiceTest {
         cleanDatabase(provider);
 
         clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
+                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
+                        null, false, null)
         );
 
         Client client = clientService.getClientByEmail(VALID_DOCUMENT);
@@ -159,7 +163,8 @@ class AccountServiceTest {
     void shouldPersistPublicKeyInDatabase() {
 
         clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
+                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
+                        null, false, null)
         );
 
         Client client = clientService.getClientByEmail(VALID_DOCUMENT);
@@ -307,7 +312,8 @@ class AccountServiceTest {
 
     private CreateAccountRequest validAccount() {
         clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
+                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL ,
+                        null, false, null)
         );
 
         Client client = clientService.getClientByEmail(VALID_DOCUMENT);

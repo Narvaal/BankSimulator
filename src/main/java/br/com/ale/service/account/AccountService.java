@@ -1,4 +1,4 @@
-package br.com.ale.service;
+package br.com.ale.service.account;
 
 import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.TransactionDAO;
@@ -8,6 +8,7 @@ import br.com.ale.domain.transaction.TransactionType;
 import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.SignatureService;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.crypto.PrivateKeyStorage;
 import br.com.ale.service.crypto.TransactionMessageBuilder;
@@ -17,6 +18,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.sql.Connection;
 import java.time.Instant;
+import java.util.Optional;
 
 public class AccountService {
 
@@ -103,6 +105,18 @@ public class AccountService {
             throw new RuntimeException(
                     "Service error while selecting account " +
                             "[accountId=" + accountId + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Account> getAccountByClientId(long clientId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.selectById(conn, clientId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting account " +
+                            "[clientId=" + clientId + "]",
                     e
             );
         }

@@ -4,7 +4,7 @@ import br.com.ale.application.account.command.DepositAccountCommand;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.auth.AuthService;
 import java.math.BigDecimal;
 

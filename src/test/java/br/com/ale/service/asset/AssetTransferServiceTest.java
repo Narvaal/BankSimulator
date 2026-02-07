@@ -1,17 +1,21 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.asset.Asset;
 import br.com.ale.domain.asset.AssetTransfer;
 import br.com.ale.domain.asset.AssetUnity;
-import br.com.ale.dto.CreateAssetRequest;
-import br.com.ale.dto.CreateAssetTransferRequest;
-import br.com.ale.dto.CreateAssetUnityRequest;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
+import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.ClientService;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,6 +26,9 @@ class AssetTransferServiceTest {
     private AssetService assetService;
     private AssetUnityService assetUnityService;
     private AssetTransferService assetTransferService;
+    private AccountService accountService;
+    private ClientService clientService;
+    private InMemoryPrivateKeyStorage inMemoryPrivateKeyStorage;
     private AssetWebhookNotifier webhookNotifier;
 
     private long fromAccountId;
@@ -35,6 +42,9 @@ class AssetTransferServiceTest {
         assetService = new AssetService(provider);
         assetUnityService = new AssetUnityService(provider, webhookNotifier);
         assetTransferService = new AssetTransferService(provider, webhookNotifier);
+        inMemoryPrivateKeyStorage = new InMemoryPrivateKeyStorage();
+        accountService = new AccountService(provider, inMemoryPrivateKeyStorage);
+        clientService = new ClientService(provider);
 
         cleanDatabase();
         createAccounts();
@@ -64,55 +74,22 @@ class AssetTransferServiceTest {
         toAccountId = createAccount("TO");
     }
 
-    private long createAccount(String suffix) {
-        try (var conn = provider.getConnection()) {
+    private long createAccount(String email) {
+        Client client = clientService.createClient(
+                new CreateClientRequest("john", email, "123", Provider.LOCAL,
+                        null, false, null)
+        );
 
-            long clientId;
-            try (var stmt = conn.prepareStatement(
-                    "INSERT INTO client (name, email) VALUES (?, ?)",
-                    new String[]{"id"}
-            )) {
-                stmt.setString(1, "Client " + suffix);
-                stmt.setString(2, "DOC-" + suffix);
-                stmt.executeUpdate();
+        Account account = accountService.createAccount(
+                new CreateAccountRequest(
+                        client.getId(),
+                        "999999999" + email,
+                        AccountType.DEFAULT,
+                        AccountStatus.ACTIVE
+                )
+        );
 
-                try (var rs = stmt.getGeneratedKeys()) {
-                    rs.next();
-                    clientId = rs.getLong(1);
-                }
-            }
-
-            try (var stmt = conn.prepareStatement(
-                    """
-                            INSERT INTO account (
-                                client_id,
-                                account_number,
-                                account_type,
-                                status,
-                                balance,
-                                public_key
-                            )
-                            VALUES (?, ?, ?, ?, ?, ?)
-                            """,
-                    new String[]{"id"}
-            )) {
-                stmt.setLong(1, clientId);
-                stmt.setString(2, "ACC-" + suffix);
-                stmt.setString(3, "WALLET");
-                stmt.setString(4, "ACTIVE");
-                stmt.setBigDecimal(5, new BigDecimal("1000.00"));
-                stmt.setString(6, "pk-" + suffix);
-                stmt.executeUpdate();
-
-                try (var rs = stmt.getGeneratedKeys()) {
-                    rs.next();
-                    return rs.getLong(1);
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return account.getId();
     }
 
     private AssetUnity createAssetUnity() {

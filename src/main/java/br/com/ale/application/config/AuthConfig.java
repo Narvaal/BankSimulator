@@ -1,9 +1,10 @@
 package br.com.ale.application.config;
 
-import br.com.ale.application.auth.usecase.LoginUseCase;
+import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
+import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
 import br.com.ale.application.account.usecase.DepositAccountUseCase;
-import br.com.ale.application.account.usecase.GetAccountDetailsUseCase;
+import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.client.query.GetClientProfileUseCase;
 import br.com.ale.application.transaction.query.ListTransfersByAccountUseCase;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
@@ -12,10 +13,12 @@ import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.infrastructure.db.DefaultConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.TransactionService;
 import br.com.ale.service.ClientService;
+import br.com.ale.service.auth.GoogleTokenVerifier;
+import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.account.AccountNumberGenerator;
 import br.com.ale.service.account.HashAccountNumberGenerator;
@@ -71,8 +74,8 @@ public class AuthConfig {
     }
 
     @Bean
-    public LoginUseCase loginUseCase(AuthService authService) {
-        return new LoginUseCase(authService);
+    public LocalLoginUseCase loginUseCase(ClientService clientService, JwtService jwtService) {
+        return new LocalLoginUseCase(clientService, jwtService);
     }
 
     @Bean
@@ -108,13 +111,32 @@ public class AuthConfig {
             AccountService accountService,
             ClientService clientService,
             AccountNumberGenerator accountNumberGenerator,
-            AuthService authService
+            JwtService JwtService
     ) {
         return new CreateAccountUseCase(
                 accountService,
                 clientService,
                 accountNumberGenerator,
-                authService
+                JwtService
+        );
+    }
+
+    @Bean
+    public GoogleLoginUseCase googleLoginUseCase (
+            AccountNumberGenerator accountNumberGenerator,
+            AccountService accountService,
+            ClientService clientService,
+            JwtService jwtService,
+            GoogleTokenVerifier googleTokenVerifier,
+            @Value("${google.client-id}") String googleClientId
+    ) {
+        return new GoogleLoginUseCase(
+                accountNumberGenerator,
+                accountService,
+                clientService,
+                jwtService,
+                googleTokenVerifier,
+                googleClientId
         );
     }
 

@@ -1,5 +1,6 @@
 package br.com.ale.application.marketplace.usecase;
 
+import br.com.ale.application.marketplace.command.CreateAssetBundleCommand;
 import br.com.ale.dto.AssetBundleResponse;
 import br.com.ale.dto.CreateAssetRequest;
 import br.com.ale.service.asset.AssetBundleService;
@@ -14,9 +15,8 @@ public class CreateAssetBundleUseCase {
     }
 
     public AssetBundleResponse execute(
-            List<CreateAssetRequest> assetRequests,
-            String identifier
+            CreateAssetBundleCommand command
     ) {
-        return assetBundleService.createBundle(assetRequests, identifier);
+        return assetBundleService.createBundle(command.assetRequests(), command.identifier());
     }
 }

@@ -1,11 +1,18 @@
 package br.com.ale.application.api;
 
 import br.com.ale.application.account.command.CreateAccountCommand;
-import br.com.ale.application.account.usecase.GetAccountDetailsUseCase;
+import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
+import br.com.ale.application.auth.command.GoogleLoginCommand;
+import br.com.ale.application.auth.command.LocalLoginCommand;
+import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.domain.account.Account;
+import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.dto.AccountDetailsResponse;
+import br.com.ale.dto.AuthResponse;
 import br.com.ale.dto.CreateAccountApiRequest;
+import br.com.ale.infrastructure.auth.AuthCookieService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,24 +29,31 @@ public class AccountController {
 
     private final CreateAccountUseCase createAccountUseCase;
     private final GetAccountDetailsUseCase getAccountDetailsUseCase;
+    private final AuthCookieService authCookieService;
 
     public AccountController(
             CreateAccountUseCase createAccountUseCase,
-            GetAccountDetailsUseCase getAccountDetailsUseCase
-    ) {
+            GetAccountDetailsUseCase getAccountDetailsUseCase,
+            AuthCookieService authCookieService) {
         this.createAccountUseCase = createAccountUseCase;
         this.getAccountDetailsUseCase = getAccountDetailsUseCase;
+        this.authCookieService = authCookieService;
     }
 
     @PostMapping
-    public Account create(@RequestBody CreateAccountApiRequest request) {
-        CreateAccountCommand command =
+    public AuthResponse create(@RequestBody CreateAccountApiRequest request,
+                               HttpServletResponse response) {
+        AuthToken authToken = createAccountUseCase.execute(
                 new CreateAccountCommand(
                         request.name(),
                         request.email(),
                         request.password()
-                );
-        return createAccountUseCase.execute(command);
+                )
+        );
+
+        authCookieService.addAuthCookie(response, authToken.getToken());
+
+        return new AuthResponse(authToken.getClientId(), "Authenticated");
     }
 
     @GetMapping("/{id}")

@@ -1,5 +1,7 @@
 package br.com.ale.application.api;
 
+import br.com.ale.application.marketplace.command.CreateAssetBundleCommand;
+import br.com.ale.application.marketplace.command.CreateAssetUnityForAccountCommand;
 import br.com.ale.application.marketplace.query.GetAssetByIdUseCase;
 import br.com.ale.application.marketplace.query.ListAssetsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetBundlesUseCase;
@@ -68,10 +70,11 @@ public class AssetQueryController {
     ) {
         String token = extractToken(authorization, request.token());
         return createAssetUnityForAccountUseCase.execute(
-                assetId,
-                request.ownerAccountId(),
-                token
-        );
+                    new CreateAssetUnityForAccountCommand(
+                    assetId,
+                    request.ownerAccountId(),
+                    token
+                ));
     }
 
     @GetMapping
@@ -86,7 +89,7 @@ public class AssetQueryController {
 
     @PostMapping("/bundles")
     public AssetBundleResponse createBundle(@RequestBody CreateAssetBundleApiRequest request) {
-        return createAssetBundleUseCase.execute(request.assets(), request.identifier());
+        return createAssetBundleUseCase.execute(new CreateAssetBundleCommand(request.assets(), request.identifier()));
     }
 
     @GetMapping("/bundles/{id}/items")

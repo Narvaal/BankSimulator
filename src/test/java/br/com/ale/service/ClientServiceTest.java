@@ -1,6 +1,7 @@
 package br.com.ale.service;
 
 import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
@@ -95,7 +96,14 @@ class ClientServiceTest {
     void shouldCreateClientAndReturnGeneratedId() {
 
         Client client = clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT)
+                new CreateClientRequest(VALID_NAME,
+                        VALID_DOCUMENT,
+                        "pass",
+                        Provider.LOCAL,
+                        null,
+                        false,
+                        null
+                )
         );
 
         assertNotNull(client);
@@ -108,7 +116,12 @@ class ClientServiceTest {
     private CreateClientRequest validClient() {
         return new CreateClientRequest(
                 VALID_NAME,
-                VALID_DOCUMENT
+                VALID_DOCUMENT,
+                "pass",
+                Provider.LOCAL,
+                null,
+                false,
+                null
         );
     }
 

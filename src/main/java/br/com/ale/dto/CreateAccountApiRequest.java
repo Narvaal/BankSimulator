@@ -1,4 +1,7 @@
 package br.com.ale.dto;
 
-public record CreateAccountApiRequest(String name, String email, String password) {
+import br.com.ale.domain.client.Provider;
+
+public record CreateAccountApiRequest(String name, String email, String password, Provider provider,
+                                      String providerId, boolean emailVerified, String picture) {
 }
