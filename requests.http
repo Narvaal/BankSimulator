@@ -21,26 +21,22 @@ Content-Type: application/json
 }
 
 ### Purchase asset
-POST http://localhost:8080/asset-listings/1/purchase
+POST http://localhost:8080/asset-listings/10/purchase
 Content-Type: application/json
-Authorization: Bearer MjoxNzY5ODkzMTgxOTQzOjE3Njk4OTY3ODE5NDM6OTg3MjBjZjUtYzdjYy00YzkzLWFjODktMTMzYTYzY2Y3MmU3.a4fvnjDP/4NsWCbi3S8slfTV5l/V/W4SWyrVxYVVSXSaR0YJoRuPxlPm5JjjTxH4KfdpL4Aiqcp/usp9UgUFP/bsS1MFvXUb/feMQvDXzhdSkEIsiI9wZaLtFVK01RA0xwZgZL4BeMazMKJtqtnUef4ueiy4It1EYlKFGwnL3bDPPpXsRvdjIT/i0HGiqoPYep4Ir1UzFcvayX0ORk6MrWqw77yTqgjcspUAo28oUJmOeM2lrQtcvguocSEl3U/qAs3rw4FtiLiWOusxF4GuccEk/V1vV8f4o4+rrVV4amj3tyPOTapuqyjMDAOsPsnbK+kAPrwVmgkeStQ3zlxxxg==
-
-{
-  "buyerAccountId": 2
-}
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcxMTI0NjAwLCJleHAiOjE3NzEyMTEwMDB9.fv1h2bJgHZ4--BpXmpxrCgzMN-_Vo5eyfstxYxzi_ms
 
 ### Post assetOffer
 POST http://localhost:8080/asset-offers
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcwOTU1MDczLCJleHAiOjE3NzEwNDE0NzN9.cZEkBYO2lemqQz5lGFGcHlRMpQVWewleF6qOY9iMN78
 
 {
   "assetUnityId": 1,
-  "price": 200.00,
-  "token": "MToxNzY5ODkyNjgwOTA1OjE3Njk4OTYyODA5MDU6YzAwNzRhOTgtZDk3MS00OGQwLThlMDUtM2Y5YzgyMTE1Yjdi.jglqagABEbtCTYmHJH3ZYJDW+39uWLswDOyvjp4WY1YZNuBUgkJKI/yWP8hp3gMEghukHTz8pWsZGkMvJQwt6z0RCaVRXKmIIv/ooMkrzQhSVzPJVbHIBzqdi+r1llukS/bz8nLphW7WFv0Q+ERx+//d2e9eCJ7R8jFb9Szcr8dPPRE+KKEsJpNhCzf7HNUxHvU/inVylC+y0/XZAZHAcyDPtkPoXp0cQ910xDp1C3Ua6iq2hcgNvFUub/NAJm5Fp3GpCCZCbg7ntABKxFEFMtkkVuMENNtiKAyToooi5pH7idSkb51+NFj1qspFKjg5IM0F1VLM36oua69IQ1C42g=="
+  "price": 200.00
 }
 
 ### Cancel assetOffer
-POST http://localhost:8080/asset-offers/4/cancel
+POST http://localhost:8080/asset-offers/5/cancel
 Content-Type: application/json
 
 {
@@ -53,17 +49,17 @@ POST http://localhost:8080/accounts/2/deposit
 Content-Type: application/json
 
 {
-  "amount": 500.00,
-  "token": "MjoxNzY5ODkzMDUyNzA1OjE3Njk4OTY2NTI3MDU6M2YzYmY2MWQtYTgyMy00YmQ2LTgwODktNjA4YjBkYTlmYTE5.HXCuQT60TqsOP2dcvwubIC0n2PEcREVw/btD9tv9gQpg5HSydYfSZZ3/L0XiKga11aBxNgDP/5/Q/m48VCHfPuFaZ/a/cwypgY8oZ5xuqIprFtEtPpuJxqjH+IGQbRtD8PTP7BZdjcnD/JYByqxb6g3EnNNyeq5kAyhP6RdZ5Rlo61ZHA7nF96wpreFi+m8yV/uUbGS7gGn2grhQ6VdhjWxvB9YqqVsv/PRHurKQO6uPZlGl14j7nh8JlY2xI3zdOoJ4GNarsBzVT6/H8yB7mK4bt53KULLWxEM9Vv4D/T8GANpEOpWbBfsKN7e9Thg5Md4i44cfsNair1w3w60I7Q=="
+  "amount": 1.00,
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxMTg4MjgzLCJleHAiOjE3NzEyNzQ2ODN9.-AAB07ASSlLNZRSWQsO6VzwTUwD0siGxClaLsZKV-hM"
 }
 
 ### Give assetUnity
-POST http://localhost:8080/assets/1/units
+POST http://localhost:8080/assets/4/units
 Content-Type: application/json
 
 {
-  "ownerAccountId": 1,
-  "token": "MToxNzY5ODkyNjgwOTA1OjE3Njk4OTYyODA5MDU6YzAwNzRhOTgtZDk3MS00OGQwLThlMDUtM2Y5YzgyMTE1Yjdi.jglqagABEbtCTYmHJH3ZYJDW+39uWLswDOyvjp4WY1YZNuBUgkJKI/yWP8hp3gMEghukHTz8pWsZGkMvJQwt6z0RCaVRXKmIIv/ooMkrzQhSVzPJVbHIBzqdi+r1llukS/bz8nLphW7WFv0Q+ERx+//d2e9eCJ7R8jFb9Szcr8dPPRE+KKEsJpNhCzf7HNUxHvU/inVylC+y0/XZAZHAcyDPtkPoXp0cQ910xDp1C3Ua6iq2hcgNvFUub/NAJm5Fp3GpCCZCbg7ntABKxFEFMtkkVuMENNtiKAyToooi5pH7idSkb51+NFj1qspFKjg5IM0F1VLM36oua69IQ1C42g=="
+  "ownerAccountId": 2,
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxMTE2Njc4LCJleHAiOjE3NzEyMDMwNzh9.zexBnoXAr0EqASgb9nGKKeoYsu2BupEe7Ay-g2fpfeI"
 }
 
 ### Create Asset bundle
@@ -90,8 +86,8 @@ POST http://localhost:8080/admin/assets/generate
 X-Admin-Token: root
 
 ### Account Details
-GET http://localhost:8080/accounts/5
-Authorization: Bearer NzoxNzY5ODMzNzAyNTIwOjE3Njk4MzczMDI1MjA6YTkxNjljYjQtODhjZi00OTE3LWI2YzQtZjk5OWQ4OWUxZGZh.St00T3bYU6l52M2ZwNI4Zqut6Q8SAr6YbHCFAQHI1G7fnErsJwoZ8EKlQgnQsNA0wufZS/5d5OPUBUKRj5/XRuVDspBZQVMIvj432IgiTy/zd6ub63ATdbwm9tv+EVUBpyhv+3mXLLlgN93Uqmt+AZcvU09brZDwHGqG83ajpebSgYYDMSX9O5ZWCNKtj1zmb/e0vScUWTF5iUEMTcFx1KPvg33akInYuxYEFWNiPC830tib5OYgBf0HtjJOT9tJwdX2OXAxQxv5uDAVnCOXLJmFy0CygWZ3v1e2FiJw36Mjo5/8D/5AdSKxWGlwTNxQJS4aDQrE254anvif4IsZOA==
+GET http://localhost:8080/accounts/me
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxMDE5OTAxLCJleHAiOjE3NzExMDYzMDF9.dyGIklwrkeri6khTPt-x89PsMMWnTUymBKPtOJlLjHk
 
 ### Client details
 GET http://localhost:8080/clients/me
@@ -117,10 +113,10 @@ GET localhost:8080/asset-listings/1
 GET localhost:8080/asset-listings
 
 ### Get asset listing by owner
-GET localhost:8080/asset-listings?ownerId=5
+GET localhost:8080/asset-listings?ownerId=2
 
 ### Get assets
 GET localhost:8080/assets
 
 ### Get asset-units by owner
-GET localhost:8080//asset-units?ownerId=5
+GET localhost:8080/asset-units?ownerId=1

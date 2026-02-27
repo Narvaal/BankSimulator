@@ -26,6 +26,8 @@ import br.com.ale.service.crypto.FilePrivateKeyStorage;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.PrivateKeyStorage;
 import java.security.KeyPair;
+
+import io.jsonwebtoken.Jwt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -143,17 +145,17 @@ public class AuthConfig {
     @Bean
     public DepositAccountUseCase depositAccountUseCase(
             AccountService accountService,
-            AuthService authService
+            JwtService jwtService
     ) {
-        return new DepositAccountUseCase(accountService, authService);
+        return new DepositAccountUseCase(accountService, jwtService);
     }
 
     @Bean
     public GetAccountDetailsUseCase getAccountDetailsUseCase(
             AccountService accountService,
-            AuthService authService
+            JwtService jwtService
     ) {
-        return new GetAccountDetailsUseCase(accountService, authService);
+        return new GetAccountDetailsUseCase(accountService, jwtService);
     }
 
     @Bean

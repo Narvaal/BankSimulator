@@ -1,32 +1,28 @@
 package br.com.ale.application.account.querry;
 
 import br.com.ale.domain.account.Account;
-import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.service.account.AccountService;
-import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 
 public class GetAccountDetailsUseCase {
 
     private final AccountService accountService;
-    private final AuthService authService;
+    private final JwtService jwtService;
 
-    public GetAccountDetailsUseCase(AccountService accountService, AuthService authService) {
+    public GetAccountDetailsUseCase(AccountService accountService, JwtService jwtService) {
         this.accountService = accountService;
-        this.authService = authService;
+        this.jwtService = jwtService;
     }
 
-    public AccountDetailsResponse execute(long accountId, String token) {
-        TokenClaims claims = authService.validateToken(token);
-        Account account = accountService.getAccountById(accountId);
+    public AccountDetailsResponse execute(String token) {
 
-        if (claims.clientId() != account.getClientId()) {
-            throw new UnauthorizedOperationException(
-                    "Authenticated client does not own this account"
-            );
-        }
+        long clientId = jwtService.extractClientId(token);
 
-        return accountService.getAccountDetailsById(accountId);
+        Account account = accountService.getAccountByClientId(clientId).orElseThrow(
+                () -> new UnauthorizedOperationException("Account not found"));
+
+        return accountService.getAccountDetailsById(account.getId());
     }
 }

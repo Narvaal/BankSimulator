@@ -64,16 +64,15 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            return isTokenExpired(token);
+            return !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }
     }
 
     private boolean isTokenExpired(String token) {
-        return !extractExpiration(token).isBefore(Instant.now());
+        return extractExpiration(token).isBefore(Instant.now());
     }
-
 
     private Claims extractAllClaims(String token) {
         try {

@@ -20,6 +20,7 @@ import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetService;
 import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
@@ -44,6 +45,7 @@ class CreateAssetOfferUseCaseTest {
 
     private AuthService authService;
     private CreateAssetOfferUseCase useCase;
+    private JwtService jwtService;
 
     @BeforeEach
     void setup() {
@@ -108,10 +110,9 @@ class CreateAssetOfferUseCaseTest {
         authService = new AuthService(provider, tokenGenerator);
 
         useCase = new CreateAssetOfferUseCase(
-                accountService,
                 assetListingService,
                 assetUnityService,
-                authService
+                jwtService
         );
 
         AssetUnity unity = createAssetUnity(owner);
@@ -166,10 +167,9 @@ class CreateAssetOfferUseCaseTest {
         authService = new AuthService(provider, tokenGenerator);
 
         useCase = new CreateAssetOfferUseCase(
-                accountService,
                 assetListingService,
                 assetUnityService,
-                authService
+                jwtService
         );
 
         AssetUnity unity = createAssetUnity(owner);
@@ -217,10 +217,9 @@ class CreateAssetOfferUseCaseTest {
         authService = new AuthService(provider, tokenGenerator);
 
         useCase = new CreateAssetOfferUseCase(
-                accountService,
                 assetListingService,
                 assetUnityService,
-                authService
+                jwtService
         );
 
         AssetUnity unity = createAssetUnity(owner);

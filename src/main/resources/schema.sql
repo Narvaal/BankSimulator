@@ -75,11 +75,20 @@ CREATE TABLE asset_bundle_item
             ON DELETE CASCADE
 );
 
+CREATE TYPE asset_unit_status AS ENUM (
+    'AVAILABLE',
+    'IN_MARKET',
+    'RESERVED',
+    'TRANSFERRING'
+);
+
 CREATE TABLE asset_unit
 (
     id               BIGSERIAL PRIMARY KEY,
     asset_id         BIGINT    NOT NULL,
     owner_account_id BIGINT    NOT NULL,
+    status           asset_unit_status NOT NULL DEFAULT 'AVAILABLE',
+    locked_at        TIMESTAMP NULL,
     created_at       TIMESTAMP NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_asset_unit_asset

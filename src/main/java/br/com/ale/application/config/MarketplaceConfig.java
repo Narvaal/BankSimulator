@@ -24,6 +24,7 @@ import br.com.ale.service.asset.AssetService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;
 import br.com.ale.service.marketplace.AssetPurchaseService;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
@@ -156,14 +157,14 @@ public class MarketplaceConfig {
             AssetListingService assetListingService,
             AssetPurchaseService assetPurchaseService,
             AssetPriceHistoryService assetPriceHistoryService,
-            AuthService authService
+            JwtService jwtService
     ) {
         return new PurchaseAssetUseCase(
                 accountService,
                 assetListingService,
                 assetPurchaseService,
                 assetPriceHistoryService,
-                authService
+                jwtService
         );
     }
 
@@ -183,29 +184,24 @@ public class MarketplaceConfig {
 
     @Bean
     public CreateAssetOfferUseCase createAssetOfferUseCase(
-            AccountService accountService,
             AssetListingService assetListingService,
             AssetUnityService assetUnityService,
-            AuthService authService
+            JwtService jwtService
     ) {
         return new CreateAssetOfferUseCase(
-                accountService,
                 assetListingService,
                 assetUnityService,
-                authService
+                jwtService
         );
     }
 
     @Bean
     public CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase(
             AssetUnityService assetUnityService,
-            AccountService accountService,
-            AuthService authService
-    ) {
+            JwtService jwtService) {
         return new CreateAssetUnityForAccountUseCase(
                 assetUnityService,
-                accountService,
-                authService
+                jwtService
         );
     }
 

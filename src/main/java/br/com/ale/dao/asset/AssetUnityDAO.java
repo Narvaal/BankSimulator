@@ -1,12 +1,11 @@
 package br.com.ale.dao.asset;
 
 import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.asset.AssetUnityStatus;
 import br.com.ale.dto.CreateAssetUnityRequest;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +65,8 @@ public class AssetUnityDAO {
                 SELECT id,
                        asset_id,
                        owner_account_id,
+                       status,
+                       locked_at,
                        created_at
                   FROM asset_unit
                  WHERE id = ?
@@ -95,16 +96,23 @@ public class AssetUnityDAO {
         }
     }
 
+    private static Instant getInstantOrNull(ResultSet rs, String column) throws SQLException {
+        Timestamp ts = rs.getTimestamp(column);
+        return ts != null ? ts.toInstant() : null;
+    }
+
     private static AssetUnity mapRow(ResultSet rs) throws SQLException {
         return new AssetUnity(
                 rs.getLong("id"),
                 rs.getLong("asset_id"),
                 rs.getLong("owner_account_id"),
-                rs.getTimestamp("created_at").toInstant()
+                AssetUnityStatus.valueOf(rs.getString("status")),
+                getInstantOrNull(rs, "locked_at"),
+                getInstantOrNull(rs, "created_at")
         );
     }
 
-    public int updateOwner(Connection conn, long assetId, long ownerAccount) {
+    public void updateOwner(Connection conn, long assetId, long ownerAccount) {
 
         String sql = """
                 UPDATE asset_unit
@@ -117,7 +125,7 @@ public class AssetUnityDAO {
             stmt.setLong(1, ownerAccount);
             stmt.setLong(2, assetId);
 
-            return stmt.executeUpdate();
+            stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(
@@ -128,14 +136,103 @@ public class AssetUnityDAO {
         }
     }
 
+    public Optional<AssetUnity> selectByIdForUpdate(Connection conn, long id) {
+
+        String sql = """
+        SELECT id,
+            asset_id,
+            owner_account_id,
+            status,
+            locked_at,
+            created_at
+        FROM asset_unit
+        WHERE id = ?
+        FOR UPDATE
+    """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+
+                return Optional.of(mapRow(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error locking assetUnity id=" + id, e);
+        }
+    }
+
+    public boolean tryUpdateToMarket(Connection conn, long id) {
+
+        String sql = """
+        UPDATE asset_unit
+           SET status = 'IN_MARKET'
+         WHERE id = ?
+           AND status = 'AVAILABLE'
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, id);
+
+            return stmt.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to reserve asset unity [id=" + id + "]",
+                    e
+            );
+        }
+    }
+
+    public boolean tryTransferOwnership(
+            Connection conn,
+            long id,
+            long sellerAccountId,
+            long buyerAccountId
+    ) {
+
+        String sql = """
+        UPDATE asset_unit
+           SET owner_account_id = ?,
+               status = 'AVAILABLE'
+         WHERE id = ?
+           AND owner_account_id = ?
+           AND status = 'IN_MARKET'
+        """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, buyerAccountId);
+            stmt.setLong(2, id);
+            stmt.setLong(3, sellerAccountId);
+
+            return stmt.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to transfer asset unity [id=" + id +
+                            ", seller=" + sellerAccountId +
+                            ", buyer=" + buyerAccountId + "]",
+                    e
+            );
+        }
+    }
+
     public List<AssetUnity> selectByOwnerAccount(Connection conn, long ownerAccountId) {
         String sql = """
                 SELECT id,
                        asset_id,
                        owner_account_id,
+                       status,
+                       locked_at,
                        created_at
-                  FROM asset_unit
-                 WHERE owner_account_id = ?
+                FROM asset_unit
+                WHERE owner_account_id = ?
+                AND status = 'AVAILABLE'
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

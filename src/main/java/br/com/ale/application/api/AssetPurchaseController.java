@@ -4,11 +4,11 @@ import br.com.ale.application.marketplace.command.PurchaseAssetCommand;
 import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
 import br.com.ale.domain.asset.AssetPurchase;
 import br.com.ale.dto.PurchaseAssetApiRequest;
-import org.springframework.http.HttpHeaders;
+import br.com.ale.infrastructure.auth.AuthCookieService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,27 +17,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AssetPurchaseController {
 
     private final PurchaseAssetUseCase purchaseAssetUseCase;
+    private final AuthCookieService authCookieService;
 
-    public AssetPurchaseController(PurchaseAssetUseCase purchaseAssetUseCase) {
+    public AssetPurchaseController(PurchaseAssetUseCase purchaseAssetUseCase, AuthCookieService authCookieService) {
         this.purchaseAssetUseCase = purchaseAssetUseCase;
+        this.authCookieService = authCookieService;
     }
 
     @PostMapping("/{id}/purchase")
     public AssetPurchase purchase(
             @PathVariable("id") long listingId,
-            @RequestBody PurchaseAssetApiRequest request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
+            HttpServletRequest httpRequest
     ) {
-        String token = extractToken(authorization, request.token());
-        PurchaseAssetCommand command =
-                new PurchaseAssetCommand(request.buyerAccountId(), listingId, token);
+        String token = authCookieService.extractToken(httpRequest);
+        PurchaseAssetCommand command = new PurchaseAssetCommand(listingId, token);
         return purchaseAssetUseCase.execute(command);
-    }
-
-    private String extractToken(String authorization, String fallback) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring("Bearer ".length()).trim();
-        }
-        return fallback;
     }
 }

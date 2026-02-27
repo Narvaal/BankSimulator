@@ -42,18 +42,21 @@ public class AssetPurchaseService {
                         );
 
                 if (listing.getStatus() != AssetListingStatus.ACTIVE)
-                    throw new RuntimeException("Listing not active");
+                    throw new RuntimeException("Listing already sold");
 
                 if (listing.getSellerAccountId() == request.buyerAccountId())
                     throw new RuntimeException("Buyer cannot be seller");
 
                 AssetUnity unity =
-                        assetUnityDAO.selectById(
+                        assetUnityDAO.selectByIdForUpdate(
                                 conn,
                                 listing.getAssetUnityId()
                         ).orElseThrow(() ->
                                 new RuntimeException("AssetUnity not found")
                         );
+
+                if (unity.getOwnerAccountId() != listing.getSellerAccountId())
+                    throw new RuntimeException("Asset already purchased by another client");
 
                 assetListingDAO.updateStatus(
                         conn,
@@ -70,11 +73,15 @@ public class AssetPurchaseService {
                         )
                 );
 
-                assetUnityDAO.updateOwner(
+                boolean transferred = assetUnityDAO.tryTransferOwnership(
                         conn,
                         unity.getId(),
+                        listing.getSellerAccountId(),
                         request.buyerAccountId()
                 );
+
+                if (!transferred)
+                    throw new RuntimeException("Asset not transferred");
 
                 conn.commit();
 
@@ -85,8 +92,10 @@ public class AssetPurchaseService {
                         request.buyerAccountId(),
                         listing.getPrice()
                 );
+
                 webhookNotifier.notifyAssetTransferCreated(transfer);
                 webhookNotifier.notifyAssetPurchaseCompleted(purchase);
+
                 return purchase;
 
             } catch (Exception e) {

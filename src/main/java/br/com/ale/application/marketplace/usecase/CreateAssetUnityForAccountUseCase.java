@@ -9,28 +9,23 @@ import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.asset.AssetUnityService;
 import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 
 public class CreateAssetUnityForAccountUseCase {
 
     private final AssetUnityService assetUnityService;
-    private final AccountService accountService;
-    private final AuthService authService;
+    private final JwtService jwtService;
 
     public CreateAssetUnityForAccountUseCase(
             AssetUnityService assetUnityService,
-            AccountService accountService,
-            AuthService authService
+            JwtService jwtService
     ) {
         this.assetUnityService = assetUnityService;
-        this.accountService = accountService;
-        this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     public AssetUnity execute(CreateAssetUnityForAccountCommand command) {
-        TokenClaims claims = authService.validateToken(command.token());
-        Account account = accountService.getAccountById(command.ownerAccountId());
-
-        if (claims.clientId() != account.getClientId()) {
+        if (!jwtService.isTokenValid(command.token())) {
             throw new UnauthorizedOperationException(
                     "Authenticated client does not own this account"
             );
