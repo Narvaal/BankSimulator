@@ -38,7 +38,7 @@ async function getBundles(page: number, size: number): Promise<Bundle[]> {
 async function getBundleAssets(id: string): Promise<Asset[]> {
 
     const res = await fetch(
-        `http://localhost:8080/assets/bundles/${id}/items?page=0&size=20`
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/assets/bundles/${id}/items?page=0&size=20`
     );
 
     if (!res.ok) throw new Error("Failed to load assets of bundle");
@@ -48,7 +48,7 @@ async function getBundleAssets(id: string): Promise<Asset[]> {
 
 async function claimAsset(assetId: number) {
 
-    const res = await fetch("http://localhost:8080/assets/claim", {
+    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/assets/claim", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -112,7 +112,7 @@ function Reward() {
     const loadBundles = useCallback(async () => {
 
         if (loadingBundles || !hasMore) return;
-        
+
         localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
 
         setLoading(false);

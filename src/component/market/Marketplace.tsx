@@ -35,7 +35,7 @@ interface assetListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number): Promise<assetListingPageView> {
-    const res = await fetch(`http://localhost:8080/asset-listings?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`http://BankSimulator.us-east-2.elasticbeanstalk.com/asset-listings?page=${page}&pageSize=${pageSize}`, {
         method: "GET",
         credentials: "include"
     });
@@ -47,7 +47,7 @@ async function getListings(page: number, pageSize: number): Promise<assetListing
 
 async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
     const res = await fetch(
-        `http://localhost:8080/assets/${assetUnityId}/price-history`
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/assets/${assetUnityId}/price-history`
     );
 
     if (!res.ok) throw new Error("Failed to load price history");
@@ -57,7 +57,7 @@ async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHis
 
 async function buyAssetUnity(assetListingId: number) {
     const res = await fetch(
-        `http://localhost:8080/asset-listings/${assetListingId}/purchase`,
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/asset-listings/${assetListingId}/purchase`,
         {method: "POST", credentials: "include"}
     );
 

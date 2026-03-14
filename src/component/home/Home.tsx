@@ -39,7 +39,7 @@ async function getAssetUnits(
 ): Promise<AssetPageView> {
 
     const res = await fetch(
-        `http://localhost:8080/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
         {credentials: "include"}
     );
 
@@ -49,7 +49,7 @@ async function getAssetUnits(
 
 async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
     const res = await fetch(
-        `http://localhost:8080/assets/${assetUnityId}/price-history`,
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/assets/${assetUnityId}/price-history`,
         {credentials: "include"}
     );
 
@@ -60,7 +60,7 @@ async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHis
 
 async function postAssetOffer(assetUnityId: number, price: number) {
     const res = await fetch(
-        `http://localhost:8080/asset-offers`,
+        `http://BankSimulator.us-east-2.elasticbeanstalk.com/asset-offers`,
         {
             method: "POST",
             credentials: "include",

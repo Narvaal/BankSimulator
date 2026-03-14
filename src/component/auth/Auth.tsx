@@ -17,7 +17,7 @@ export interface Account {
 }
 
 export async function fetchAccount(): Promise<Account> {
-    const res = await fetch("http://localhost:8080/accounts/me", {
+    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/accounts/me", {
         credentials: "include",
     });
 

@@ -40,11 +40,11 @@ function checkName(name: string): string | null {
 }
 
 async function handleAccountCreation(name: string, email: string, password: string) {
-    const res = await fetch("http://localhost:8080/accounts", {
+    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/accounts", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({name, email, password}),
     });
 
     if (!res.ok) {
@@ -54,7 +54,7 @@ async function handleAccountCreation(name: string, email: string, password: stri
     return await res.json();
 }
 
-function Rule({ok, text}: {ok: boolean, text: string}) {
+function Rule({ok, text}: { ok: boolean, text: string }) {
     return (
         <div className={`flex items-center gap-2 text-xs ${ok ? "text-green-600" : "text-red-500"}`}>
             <span className="font-bold">{ok ? "✓" : "×"}</span>
@@ -105,7 +105,7 @@ function CreateAccount() {
         <AuthLayout title={"Create a free account"} description={"Sing in for a complete experience"}>
             <form onSubmit={onSubmit}>
 
-                 {serverError && <p className="text-red-500 text-xs text-center mb-4">{serverError}</p>}
+                {serverError && <p className="text-red-500 text-xs text-center mb-4">{serverError}</p>}
 
                 <GoogleLoginButton/>
 
