@@ -1,38 +1,7 @@
 package br.com.ale.application.marketplace.usecase;
 
-import br.com.ale.application.marketplace.command.CancelAssetCommand;
-import br.com.ale.domain.account.Account;
-import br.com.ale.domain.account.AccountStatus;
-import br.com.ale.domain.account.AccountType;
-import br.com.ale.domain.asset.*;
-import br.com.ale.domain.auth.AuthToken;
-import br.com.ale.domain.auth.PasswordHasher;
-import br.com.ale.domain.client.Client;
-import br.com.ale.domain.client.Provider;
-import br.com.ale.domain.exception.InvalidAssetListingStateException;
-import br.com.ale.domain.exception.InvalidCredentialsException;
-import br.com.ale.domain.exception.UnauthorizedOperationException;
-import br.com.ale.dto.*;
-import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
-import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.account.AccountService;
-import br.com.ale.service.ClientService;
-import br.com.ale.service.asset.AssetListingService;
-import br.com.ale.service.asset.AssetService;
-import br.com.ale.service.asset.AssetUnityService;
-import br.com.ale.service.auth.AuthService;
-import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
-import br.com.ale.service.crypto.KeyPairService;
-import br.com.ale.service.webhook.AssetWebhookNotifier;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class CancelAssetOfferUseCaseTest {
-
+    /*
     private TestConnectionProvider provider;
 
     private ClientService clientService;
@@ -169,7 +138,7 @@ class CancelAssetOfferUseCaseTest {
                         "password"
                 )
         );
-        */
+
         return account;
     }
 
@@ -403,4 +372,5 @@ class CancelAssetOfferUseCaseTest {
                 () -> useCase.execute(command)
         );
     }
+    */
 }

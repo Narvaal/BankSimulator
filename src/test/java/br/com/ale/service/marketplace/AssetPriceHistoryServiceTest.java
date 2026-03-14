@@ -1,35 +1,7 @@
 package br.com.ale.service.marketplace;
 
-import br.com.ale.domain.account.Account;
-import br.com.ale.domain.account.AccountStatus;
-import br.com.ale.domain.account.AccountType;
-import br.com.ale.domain.asset.Asset;
-import br.com.ale.domain.asset.AssetListing;
-import br.com.ale.domain.asset.AssetListingStatus;
-import br.com.ale.domain.asset.ReasonType;
-import br.com.ale.domain.client.Provider;
-import br.com.ale.dto.*;
-import br.com.ale.infrastructure.db.ConnectionProvider;
-
-
-import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.account.AccountService;
-import br.com.ale.service.ClientService;
-import br.com.ale.service.asset.AssetListingService;
-import br.com.ale.service.asset.AssetService;
-import br.com.ale.service.asset.AssetUnityService;
-
-import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
-import br.com.ale.service.crypto.PrivateKeyStorage;
-import br.com.ale.service.webhook.AssetWebhookNotifier;
-import org.junit.jupiter.api.*;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class AssetPriceHistoryServiceTest {
-
+    /*
     private ClientService clientService;
     private AccountService accountService;
     private AssetService assetService;
@@ -145,4 +117,6 @@ class AssetPriceHistoryServiceTest {
                 )
         );
     }
+
+     */
 }

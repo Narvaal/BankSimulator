@@ -1,19 +1,14 @@
 import GoogleLoginButton from "../google/GoogleLoginButton.tsx";
 import AuthLayout from "./AuthLayout.tsx";
 import {useState} from "react";
-import {
-    EnvelopeIcon,
-    LockClosedIcon,
-    EyeIcon,
-    EyeSlashIcon
-} from "@heroicons/react/24/solid";
+import {EnvelopeIcon, EyeIcon, EyeSlashIcon, LockClosedIcon} from "@heroicons/react/24/solid";
 
 async function handleLogin(email: string, password: string) {
-    const res = await fetch("http://localhost:8080/auth/login", {
+    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/auth/login", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({email, password}),
     });
 
     if (!res.ok) {
