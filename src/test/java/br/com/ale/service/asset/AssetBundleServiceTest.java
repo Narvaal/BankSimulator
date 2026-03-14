@@ -57,11 +57,11 @@ class AssetBundleServiceTest {
         }
         assertEquals(expectedTexts, persistedTexts);
 
-        List<AssetBundleResponse> bundles = service.listBundles();
+        List<AssetBundleResponse> bundles = service.listBundles(0, 10);
         assertEquals(1, bundles.size());
 
         List<AssetBundleItemResponse> items =
-                service.listBundleItems(bundles.get(0).id());
+                service.listBundleItems(bundles.get(0).id(), 10, 20);
 
         assertEquals(assets.size(), items.size());
 
@@ -79,7 +79,7 @@ class AssetBundleServiceTest {
                 new Asset(uniqueText("delta"), 100)
         ));
 
-        List<AssetBundleResponse> bundles = service.listBundles();
+        List<AssetBundleResponse> bundles = service.listBundles(0, 10);
         assertEquals(1, bundles.size());
 
         String identifier = bundles.get(0).identifier();

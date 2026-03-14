@@ -51,10 +51,10 @@ public class AssetBundleService {
         );
     }
 
-    public List<AssetBundleResponse> listBundles() {
+    public List<AssetBundleResponse> listBundles(int page, int size) {
         try (Connection conn = connectionProvider.getConnection()) {
             List<AssetBundleResponse> responses = new ArrayList<>();
-            for (AssetBundle bundle : assetBundleDAO.selectAll(conn)) {
+            for (AssetBundle bundle : assetBundleDAO.selectAll(conn, page, size)) {
                 responses.add(new AssetBundleResponse(
                         bundle.getId(),
                         bundle.getIdentifier(),
@@ -67,9 +67,9 @@ public class AssetBundleService {
         }
     }
 
-    public List<AssetBundleItemResponse> listBundleItems(long bundleId) {
+    public List<AssetBundleItemResponse> listBundleItems(long bundleId, int page, int size) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return assetBundleItemDAO.selectItemsByBundleId(conn, bundleId);
+            return assetBundleItemDAO.selectItemsByBundleId(conn, bundleId, page, size);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while listing bundle items " +

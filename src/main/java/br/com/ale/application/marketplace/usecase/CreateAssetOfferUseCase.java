@@ -35,17 +35,7 @@ public class CreateAssetOfferUseCase {
 
         long authenticatedAccountId = jwtService.extractClientId(command.token());
 
-        boolean locked = assetUnityService.tryUpdateToMarket(
-                command.assetUnityId()
-        );
-
-        if (!locked) {
-            throw new UnauthorizedOperationException(
-                    "Asset not owned or not available"
-            );
-        }
-
-        return assetListingService.createAssetListing(
+        return assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         command.assetUnityId(),
                         authenticatedAccountId,

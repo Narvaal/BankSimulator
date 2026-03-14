@@ -12,7 +12,7 @@ public class ListAssetBundleItemsUseCase {
         this.assetBundleService = assetBundleService;
     }
 
-    public List<AssetBundleItemResponse> execute(long bundleId) {
-        return assetBundleService.listBundleItems(bundleId);
+    public List<AssetBundleItemResponse> execute(long bundleId, int page, int size) {
+        return assetBundleService.listBundleItems(bundleId, page, size);
     }
 }

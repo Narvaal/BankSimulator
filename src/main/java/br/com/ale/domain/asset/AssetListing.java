@@ -19,11 +19,10 @@ public class AssetListing {
         this.id = id;
         this.assetUnitId = assetUnitId;
         this.sellerAccountId = sellerAccountId;
-        this.price = price;
+        this.price = setPrice(price);
         this.status = status;
         this.createAt = createAt;
         this.updatedAt = updatedAt;
-
     }
 
     public AssetListing(
@@ -32,10 +31,27 @@ public class AssetListing {
         this.id = null;
         this.assetUnitId = assetUnitId;
         this.sellerAccountId = sellerAccountId;
-        this.price = price;
+        this.price = setPrice(price);
         this.status = status;
         this.createAt = null;
         this.updatedAt = null;
+    }
+
+    private BigDecimal setPrice(BigDecimal price) {
+
+        if (price == null) {
+            throw new IllegalArgumentException("Price cannot be null");
+        }
+
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price must be greater than 0");
+        }
+
+        if (price.scale() > 2) {
+            throw new IllegalArgumentException("Price cannot have more than 2 decimal places");
+        }
+
+        return price;
     }
 
     public Long getId() {

@@ -5,7 +5,6 @@ import br.com.ale.dao.TransactionDAO;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
-import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.SignatureService;
@@ -58,7 +57,8 @@ public class AccountService {
                         request.accountType(),
                         java.math.BigDecimal.ZERO,
                         request.status(),
-                        publicKey
+                        publicKey,
+                        Instant.now()
                 );
 
             } catch (Exception e) {
@@ -134,6 +134,30 @@ public class AccountService {
             throw new RuntimeException(
                     "Service error while selecting account details " +
                             "[accountId=" + accountId + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Instant> tryClaimAssetUnity(String accountNumber) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.tryClaimAssetUnity(conn, accountNumber);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting account to check free asset" +
+                            "[accountNumber=" + accountNumber + "]",
+                    e
+            );
+        }
+    }
+
+    public Instant selectNextClaimById(String accountNumber) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.selectNextClaimById(conn, accountNumber);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting account to check free asset" +
+                            "[accountNumber=" + accountNumber + "]",
                     e
             );
         }

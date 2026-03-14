@@ -19,13 +19,7 @@ import br.com.ale.dto.CreateAssetBundleApiRequest;
 import br.com.ale.dto.CreateAssetUnityApiRequest;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/assets")
@@ -83,8 +77,10 @@ public class AssetQueryController {
     }
 
     @GetMapping("/bundles")
-    public List<AssetBundleResponse> listBundles() {
-        return listAssetBundlesUseCase.execute();
+    public List<AssetBundleResponse> listBundles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return listAssetBundlesUseCase.execute(page, size);
     }
 
     @PostMapping("/bundles")
@@ -93,8 +89,12 @@ public class AssetQueryController {
     }
 
     @GetMapping("/bundles/{id}/items")
-    public List<AssetBundleItemResponse> listBundleItems(@PathVariable("id") long id) {
-        return listAssetBundleItemsUseCase.execute(id);
+    public List<AssetBundleItemResponse> listBundleItems(
+            @PathVariable("id") long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return listAssetBundleItemsUseCase.execute(id, page, size);
     }
 
     @GetMapping("/{id}/price-history")

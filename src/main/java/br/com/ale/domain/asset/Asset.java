@@ -30,9 +30,9 @@ public class Asset {
     }
 
     private int validateTotalSupply(int totalSupply) {
-        if (totalSupply < 1) {
+        if (totalSupply < 0) {
             throw new IllegalArgumentException(
-                    "Asset total supply cannot be less than one [totalSupply=" + totalSupply + "]"
+                    "Asset total supply cannot be less than zero [totalSupply=" + totalSupply + "]"
             );
         }
         return totalSupply;

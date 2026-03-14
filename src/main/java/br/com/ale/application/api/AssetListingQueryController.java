@@ -4,26 +4,27 @@ import br.com.ale.application.marketplace.query.GetAssetListingByIdUseCase;
 import br.com.ale.application.marketplace.query.ListActiveAssetListingsUseCase;
 import br.com.ale.application.marketplace.query.ListAssetListingsByOwnerUseCase;
 import br.com.ale.domain.asset.AssetListing;
-import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import br.com.ale.dto.AssetListingPageView;
+import br.com.ale.infrastructure.auth.AuthCookieService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/asset-listings")
 public class AssetListingQueryController {
 
+    private final AuthCookieService authCookieService;
     private final GetAssetListingByIdUseCase getAssetListingByIdUseCase;
     private final ListActiveAssetListingsUseCase listActiveAssetListingsUseCase;
     private final ListAssetListingsByOwnerUseCase listAssetListingsByOwnerUseCase;
 
     public AssetListingQueryController(
+            AuthCookieService authCookieService,
             GetAssetListingByIdUseCase getAssetListingByIdUseCase,
             ListActiveAssetListingsUseCase listActiveAssetListingsUseCase,
             ListAssetListingsByOwnerUseCase listAssetListingsByOwnerUseCase
     ) {
+        this.authCookieService = authCookieService;
         this.getAssetListingByIdUseCase = getAssetListingByIdUseCase;
         this.listActiveAssetListingsUseCase = listActiveAssetListingsUseCase;
         this.listAssetListingsByOwnerUseCase = listAssetListingsByOwnerUseCase;
@@ -35,10 +36,10 @@ public class AssetListingQueryController {
     }
 
     @GetMapping
-    public List<AssetListing> list(@RequestParam(value = "ownerId", required = false) Long ownerId) {
-        if (ownerId == null) {
-            return listActiveAssetListingsUseCase.execute();
-        }
-        return listAssetListingsByOwnerUseCase.execute(ownerId);
+    public AssetListingPageView list(@RequestParam("page") int page,
+                                     @RequestParam("pageSize") int pageSize,
+                                     HttpServletRequest response) {
+        String token = authCookieService.extractToken(response);
+        return listActiveAssetListingsUseCase.execute(token, page, pageSize);
     }
 }

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 
 export interface Account {
     id: number;
@@ -8,6 +8,12 @@ export interface Account {
     balance: number;
     accountStatus: string;
     publicKey: string;
+    nextFreeAssetAt: string;
+
+    name: string;
+    picture: string,
+    emailVerified: boolean,
+    provider: string
 }
 
 export async function fetchAccount(): Promise<Account> {
@@ -16,6 +22,7 @@ export async function fetchAccount(): Promise<Account> {
     });
 
     if (!res.ok) throw new Error("Not authenticated");
+
     return res.json();
 }
 

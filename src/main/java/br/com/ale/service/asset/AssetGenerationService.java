@@ -4,10 +4,8 @@ import br.com.ale.domain.asset.Asset;
 import br.com.ale.infrastructure.json.JsonUtils;
 import br.com.ale.util.RandomUtils;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class AssetGenerationService {
 

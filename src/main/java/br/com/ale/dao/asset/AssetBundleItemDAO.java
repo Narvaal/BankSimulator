@@ -34,24 +34,36 @@ public class AssetBundleItemDAO {
 
     public List<AssetBundleItemResponse> selectItemsByBundleId(
             Connection conn,
-            long bundleId
+            long bundleId,
+            int page,
+            int size
     ) {
+
         String sql = """
-                SELECT a.id,
-                       a.text,
-                       a.total_supply,
-                       a.created_at
-                  FROM asset_bundle_item abi
-                  JOIN asset a
-                    ON a.id = abi.asset_id
-                 WHERE abi.bundle_id = ?
-                 ORDER BY a.created_at ASC
-                """;
+            SELECT a.id,
+                   a.text,
+                   a.total_supply,
+                   a.created_at
+              FROM asset_bundle_item abi
+              JOIN asset a
+                ON a.id = abi.asset_id
+             WHERE abi.bundle_id = ?
+             ORDER BY a.created_at ASC
+             LIMIT ? OFFSET ?
+            """;
+
+        int offset = page * size;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, bundleId);
+            stmt.setInt(2, size);
+            stmt.setInt(3, offset);
+
             try (ResultSet rs = stmt.executeQuery()) {
+
                 List<AssetBundleItemResponse> items = new ArrayList<>();
+
                 while (rs.next()) {
                     items.add(new AssetBundleItemResponse(
                             rs.getLong("id"),
@@ -60,12 +72,14 @@ public class AssetBundleItemDAO {
                             rs.getTimestamp("created_at").toInstant()
                     ));
                 }
+
                 return items;
             }
+
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Database error while selecting bundle items " +
-                            "[bundleId=" + bundleId + "]",
+                            "[bundleId=" + bundleId + ", page=" + page + ", size=" + size + "]",
                     e
             );
         }

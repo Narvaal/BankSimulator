@@ -1,9 +1,9 @@
 package br.com.ale.dao;
 
 import br.com.ale.domain.account.Account;
-import br.com.ale.domain.client.Client;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
@@ -21,17 +21,17 @@ public class ClientDAO {
     public long insert(Connection conn, CreateClientRequest request) {
 
         String sql = """
-        INSERT INTO client (
-            name,
-            email,
-            password,
-            provider,
-            provider_id,
-            email_verified,
-            picture
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """;
+                INSERT INTO client (
+                    name,
+                    email,
+                    password,
+                    provider,
+                    provider_id,
+                    email_verified,
+                    picture
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """;
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
@@ -125,16 +125,16 @@ public class ClientDAO {
     public Optional<Client> selectById(Connection conn, long id) {
 
         String sql = """
-          SELECT  id,
-                  name,
-                  email,
-                  password,
-                  provider,
-                  provider_id,
-                  email_verified,
-                  picture
-          FROM client WHERE id = ?
-          """;
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE id = ?
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -172,16 +172,16 @@ public class ClientDAO {
     public Optional<Client> selectByEmail(Connection conn, String email) {
 
         String sql = """
-          SELECT  id,
-                  name,
-                  email,
-                  password,
-                  provider,
-                  provider_id,
-                  email_verified,
-                  picture
-          FROM client WHERE email = ?
-          """;
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE email = ?
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -219,16 +219,16 @@ public class ClientDAO {
     public Optional<Client> selectByProviderAndId(Connection conn, Provider provider, String providerId) {
 
         String sql = """
-          SELECT  id,
-                  name,
-                  email,
-                  password,
-                  provider,
-                  provider_id,
-                  email_verified,
-                  picture
-          FROM client WHERE provider = ? AND provider_id = ?
-          """;
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE provider = ? AND provider_id = ?
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -274,7 +274,8 @@ public class ClientDAO {
                        account_type,
                        balance,
                        status,
-                       public_key
+                       public_key,
+                        next_free_asset_at
                   FROM account
                  WHERE client_id = ?
                 """;
@@ -296,7 +297,8 @@ public class ClientDAO {
                                     AccountType.valueOf(rs.getString("account_type")),
                                     rs.getBigDecimal("balance"),
                                     AccountStatus.valueOf(rs.getString("status")),
-                                    rs.getString("public_key")
+                                    rs.getString("public_key"),
+                                    rs.getTimestamp("next_free_asset_at").toInstant()
                             )
                     );
                 }

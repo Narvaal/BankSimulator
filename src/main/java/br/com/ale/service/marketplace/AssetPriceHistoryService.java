@@ -104,7 +104,7 @@ public class AssetPriceHistoryService {
 
     public List<AssetPriceHistory> listByAssetId(long assetId) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return assetPriceHistoryDAO.selectByAssetId(conn, assetId);
+            return assetPriceHistoryDAO.selectByAssetUnityId(conn, assetId);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while listing asset price history " +

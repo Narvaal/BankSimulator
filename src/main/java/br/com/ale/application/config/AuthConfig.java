@@ -1,10 +1,10 @@
 package br.com.ale.application.config;
 
-import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
-import br.com.ale.application.auth.usecase.LocalLoginUseCase;
+import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
 import br.com.ale.application.account.usecase.DepositAccountUseCase;
-import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
+import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
+import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.application.client.query.GetClientProfileUseCase;
 import br.com.ale.application.transaction.query.ListTransfersByAccountUseCase;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
@@ -13,24 +13,23 @@ import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.infrastructure.db.DefaultConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
-import br.com.ale.service.account.AccountService;
-import br.com.ale.service.auth.AuthService;
-import br.com.ale.service.TransactionService;
 import br.com.ale.service.ClientService;
+import br.com.ale.service.TransactionService;
+import br.com.ale.service.account.AccountNumberGenerator;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.account.HashAccountNumberGenerator;
+import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.auth.GoogleTokenVerifier;
 import br.com.ale.service.auth.JwtService;
-import br.com.ale.service.crypto.KeyPairService;
-import br.com.ale.service.account.AccountNumberGenerator;
-import br.com.ale.service.account.HashAccountNumberGenerator;
 import br.com.ale.service.crypto.FilePrivateKeyStorage;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.crypto.PrivateKeyStorage;
-import java.security.KeyPair;
-
-import io.jsonwebtoken.Jwt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.security.KeyPair;
 
 @Configuration
 public class AuthConfig {
@@ -124,7 +123,7 @@ public class AuthConfig {
     }
 
     @Bean
-    public GoogleLoginUseCase googleLoginUseCase (
+    public GoogleLoginUseCase googleLoginUseCase(
             AccountNumberGenerator accountNumberGenerator,
             AccountService accountService,
             ClientService clientService,
@@ -145,9 +144,9 @@ public class AuthConfig {
     @Bean
     public DepositAccountUseCase depositAccountUseCase(
             AccountService accountService,
-            JwtService jwtService
+            ClientService clientService
     ) {
-        return new DepositAccountUseCase(accountService, jwtService);
+        return new DepositAccountUseCase(accountService, clientService);
     }
 
     @Bean

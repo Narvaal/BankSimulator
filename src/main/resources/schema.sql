@@ -1,32 +1,48 @@
 CREATE TABLE client
 (
-    id              BIGSERIAL PRIMARY KEY,
-    name            VARCHAR(255),
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    password        VARCHAR(255),
-    provider        VARCHAR(20) NOT NULL,
-    provider_id     VARCHAR(255),
-    email_verified  BOOLEAN NOT NULL DEFAULT false,
-    picture         TEXT,
-    created_at      TIMESTAMP NOT NULL DEFAULT now(),
+    id             BIGSERIAL PRIMARY KEY,
+    name           VARCHAR(255),
+    email          VARCHAR(255) NOT NULL UNIQUE,
+    password       VARCHAR(255),
+    provider       VARCHAR(20)  NOT NULL,
+    provider_id    VARCHAR(255),
+    email_verified BOOLEAN      NOT NULL DEFAULT false,
+    picture        TEXT,
+    created_at     TIMESTAMP    NOT NULL DEFAULT now(),
     CONSTRAINT uq_provider UNIQUE (provider, provider_id)
 );
 
 CREATE TABLE account
 (
-    id             BIGSERIAL PRIMARY KEY,
-    client_id      BIGINT         NOT NULL,
-    account_number VARCHAR(50)    NOT NULL UNIQUE,
-    account_type   VARCHAR(50)    NOT NULL,
-    status         VARCHAR(50)    NOT NULL,
-    balance        NUMERIC(19, 2) NOT NULL DEFAULT 0,
-    public_key     TEXT           NOT NULL,
-    created_at     TIMESTAMP      NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMP      NOT NULL DEFAULT now(),
+    id                 BIGSERIAL PRIMARY KEY,
+    client_id          BIGINT         NOT NULL,
+    account_number     VARCHAR(50)    NOT NULL UNIQUE,
+    account_type       VARCHAR(50)    NOT NULL,
+    status             VARCHAR(50)    NOT NULL,
+    balance            NUMERIC(19, 2) NOT NULL DEFAULT 0,
+    public_key         TEXT           NOT NULL,
+    created_at         TIMESTAMP      NOT NULL DEFAULT now(),
+    updated_at         TIMESTAMP      NOT NULL DEFAULT now(),
+    next_free_asset_at TIMESTAMP      NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_account_client
         FOREIGN KEY (client_id)
             REFERENCES client (id)
+);
+
+CREATE TABLE email_verification
+(
+    id          BIGSERIAL PRIMARY KEY,
+    client_id   BIGINT       NOT NULL,
+    token       VARCHAR(255) NOT NULL UNIQUE,
+    expires_at  TIMESTAMP    NOT NULL,
+    verified_at TIMESTAMP,
+    created_at  TIMESTAMP    NOT NULL DEFAULT now(),
+
+    CONSTRAINT fk_email_verification_client
+        FOREIGN KEY (client_id)
+            REFERENCES client (id)
+            ON DELETE CASCADE
 );
 
 CREATE TABLE transactions
@@ -55,7 +71,7 @@ CREATE TABLE asset_bundle
 (
     id         BIGSERIAL PRIMARY KEY,
     identifier VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT now()
+    created_at TIMESTAMP    NOT NULL DEFAULT now()
 );
 
 CREATE TABLE asset_bundle_item
@@ -80,16 +96,16 @@ CREATE TYPE asset_unit_status AS ENUM (
     'IN_MARKET',
     'RESERVED',
     'TRANSFERRING'
-);
+    );
 
 CREATE TABLE asset_unit
 (
     id               BIGSERIAL PRIMARY KEY,
-    asset_id         BIGINT    NOT NULL,
-    owner_account_id BIGINT    NOT NULL,
+    asset_id         BIGINT            NOT NULL,
+    owner_account_id BIGINT            NOT NULL,
     status           asset_unit_status NOT NULL DEFAULT 'AVAILABLE',
-    locked_at        TIMESTAMP NULL,
-    created_at       TIMESTAMP NOT NULL DEFAULT now(),
+    locked_at        TIMESTAMP         NULL,
+    created_at       TIMESTAMP         NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_asset_unit_asset
         FOREIGN KEY (asset_id)
@@ -142,27 +158,28 @@ CREATE TABLE asset_listing
             ON DELETE RESTRICT
 );
 
-CREATE TABLE asset_price_history (
-                                     id BIGSERIAL PRIMARY KEY,
-                                     asset_listing_id BIGINT NOT NULL,
-                                     asset_unity_id BIGINT NOT NULL,
-                                     old_price DECIMAL(19, 2),
-                                     new_price DECIMAL(19, 2) NOT NULL,
-                                     changed_by_account_id BIGINT NOT NULL,
-                                     reason VARCHAR(50) NOT NULL,
-                                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE asset_price_history
+(
+    id                    BIGSERIAL PRIMARY KEY,
+    asset_listing_id      BIGINT         NOT NULL,
+    asset_unity_id        BIGINT         NOT NULL,
+    old_price             DECIMAL(19, 2),
+    new_price             DECIMAL(19, 2) NOT NULL,
+    changed_by_account_id BIGINT         NOT NULL,
+    reason                VARCHAR(50)    NOT NULL,
+    created_at            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-                                     CONSTRAINT fk_price_history_listing
-                                         FOREIGN KEY (asset_listing_id)
-                                             REFERENCES asset_listing(id),
+    CONSTRAINT fk_price_history_listing
+        FOREIGN KEY (asset_listing_id)
+            REFERENCES asset_listing (id),
 
-                                     CONSTRAINT fk_price_history_unity
-                                         FOREIGN KEY (asset_unity_id)
-                                             REFERENCES asset_unit(id),
+    CONSTRAINT fk_price_history_unity
+        FOREIGN KEY (asset_unity_id)
+            REFERENCES asset_unit (id),
 
-                                     CONSTRAINT fk_price_history_account
-                                         FOREIGN KEY (changed_by_account_id)
-                                             REFERENCES account(id)
+    CONSTRAINT fk_price_history_account
+        FOREIGN KEY (changed_by_account_id)
+            REFERENCES account (id)
 );
 
 CREATE INDEX idx_asset_unit_owner
@@ -177,21 +194,22 @@ CREATE INDEX idx_asset_listing_unit
 CREATE INDEX idx_asset_transfer_unit
     ON asset_transfer (asset_unit_id);
 
-CREATE TABLE credential (
-                            id BIGSERIAL PRIMARY KEY,
-                            client_id BIGINT NOT NULL,
-                            email VARCHAR(50) NOT NULL,
-                            password_hash VARCHAR(255) NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE credential
+(
+    id            BIGSERIAL PRIMARY KEY,
+    client_id     BIGINT       NOT NULL,
+    email         VARCHAR(50)  NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-                            CONSTRAINT fk_credential_client
-                                FOREIGN KEY (client_id)
-                                    REFERENCES client(id)
-                                    ON DELETE CASCADE,
+    CONSTRAINT fk_credential_client
+        FOREIGN KEY (client_id)
+            REFERENCES client (id)
+            ON DELETE CASCADE,
 
-                            CONSTRAINT uk_credential_email
-                                UNIQUE (email),
+    CONSTRAINT uk_credential_email
+        UNIQUE (email),
 
-                            CONSTRAINT uk_credential_client
-                                UNIQUE (client_id)
+    CONSTRAINT uk_credential_client
+        UNIQUE (client_id)
 );

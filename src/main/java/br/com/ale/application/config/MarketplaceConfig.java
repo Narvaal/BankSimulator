@@ -117,9 +117,11 @@ public class MarketplaceConfig {
 
     @Bean
     public ListActiveAssetListingsUseCase listActiveAssetListingsUseCase(
-            AssetListingService assetListingService
+            AccountService accountService,
+            AssetListingService assetListingService,
+            JwtService jwtService
     ) {
-        return new ListActiveAssetListingsUseCase(assetListingService);
+        return new ListActiveAssetListingsUseCase(accountService, assetListingService, jwtService);
     }
 
     @Bean

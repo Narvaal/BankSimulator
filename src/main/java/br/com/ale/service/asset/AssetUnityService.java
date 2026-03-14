@@ -4,6 +4,8 @@ import br.com.ale.dao.asset.AssetDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.domain.asset.AssetUnityStatus;
+import br.com.ale.dto.AssetUnityPageView;
+import br.com.ale.dto.AssetUnityView;
 import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
@@ -69,9 +71,9 @@ public class AssetUnityService {
         }
     }
 
-    public List<AssetUnity> selectByOwnerAccount(long ownerAccountId) {
+    public AssetUnityPageView selectByOwnerAccount(long ownerAccountId, int page, int pageSize) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return assetUnityDAO.selectByOwnerAccount(conn, ownerAccountId);
+            return assetUnityDAO.selectByOwnerAccount(conn, ownerAccountId, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting asset unity [ownerAccountId=" + ownerAccountId + "]",

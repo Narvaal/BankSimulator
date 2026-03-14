@@ -2,6 +2,8 @@ package br.com.ale.dao.asset;
 
 import br.com.ale.domain.asset.AssetUnity;
 import br.com.ale.domain.asset.AssetUnityStatus;
+import br.com.ale.dto.AssetUnityPageView;
+import br.com.ale.dto.AssetUnityView;
 import br.com.ale.dto.CreateAssetUnityRequest;
 
 import java.sql.*;
@@ -11,6 +13,22 @@ import java.util.List;
 import java.util.Optional;
 
 public class AssetUnityDAO {
+    private static Instant getInstantOrNull(ResultSet rs, String column) throws SQLException {
+        Timestamp ts = rs.getTimestamp(column);
+        return ts != null ? ts.toInstant() : null;
+    }
+
+    private static AssetUnity mapRow(ResultSet rs) throws SQLException {
+        return new AssetUnity(
+                rs.getLong("id"),
+                rs.getLong("asset_id"),
+                rs.getLong("owner_account_id"),
+                AssetUnityStatus.valueOf(rs.getString("status")),
+                getInstantOrNull(rs, "locked_at"),
+                getInstantOrNull(rs, "created_at")
+        );
+    }
+
     public AssetUnity insert(Connection conn, CreateAssetUnityRequest request) {
         String sql = """
                 INSERT INTO asset_unit (asset_id, owner_account_id)
@@ -96,22 +114,6 @@ public class AssetUnityDAO {
         }
     }
 
-    private static Instant getInstantOrNull(ResultSet rs, String column) throws SQLException {
-        Timestamp ts = rs.getTimestamp(column);
-        return ts != null ? ts.toInstant() : null;
-    }
-
-    private static AssetUnity mapRow(ResultSet rs) throws SQLException {
-        return new AssetUnity(
-                rs.getLong("id"),
-                rs.getLong("asset_id"),
-                rs.getLong("owner_account_id"),
-                AssetUnityStatus.valueOf(rs.getString("status")),
-                getInstantOrNull(rs, "locked_at"),
-                getInstantOrNull(rs, "created_at")
-        );
-    }
-
     public void updateOwner(Connection conn, long assetId, long ownerAccount) {
 
         String sql = """
@@ -139,16 +141,16 @@ public class AssetUnityDAO {
     public Optional<AssetUnity> selectByIdForUpdate(Connection conn, long id) {
 
         String sql = """
-        SELECT id,
-            asset_id,
-            owner_account_id,
-            status,
-            locked_at,
-            created_at
-        FROM asset_unit
-        WHERE id = ?
-        FOR UPDATE
-    """;
+                    SELECT id,
+                        asset_id,
+                        owner_account_id,
+                        status,
+                        locked_at,
+                        created_at
+                    FROM asset_unit
+                    WHERE id = ?
+                    FOR UPDATE
+                """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -168,11 +170,11 @@ public class AssetUnityDAO {
     public boolean tryUpdateToMarket(Connection conn, long id) {
 
         String sql = """
-        UPDATE asset_unit
-           SET status = 'IN_MARKET'
-         WHERE id = ?
-           AND status = 'AVAILABLE'
-        """;
+                UPDATE asset_unit
+                   SET status = 'IN_MARKET'
+                 WHERE id = ?
+                   AND status = 'AVAILABLE'
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -196,13 +198,13 @@ public class AssetUnityDAO {
     ) {
 
         String sql = """
-        UPDATE asset_unit
-           SET owner_account_id = ?,
-               status = 'AVAILABLE'
-         WHERE id = ?
-           AND owner_account_id = ?
-           AND status = 'IN_MARKET'
-        """;
+                UPDATE asset_unit
+                   SET owner_account_id = ?,
+                       status = 'AVAILABLE'
+                 WHERE id = ?
+                   AND owner_account_id = ?
+                   AND status = 'IN_MARKET'
+                """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -222,30 +224,72 @@ public class AssetUnityDAO {
         }
     }
 
-    public List<AssetUnity> selectByOwnerAccount(Connection conn, long ownerAccountId) {
+    public AssetUnityPageView selectByOwnerAccount(
+            Connection conn,
+            long ownerAccountId,
+            int page,
+            int pageSize
+    ) {
+
         String sql = """
-                SELECT id,
-                       asset_id,
-                       owner_account_id,
-                       status,
-                       locked_at,
-                       created_at
-                FROM asset_unit
-                WHERE owner_account_id = ?
-                AND status = 'AVAILABLE'
+                SELECT
+                    u.id AS asset_unity_id,
+                    u.created_at,
+                    a.id AS asset_id,
+                    a.text AS asset_text,
+                    COUNT(*) OVER() AS total_items
+                FROM asset_unit u
+                JOIN asset a ON a.id = u.asset_id
+                WHERE u.owner_account_id = ?
+                  AND u.status = 'AVAILABLE'
+                ORDER BY u.created_at DESC
+                LIMIT ?
+                OFFSET ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int offset = page * pageSize;
+
             stmt.setLong(1, ownerAccountId);
+            stmt.setInt(2, pageSize);
+            stmt.setInt(3, offset);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                List<AssetUnity> result = new ArrayList<>();
+
+                List<AssetUnityView> items = new ArrayList<>();
+
+                long totalItems = 0;
+
                 while (rs.next()) {
-                    result.add(mapRow(rs));
+
+                    if (totalItems == 0) {
+                        totalItems = rs.getLong("total_items");
+                    }
+
+                    items.add(
+                            new AssetUnityView(
+                                    rs.getLong("asset_id"),
+                                    rs.getLong("asset_unity_id"),
+                                    rs.getString("asset_text"),
+                                    getInstantOrNull(rs, "created_at")
+                            )
+                    );
                 }
-                return result;
+
+                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+                return new AssetUnityPageView(
+                        items,
+                        page,
+                        pageSize,
+                        totalPages,
+                        totalItems
+                );
             }
+
         } catch (SQLException e) {
+
             throw new RuntimeException(
                     "Database error while selecting asset unity by owner " +
                             "[ownerAccountId=" + ownerAccountId + "]",

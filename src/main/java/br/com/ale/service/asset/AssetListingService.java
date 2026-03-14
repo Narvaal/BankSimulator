@@ -2,9 +2,12 @@ package br.com.ale.service.asset;
 
 import br.com.ale.dao.asset.AssetListingDAO;
 import br.com.ale.dao.asset.AssetPriceHistoryDAO;
+import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
 import br.com.ale.domain.asset.ReasonType;
+import br.com.ale.domain.exception.UnauthorizedOperationException;
+import br.com.ale.dto.AssetListingPageView;
 import br.com.ale.dto.CreateAssetListingRequest;
 import br.com.ale.dto.CreatePriceHistoryRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
@@ -16,6 +19,7 @@ import java.util.List;
 public class AssetListingService {
     private final ConnectionProvider connectionProvider;
     private final AssetListingDAO assetListingDAO = new AssetListingDAO();
+    private final AssetUnityDAO assetUnityDAO = new AssetUnityDAO();
     private final AssetPriceHistoryDAO assetPriceHistoryDAO = new AssetPriceHistoryDAO();
 
     public AssetListingService(
@@ -75,15 +79,34 @@ public class AssetListingService {
         }
     }
 
-    public AssetListing createAssetListing(CreateAssetListingRequest request) {
+    public AssetListing createAssetOffer(CreateAssetListingRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
+
             conn.setAutoCommit(false);
 
             try {
-                AssetListing asset = assetListingDAO.insert(conn, request);
+
+                validatePrice(request.price());
+
+                boolean locked = assetUnityDAO.tryUpdateToMarket(conn, request.assetUnityId());
+
+                if (!locked) {
+                    throw new UnauthorizedOperationException("Asset not owned or not available");
+                }
+
+                AssetListing listing = assetListingDAO.insert(
+                        conn,
+                        new CreateAssetListingRequest(
+                                request.assetUnityId(),
+                                request.sellerAccountId(),
+                                request.price(),
+                                AssetListingStatus.ACTIVE
+                        )
+                );
+
                 conn.commit();
-                return asset;
+                return listing;
 
             } catch (Exception e) {
                 conn.rollback();
@@ -91,14 +114,18 @@ public class AssetListingService {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Service error while creating asset listing " +
-                            "[assetUnityId=" + request.assetUnityId() +
-                            ", sellerAccountId=" + request.sellerAccountId() +
-                            ", price=" + request.price() +
-                            ", status=" + request.status().name() + "]",
-                    e
-            );
+            throw new RuntimeException("Error creating asset offer", e);
+        }
+    }
+
+    private void validatePrice(BigDecimal price) {
+
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price must be greater than 0");
+        }
+
+        if (price.scale() > 2) {
+            throw new IllegalArgumentException("Price cannot have more than 2 decimal places");
         }
     }
 
@@ -160,6 +187,19 @@ public class AssetListingService {
             );
         }
     }
+
+
+    public AssetListingPageView selectActiveByActiveStatus(long accountId, int page, int pageSize) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return assetListingDAO.selectActiveByActiveStatus(conn, accountId, page, pageSize);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting active asset listing",
+                    e
+            );
+        }
+    }
+
 
     public List<AssetListing> selectByOwnerAccount(long ownerAccountId, AssetListingStatus status) {
         try (Connection conn = connectionProvider.getConnection()) {

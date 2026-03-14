@@ -3,6 +3,9 @@ package br.com.ale.application.api;
 import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
 import br.com.ale.domain.asset.AssetUnity;
 import java.util.List;
+
+import br.com.ale.dto.AssetUnityPageView;
+import br.com.ale.dto.AssetUnityView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +22,9 @@ public class AssetUnityQueryController {
     }
 
     @GetMapping
-    public List<AssetUnity> listByOwner(@RequestParam("ownerId") long ownerId) {
-        return listAssetUnitsByOwnerUseCase.execute(ownerId);
+    public AssetUnityPageView listByOwner(@RequestParam("ownerId") long ownerId,
+                                          @RequestParam("page") int page,
+                                          @RequestParam("pageSize") int pageSize) {
+        return listAssetUnitsByOwnerUseCase.execute(ownerId, page, pageSize);
     }
 }

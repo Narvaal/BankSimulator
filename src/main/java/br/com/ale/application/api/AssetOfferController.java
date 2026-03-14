@@ -26,12 +26,10 @@ public class AssetOfferController {
             @RequestBody CreateAssetOfferApiRequest body,
             HttpServletRequest httpRequest
     ) {
-
         String token = authCookieService.extractToken(httpRequest);
 
         CreateAssetOfferCommand command =
                 new CreateAssetOfferCommand(
-                        body.accountId(),
                         body.assetUnityId(),
                         body.price(),
                         token

@@ -3,6 +3,7 @@ package br.com.ale.dao;
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.AccountDetailsResponse;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateBalanceOperationRequest;
@@ -12,9 +13,24 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Optional;
 
 public class AccountDAO {
+
+    private static Account mapRow(ResultSet rs) throws SQLException {
+
+        return new Account(
+                rs.getLong("id"),
+                rs.getLong("client_id"),
+                rs.getString("account_number"),
+                AccountType.valueOf(rs.getString("account_type")),
+                rs.getBigDecimal("balance"),
+                AccountStatus.valueOf(rs.getString("status")),
+                rs.getString("public_key"),
+                rs.getTimestamp("next_free_asset_at").toInstant()
+        );
+    }
 
     public long insert(Connection conn, CreateAccountRequest request, String publicKey) {
 
@@ -100,7 +116,8 @@ public class AccountDAO {
                        account_type,
                        balance,
                        status,
-                       public_key
+                       public_key,
+                       next_free_asset_at
                   FROM account
                  WHERE id = ?
                 """;
@@ -138,7 +155,8 @@ public class AccountDAO {
                        account_type,
                        balance,
                        status,
-                       public_key
+                       public_key,
+                       next_free_asset_at
                   FROM account
                  WHERE client_id = ?
                 """;
@@ -167,33 +185,28 @@ public class AccountDAO {
         }
     }
 
-    private static Account mapRow(ResultSet rs) throws SQLException {
-
-        return new Account(
-                rs.getLong("id"),
-                rs.getLong("client_id"),
-                rs.getString("account_number"),
-                AccountType.valueOf(rs.getString("account_type")),
-                rs.getBigDecimal("balance"),
-                AccountStatus.valueOf(rs.getString("status")),
-                rs.getString("public_key")
-        );
-    }
-
     public Optional<AccountDetailsResponse> selectDetailsById(Connection conn, long accountId) {
 
         String sql = """
-                SELECT id,
-                       client_id,
-                       account_number,
-                       account_type,
-                       balance,
-                       status,
-                       public_key,
-                       created_at,
-                       updated_at
-                  FROM account
-                 WHERE id = ?
+                    SELECT
+                    a.id,
+                    a.client_id,
+                    a.account_number,
+                    a.account_type,
+                    a.balance,
+                    a.status,
+                    a.public_key,
+                    a.created_at,
+                    a.updated_at,
+                    a.next_free_asset_at,
+                
+                    c.name,
+                    c.picture,
+                    c.email_verified,
+                    c.provider
+                FROM account a
+                JOIN client c ON c.id = a.client_id
+                WHERE a.id = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -212,7 +225,13 @@ public class AccountDAO {
                                     AccountStatus.valueOf(rs.getString("status")),
                                     rs.getString("public_key"),
                                     rs.getTimestamp("created_at").toInstant(),
-                                    rs.getTimestamp("updated_at").toInstant()
+                                    rs.getTimestamp("updated_at").toInstant(),
+                                    rs.getTimestamp("next_free_asset_at").toInstant(),
+
+                                    rs.getString("name"),
+                                    rs.getString("picture"),
+                                    rs.getBoolean("email_verified"),
+                                    Provider.valueOf(rs.getString("provider"))
                             )
                     );
                 }
@@ -237,7 +256,8 @@ public class AccountDAO {
                        account_type,
                        balance,
                        status,
-                       public_key
+                       public_key,
+                       next_free_asset_at
                   FROM account
                  WHERE account_number = ?
                 """;
@@ -316,6 +336,65 @@ public class AccountDAO {
                     "Database error while crediting account " +
                             "[accountNumber=" + request.accountNumber() +
                             ", amount=" + request.amount() + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Instant> tryClaimAssetUnity(Connection conn, String accountNumber) {
+
+        String sql = """
+                UPDATE account
+                SET next_free_asset_at = now() + interval '2 hours'
+                WHERE account_number = ?
+                AND next_free_asset_at <= now()
+                RETURNING next_free_asset_at;
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, accountNumber);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(rs.getTimestamp("next_free_asset_at").toInstant());
+                }
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while claiming free asset [accountId=" + accountNumber + "]",
+                    e
+            );
+        }
+    }
+
+    public Instant selectNextClaimById(Connection conn, String accountNumber) {
+
+        String sql = """
+                SELECT next_free_asset_at
+                  FROM account
+                 WHERE account_number = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, accountNumber);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getDate("next_free_asset_at").toInstant();
+                }
+
+                return null;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting next claim instant account " +
+                            "[accountNumber=" + accountNumber + "]",
                     e
             );
         }

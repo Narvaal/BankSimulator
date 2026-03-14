@@ -49,18 +49,28 @@ public class AssetBundleDAO {
         }
     }
 
-    public List<AssetBundle> selectAll(Connection conn) {
+    public List<AssetBundle> selectAll(Connection conn, int page, int size) {
+
         String sql = """
-                SELECT id,
-                       identifier,
-                       created_at
-                  FROM asset_bundle
-                 ORDER BY created_at DESC
-                """;
+        SELECT id,
+               identifier,
+               created_at
+          FROM asset_bundle
+         ORDER BY created_at DESC
+         LIMIT ? OFFSET ?
+        """;
+
+        int offset = page * size;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, size);
+            stmt.setInt(2, offset);
+
             try (ResultSet rs = stmt.executeQuery()) {
+
                 List<AssetBundle> bundles = new ArrayList<>();
+
                 while (rs.next()) {
                     bundles.add(new AssetBundle(
                             rs.getLong("id"),
@@ -68,10 +78,15 @@ public class AssetBundleDAO {
                             rs.getTimestamp("created_at").toInstant()
                     ));
                 }
+
                 return bundles;
             }
+
         } catch (SQLException e) {
-            throw new RuntimeException("Database error while selecting bundles", e);
+            throw new RuntimeException(
+                    "Database error while selecting bundles [page=" + page + ", size=" + size + "]",
+                    e
+            );
         }
     }
 }

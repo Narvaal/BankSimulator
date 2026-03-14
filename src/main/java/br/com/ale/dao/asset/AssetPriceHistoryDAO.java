@@ -157,37 +157,42 @@ public class AssetPriceHistoryDAO {
         }
     }
 
-    public List<AssetPriceHistory> selectByAssetId(Connection conn, long assetId) {
+    public List<AssetPriceHistory> selectByAssetUnityId(Connection conn, long assetUnityId) {
+
         String sql = """
-                SELECT aph.id,
-                       aph.asset_listing_id,
-                       aph.asset_unity_id,
-                       aph.old_price,
-                       aph.new_price,
-                       aph.changed_by_account_id,
-                       aph.reason,
-                       aph.created_at
-                  FROM asset_price_history aph
-                  JOIN asset_unit au
-                    ON au.id = aph.asset_unity_id
-                 WHERE au.asset_id = ?
-                 ORDER BY aph.created_at ASC
-                """;
+            SELECT aph.id,
+                   aph.asset_listing_id,
+                   aph.asset_unity_id,
+                   aph.old_price,
+                   aph.new_price,
+                   aph.changed_by_account_id,
+                   aph.reason,
+                   aph.created_at
+              FROM asset_price_history aph
+             WHERE aph.asset_unity_id = ?
+             ORDER BY aph.created_at ASC
+            """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, assetId);
+
+            stmt.setLong(1, assetUnityId);
 
             try (ResultSet rs = stmt.executeQuery()) {
+
                 List<AssetPriceHistory> result = new ArrayList<>();
+
                 while (rs.next()) {
                     result.add(mapRow(rs));
                 }
+
                 return result;
             }
+
         } catch (SQLException e) {
+
             throw new RuntimeException(
                     "Database error while selecting asset price history " +
-                            "[assetId=" + assetId + "]",
+                            "[assetUnityId=" + assetUnityId + "]",
                     e
             );
         }

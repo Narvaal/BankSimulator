@@ -51,6 +51,8 @@ public class PurchaseAssetUseCase {
             throw new UnauthorizedOperationException("Seller cannot buy own asset");
         }
 
+        accountService.transfer(authenticated.getId(), listing.getSellerAccountId(), listing.getPrice());
+
         AssetPurchase purchase = assetPurchaseService.purchase(
                 new CreateAssetPurchaseRequest(
                         listing.getId(),

@@ -1,5 +1,6 @@
 package br.com.ale.service.marketplace;
 
+import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.asset.AssetListingDAO;
 import br.com.ale.dao.asset.AssetTransferDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
@@ -7,6 +8,7 @@ import br.com.ale.domain.asset.*;
 import br.com.ale.dto.CreateAssetPurchaseRequest;
 import br.com.ale.dto.CreateAssetTransferRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
 
 import java.sql.Connection;
