@@ -3,7 +3,7 @@ import type {ComponentType, Dispatch, SetStateAction, SVGProps} from "react";
 
 import {BriefcaseIcon, GiftIcon, ShoppingCartIcon} from "@heroicons/react/24/outline";
 import {ArrowLeftIcon} from "@heroicons/react/16/solid";
-import {useLocation} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -19,7 +19,7 @@ function NavItem({icon: Icon, text, collapsed, link}: NavItemProps) {
     const active = location.pathname === link;
 
     return (
-        <a href={link}>
+        <Link to={link}>
             <div className="relative group">
                 <div
                     className={`flex items-center h-11 rounded-lg px-3 cursor-pointer transition border
@@ -60,9 +60,10 @@ function NavItem({icon: Icon, text, collapsed, link}: NavItemProps) {
                     </div>
                 )}
             </div>
-        </a>
+        </Link>
     );
 }
+
 
 interface Props {
     collapsed: boolean;
