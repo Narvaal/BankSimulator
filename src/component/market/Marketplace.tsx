@@ -35,7 +35,7 @@ interface assetListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number): Promise<assetListingPageView> {
-    const res = await fetch(`https://bankapi.alessandro-bezerra.me//asset-listings?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`https://bankapi.alessandro-bezerra.me/asset-listings?page=${page}&pageSize=${pageSize}`, {
         method: "GET",
         credentials: "include"
     });
