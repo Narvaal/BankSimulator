@@ -14,19 +14,20 @@ import java.time.Duration;
 @Component
 public class AuthCookieService {
 
+    private static final String AUTH_COOKIE_NAME = "AUTH_TOKEN";
+
     public void addAuthCookie(HttpServletResponse response, String token) {
 
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofDays(1))
                 .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
-    private static final String AUTH_COOKIE_NAME = "AUTH_TOKEN";
 
     public String extractToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
