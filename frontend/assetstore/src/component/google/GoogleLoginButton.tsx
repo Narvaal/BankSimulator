@@ -7,7 +7,7 @@ type GoogleCredentialResponse = {
 };
 
 async function handleGoogleLogin(response: GoogleCredentialResponse) {
-    const res = await fetch("https://BankSimulator.us-east-2.elasticbeanstalk.com/auth/google", {
+    const res = await fetch("https://https://bankapi.alessandro-bezerra.me/auth/google", {
         method: "POST",
         credentials: "include",
         headers: {
