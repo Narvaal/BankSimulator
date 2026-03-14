@@ -1,5 +1,5 @@
 /// <reference types="@types/google.accounts" />
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 
 type GoogleCredentialResponse = {
     credential: string;
@@ -35,18 +35,18 @@ function GoogleLoginButton() {
                 handleGoogleLogin(response);
             },
         });
-        
+
         window.google.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
             size: "large",
             text: "signin_with",
             shape: "rectangular",
             logo_alignment: "left",
-            width: "100%",
+            type: "standard"
         });
     }, []);
 
-    return <div ref={googleBtnRef} className="w-full" />;
+    return <div ref={googleBtnRef} className="w-full"/>;
 }
 
 export default GoogleLoginButton;
