@@ -17,7 +17,7 @@ export interface Account {
 }
 
 export async function fetchAccount(): Promise<Account> {
-    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/accounts/me", {
+    const res = await fetch("https://BankSimulator.us-east-2.elasticbeanstalk.com/accounts/me", {
         credentials: "include",
     });
 
