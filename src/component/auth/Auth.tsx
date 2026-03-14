@@ -17,7 +17,7 @@ export interface Account {
 }
 
 export async function fetchAccount(): Promise<Account> {
-    const res = await fetch("https://https://bankapi.alessandro-bezerra.me/accounts/me", {
+    const res = await fetch("https://bankapi.alessandro-bezerra.me/accounts/me", {
         credentials: "include",
     });
 
