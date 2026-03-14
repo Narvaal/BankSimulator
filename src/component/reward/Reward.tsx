@@ -27,7 +27,7 @@ interface Asset {
 async function getBundles(page: number, size: number): Promise<Bundle[]> {
 
     const res = await fetch(
-        `https://localhost:8080/assets/bundles?page=${page}&size=${size}`
+        `https://BankSimulator.us-east-2.elasticbeanstalk.com/assets/bundles?page=${page}&size=${size}`
     );
 
     if (!res.ok) throw new Error("Failed to load bundles");

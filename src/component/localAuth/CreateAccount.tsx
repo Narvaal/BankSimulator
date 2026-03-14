@@ -40,7 +40,7 @@ function checkName(name: string): string | null {
 }
 
 async function handleAccountCreation(name: string, email: string, password: string) {
-    const res = await fetch("http://BankSimulator.us-east-2.elasticbeanstalk.com/accounts", {
+    const res = await fetch("https://BankSimulator.us-east-2.elasticbeanstalk.com/accounts", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
