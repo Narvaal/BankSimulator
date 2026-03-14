@@ -3,6 +3,7 @@ import CreateAccount from "./component/localAuth/CreateAccount";
 import Login from "./component/localAuth/Login";
 import Home from "./component/home/Home"
 import Marketplace from "./component/market/Marketplace.tsx";
+import Reward from "./component/reward/Reward.tsx";
 
 export default function Router() {
     return (
@@ -15,6 +16,8 @@ export default function Router() {
 
                 <Route path="/" element={<Home/>}/>
                 <Route path="/market" element={<Marketplace/>}/>
+
+                <Route path="/reward" element={<Reward/>}/>
 
             </Routes>
         </BrowserRouter>
