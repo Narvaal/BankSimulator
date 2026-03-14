@@ -21,6 +21,7 @@ export async function fetchAccount(): Promise<Account> {
         credentials: "include",
     });
 
+
     if (!res.ok) throw new Error("Not authenticated");
 
     return res.json();
