@@ -7,7 +7,7 @@ type GoogleCredentialResponse = {
 };
 
 async function handleGoogleLogin(response: GoogleCredentialResponse) {
-    const res = await fetch("https://https://bankapi.alessandro-bezerra.me/auth/google", {
+    const res = await fetch("https://bankapi.alessandro-bezerra.me/auth/google", {
         method: "POST",
         credentials: "include",
         headers: {
