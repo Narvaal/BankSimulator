@@ -385,7 +385,14 @@ public class AccountDAO {
             try (ResultSet rs = stmt.executeQuery()) {
 
                 if (rs.next()) {
-                    return rs.getDate("next_free_asset_at").toInstant();
+
+                    var timestamp = rs.getTimestamp("next_free_asset_at");
+
+                    if (timestamp == null) {
+                        return null;
+                    }
+
+                    return timestamp.toInstant();
                 }
 
                 return null;
