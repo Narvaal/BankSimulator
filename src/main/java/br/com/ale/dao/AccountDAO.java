@@ -168,9 +168,7 @@ public class AccountDAO {
             try (ResultSet rs = stmt.executeQuery()) {
 
                 if (rs.next()) {
-                    return Optional.of(
-                            mapRow(rs)
-                    );
+                    return Optional.of(mapRow(rs));
                 }
 
                 return Optional.empty();

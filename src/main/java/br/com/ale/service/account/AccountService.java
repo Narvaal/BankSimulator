@@ -112,7 +112,7 @@ public class AccountService {
 
     public Optional<Account> getAccountByClientId(long clientId) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return accountDAO.selectById(conn, clientId);
+            return accountDAO.selectByClientId(conn, clientId);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting account " +

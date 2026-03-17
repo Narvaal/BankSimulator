@@ -9,9 +9,9 @@ import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateClientRequest;
-import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.account.AccountNumberGenerator;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.auth.GoogleTokenVerifier;
 import br.com.ale.service.auth.JwtService;
 
@@ -35,7 +35,7 @@ public class GoogleLoginUseCase {
             JwtService jwtService,
             GoogleTokenVerifier googleTokenVerifier,
             String googleClientId
-    ){
+    ) {
         this.accountNumberGenerator = accountNumberGenerator;
         this.accountService = accountService;
         this.clientService = clientService;
@@ -67,16 +67,18 @@ public class GoogleLoginUseCase {
 
     }
 
-    private void findOrCreateAccount(Client client) {
+    private Account findOrCreateAccount(Client client) {
 
         Optional<Account> existing = accountService.getAccountByClientId(client.getId());
 
-        existing.orElseGet(() -> accountService.createAccount(new CreateAccountRequest(
-                client.getId(),
-                accountNumberGenerator.generate(client),
-                AccountType.DEFAULT,
-                AccountStatus.ACTIVE
-        )));
+        return existing.orElseGet(() ->
+                accountService.createAccount(new CreateAccountRequest(
+                        client.getId(),
+                        accountNumberGenerator.generate(client),
+                        AccountType.DEFAULT,
+                        AccountStatus.ACTIVE
+                ))
+        );
     }
 
     public AuthToken execute(GoogleLoginCommand command) {
@@ -106,7 +108,7 @@ public class GoogleLoginUseCase {
         }
 
         Client client = findOrCreateGoogleClient(name, email, googleId, emailVerified, picture);
-        findOrCreateAccount(client);
+        Account account = findOrCreateAccount(client);
 
         String jwt = jwtService.generateToken(client.getId());
 
