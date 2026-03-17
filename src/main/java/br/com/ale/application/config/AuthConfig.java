@@ -12,7 +12,7 @@ import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.infrastructure.db.DefaultConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
-import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.infrastructure.db.secrets.SecretsService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.TransactionService;
 import br.com.ale.service.account.AccountNumberGenerator;
@@ -37,13 +37,10 @@ public class AuthConfig {
     @Bean
     public ConnectionProvider connectionProvider(
             @Value("${db.default.url}") String url,
-            @Value("${db.default.user}") String user,
-            @Value("${db.default.password:}") String password,
-            @Value("${db.use.test:false}") boolean useTestDb
+            @Value("${db.default.user}") String user
     ) {
-        if (useTestDb) {
-            return new TestConnectionProvider();
-        }
+        SecretsService secretsService = new SecretsService();
+        String password = secretsService.getDbPassword();
         return new DefaultConnectionProvider(url, user, password);
     }
 
