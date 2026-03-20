@@ -35,7 +35,7 @@ interface assetListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number): Promise<assetListingPageView> {
-    const res = await fetch(`https://bankapi.alessandro-bezerra.me/asset-listings?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings?page=${page}&pageSize=${pageSize}`, {
         method: "GET",
         credentials: "include"
     });
@@ -47,7 +47,7 @@ async function getListings(page: number, pageSize: number): Promise<assetListing
 
 async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
     const res = await fetch(
-        `https://bankapi.alessandro-bezerra.me/assets/${assetUnityId}/price-history`
+        `https://api.alessandro-bezerra.me/assets/${assetUnityId}/price-history`
     );
 
     if (!res.ok) throw new Error("Failed to load price history");
@@ -57,7 +57,7 @@ async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHis
 
 async function buyAssetUnity(assetListingId: number) {
     const res = await fetch(
-        `https://bankapi.alessandro-bezerra.me/asset-listings/${assetListingId}/purchase`,
+        `https://api.alessandro-bezerra.me/asset-listings/${assetListingId}/purchase`,
         {method: "POST", credentials: "include"}
     );
 

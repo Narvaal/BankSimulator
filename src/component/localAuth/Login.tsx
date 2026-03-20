@@ -4,7 +4,7 @@ import {useState} from "react";
 import {EnvelopeIcon, EyeIcon, EyeSlashIcon, LockClosedIcon} from "@heroicons/react/24/solid";
 
 async function handleLogin(email: string, password: string) {
-    const res = await fetch("https://bankapi.alessandro-bezerra.me/auth/login", {
+    const res = await fetch("https://api.alessandro-bezerra.me/auth/login", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
