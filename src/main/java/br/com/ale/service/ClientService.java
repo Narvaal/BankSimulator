@@ -16,6 +16,7 @@ public class ClientService {
     private final ClientDAO clientDAO = new ClientDAO();
     private final HashAccountNumberGenerator hashAccountNumberGenerator = new HashAccountNumberGenerator();
     private final ConnectionProvider connectionProvider;
+
     public ClientService(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
 
@@ -110,7 +111,7 @@ public class ClientService {
 
     public Optional<Client> getClientByProviderAndId(Provider provider, String providerId) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return clientDAO.selectByProviderAndId(conn, provider,providerId);
+            return clientDAO.selectByProviderAndId(conn, provider, providerId);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting client " +
@@ -131,6 +132,18 @@ public class ClientService {
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting client " +
+                            "[clientId=" + clientId + "]",
+                    e
+            );
+        }
+    }
+
+    public int activate(long clientId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.activate(conn, clientId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client to activate " +
                             "[clientId=" + clientId + "]",
                     e
             );

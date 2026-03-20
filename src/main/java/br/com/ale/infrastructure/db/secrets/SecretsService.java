@@ -1,12 +1,14 @@
 package br.com.ale.infrastructure.db.secrets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
 import java.util.Map;
 
+@Service
 public class SecretsService {
 
     private final SecretsManagerClient client;

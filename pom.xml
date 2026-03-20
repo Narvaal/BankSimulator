@@ -110,6 +110,13 @@
             <artifactId>secretsmanager</artifactId>
         </dependency>
 
+        <!-- AWS Email Service -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ses</artifactId>
+            <version>2.25.28</version>
+        </dependency>
+
     </dependencies>
 
     <build>

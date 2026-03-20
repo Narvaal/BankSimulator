@@ -30,14 +30,20 @@ CREATE TABLE account
             REFERENCES client (id)
 );
 
+CREATE TYPE verification_type AS ENUM (
+    'EMAIL_VERIFICATION',
+    'PASSWORD_RESET'
+    );
+
 CREATE TABLE email_verification
 (
     id          BIGSERIAL PRIMARY KEY,
-    client_id   BIGINT       NOT NULL,
-    token       VARCHAR(255) NOT NULL UNIQUE,
-    expires_at  TIMESTAMP    NOT NULL,
+    client_id   BIGINT            NOT NULL,
+    token       VARCHAR(255)      NOT NULL UNIQUE,
+    type        verification_type NOT NULL,
+    expires_at  TIMESTAMP         NOT NULL,
     verified_at TIMESTAMP,
-    created_at  TIMESTAMP    NOT NULL DEFAULT now(),
+    created_at  TIMESTAMP         NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_email_verification_client
         FOREIGN KEY (client_id)

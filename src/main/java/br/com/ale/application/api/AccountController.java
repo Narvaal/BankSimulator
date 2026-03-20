@@ -3,20 +3,12 @@ package br.com.ale.application.api;
 import br.com.ale.application.account.command.CreateAccountCommand;
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
-import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.dto.AccountDetailsResponse;
-import br.com.ale.dto.AuthResponse;
 import br.com.ale.dto.CreateAccountApiRequest;
+import br.com.ale.dto.CreateAccountResponse;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/accounts")
@@ -37,9 +29,9 @@ public class AccountController {
     }
 
     @PostMapping
-    public AuthResponse create(@RequestBody CreateAccountApiRequest request,
-                               HttpServletResponse response) {
-        AuthToken authToken = createAccountUseCase.execute(
+    public CreateAccountResponse create(@RequestBody CreateAccountApiRequest request) {
+
+        createAccountUseCase.execute(
                 new CreateAccountCommand(
                         request.name(),
                         request.email(),
@@ -47,9 +39,9 @@ public class AccountController {
                 )
         );
 
-        authCookieService.addAuthCookie(response, authToken.getToken());
-
-        return new AuthResponse(authToken.getClientId(), "Authenticated");
+        return new CreateAccountResponse(
+                "Account created. Check your email to activate your account."
+        );
     }
 
     @GetMapping("/me")

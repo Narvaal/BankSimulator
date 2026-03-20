@@ -2,12 +2,15 @@ package br.com.ale.service;
 
 import br.com.ale.dao.EmailVerificationDAO;
 import br.com.ale.domain.emailVerification.EmailVerification;
+import br.com.ale.domain.emailVerification.EmailVerificationType;
 import br.com.ale.dto.CreateEmailVerificationRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.util.Optional;
 
+@Service
 public class EmailVerificationService {
 
     private final ConnectionProvider connectionProvider;
@@ -17,26 +20,43 @@ public class EmailVerificationService {
         this.connectionProvider = connectionProvider;
     }
 
-    public Long insert(CreateEmailVerificationRequest request) {
+    public long create(CreateEmailVerificationRequest request) {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            return emailVerificationDAO.insert(conn, request);
+            conn.setAutoCommit(false);
+
+            try {
+                emailVerificationDAO.invalidatePreviousTokens(
+                        conn,
+                        request.clientId(),
+                        request.type()
+                );
+
+                long id = emailVerificationDAO.insert(conn, request);
+
+                conn.commit();
+                return id;
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while inserting email verification " +
+                    "Service error while creating email verification " +
                             "[clientId=" + request.clientId() + "]",
                     e
             );
         }
     }
 
-    public Optional<EmailVerification> findByToken(String token) {
+    public Optional<EmailVerification> findByToken(String token, EmailVerificationType type) {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            return emailVerificationDAO.findByToken(conn, token);
+            return emailVerificationDAO.findValidByToken(conn, token, type);
 
         } catch (Exception e) {
             throw new RuntimeException(
@@ -47,26 +67,14 @@ public class EmailVerificationService {
         }
     }
 
-    public void markVerified(long id) {
+    public Optional<EmailVerification> findActiveByClientId(
+            long clientId,
+            EmailVerificationType type
+    ) {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            emailVerificationDAO.markVerified(conn, id);
-
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Service error while marking email verification as verified " +
-                            "[id=" + id + "]",
-                    e
-            );
-        }
-    }
-
-    public Optional<EmailVerification> findActiveByClientId(long clientId) {
-
-        try (Connection conn = connectionProvider.getConnection()) {
-
-            return emailVerificationDAO.findActiveByClientId(conn, clientId);
+            return emailVerificationDAO.findActiveByClientId(conn, clientId, type);
 
         } catch (Exception e) {
             throw new RuntimeException(
@@ -77,24 +85,44 @@ public class EmailVerificationService {
         }
     }
 
-    public EmailVerification validateToken(String token) {
+    public EmailVerification validateToken(String token, EmailVerificationType type) {
 
-        Optional<EmailVerification> optional = findByToken(token);
+        return findByToken(token, type)
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid or expired email verification token")
+                );
+    }
 
-        if (optional.isEmpty()) {
-            throw new RuntimeException("Invalid email verification token");
+    public EmailVerification confirmToken(String token, EmailVerificationType type) {
+
+        try (Connection conn = connectionProvider.getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try {
+                EmailVerification verification = emailVerificationDAO
+                        .findValidByToken(conn, token, type)
+                        .orElseThrow(() ->
+                                new RuntimeException("Invalid or expired email verification token")
+                        );
+
+                emailVerificationDAO.markVerified(conn, verification.getId());
+
+                conn.commit();
+
+                return verification;
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while confirming email verification " +
+                            "[token=" + token + "]",
+                    e
+            );
         }
-
-        EmailVerification verification = optional.get();
-
-        if (verification.isVerified()) {
-            throw new RuntimeException("Email already verified");
-        }
-
-        if (verification.isExpired()) {
-            throw new RuntimeException("Email verification token expired");
-        }
-
-        return verification;
     }
 }

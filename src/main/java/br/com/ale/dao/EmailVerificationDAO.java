@@ -1,9 +1,11 @@
 package br.com.ale.dao;
 
 import br.com.ale.domain.emailVerification.EmailVerification;
+import br.com.ale.domain.emailVerification.EmailVerificationType;
 import br.com.ale.dto.CreateEmailVerificationRequest;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.Optional;
 
 public class EmailVerificationDAO {
@@ -14,22 +16,24 @@ public class EmailVerificationDAO {
                 INSERT INTO email_verification (
                     client_id,
                     token,
+                    type,
                     expires_at,
                     verified_at
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setLong(1, request.clientId());
             stmt.setString(2, request.token());
-            stmt.setTimestamp(3, Timestamp.from(request.expiresAt()));
+            stmt.setObject(3, request.type().name(), Types.OTHER);
+            stmt.setTimestamp(4, Timestamp.from(request.expiresAt()));
 
             if (request.verifiedAt() != null) {
-                stmt.setTimestamp(4, Timestamp.from(request.verifiedAt()));
+                stmt.setTimestamp(5, Timestamp.from(request.verifiedAt()));
             } else {
-                stmt.setNull(4, Types.TIMESTAMP);
+                stmt.setNull(5, Types.TIMESTAMP);
             }
 
             int rowsAffected = stmt.executeUpdate();
@@ -45,7 +49,6 @@ public class EmailVerificationDAO {
                 if (rs.next()) {
                     return rs.getLong("id");
                 }
-
                 throw new RuntimeException(
                         "Failed to retrieve email verification id [clientId=" +
                                 request.clientId() + ", token=" + request.token() + "]"
@@ -54,7 +57,7 @@ public class EmailVerificationDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while email verification " +
+                    "Database error while inserting email verification " +
                             "[clientId=" + request.clientId() +
                             ", token=" + request.token() + "]",
                     e
@@ -62,41 +65,69 @@ public class EmailVerificationDAO {
         }
     }
 
-    public Optional<EmailVerification> findByToken(Connection conn, String token) {
+    public Optional<EmailVerification> findValidByToken(
+            Connection conn,
+            String token,
+            EmailVerificationType type
+    ) {
 
         String sql = """
-                SELECT id, client_id, token, expires_at, verified_at, created_at
+                SELECT id, client_id, token, type, expires_at, verified_at, created_at
                 FROM email_verification
                 WHERE token = ?
+                  AND type = ?
+                  AND verified_at IS NULL
+                  AND expires_at > now()
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, token);
+            stmt.setObject(2, type.name(), Types.OTHER);
 
             try (ResultSet rs = stmt.executeQuery()) {
-
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
-
-                EmailVerification verification = new EmailVerification(
-                        rs.getLong("id"),
-                        rs.getLong("client_id"),
-                        rs.getString("token"),
-                        rs.getTimestamp("expires_at").toInstant(),
-                        rs.getTimestamp("verified_at") != null
-                                ? rs.getTimestamp("verified_at").toInstant()
-                                : null,
-                        rs.getTimestamp("created_at").toInstant()
-                );
-
-                return Optional.of(verification);
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(mapRow(rs));
             }
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while fetching email verification [token=" + token + "]",
+                    "Database error while fetching valid email verification [token=" + token + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<EmailVerification> findActiveByClientId(
+            Connection conn,
+            long clientId,
+            EmailVerificationType type
+    ) {
+
+        String sql = """
+                SELECT id, client_id, token, type, expires_at, verified_at, created_at
+                FROM email_verification
+                WHERE client_id = ?
+                  AND type = ?
+                  AND verified_at IS NULL
+                  AND expires_at > now()
+                ORDER BY created_at DESC
+                LIMIT 1
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, clientId);
+            stmt.setObject(2, type.name(), Types.OTHER);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(mapRow(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while fetching active email verification [clientId=" + clientId + "]",
                     e
             );
         }
@@ -111,11 +142,8 @@ public class EmailVerificationDAO {
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setLong(1, id);
-
             int rows = stmt.executeUpdate();
-
             if (rows == 0) {
                 throw new RuntimeException(
                         "Failed to mark email verification as verified [id=" + id + "]"
@@ -130,44 +158,48 @@ public class EmailVerificationDAO {
         }
     }
 
-    public Optional<EmailVerification> findActiveByClientId(Connection conn, long clientId) {
+    public void invalidatePreviousTokens(
+            Connection conn,
+            long clientId,
+            EmailVerificationType type
+    ) {
 
         String sql = """
-                SELECT id, client_id, token, expires_at, verified_at, created_at
-                FROM email_verification
+                UPDATE email_verification
+                SET verified_at = now()
                 WHERE client_id = ?
-                AND verified_at IS NULL
-                ORDER BY created_at DESC
-                LIMIT 1
+                  AND type = ?
+                  AND verified_at IS NULL
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, clientId);
+            stmt.setObject(2, type.name(), Types.OTHER);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
-
-                EmailVerification verification = new EmailVerification(
-                        rs.getLong("id"),
-                        rs.getLong("client_id"),
-                        rs.getString("token"),
-                        rs.getTimestamp("expires_at").toInstant(),
-                        null,
-                        rs.getTimestamp("created_at").toInstant()
-                );
-
-                return Optional.of(verification);
-            }
+            stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while fetching active email verification [clientId=" + clientId + "]",
+                    "Database error while invalidating tokens [clientId=" + clientId + "]",
                     e
             );
         }
+    }
+
+    private EmailVerification mapRow(ResultSet rs) throws SQLException {
+
+        Timestamp verifiedAtTs = rs.getTimestamp("verified_at");
+        Instant verifiedAt = verifiedAtTs != null ? verifiedAtTs.toInstant() : null;
+
+        return new EmailVerification(
+                rs.getLong("id"),
+                rs.getLong("client_id"),
+                rs.getString("token"),
+                EmailVerificationType.valueOf(rs.getString("type")),
+                rs.getTimestamp("expires_at").toInstant(),
+                verifiedAt,
+                rs.getTimestamp("created_at").toInstant()
+        );
     }
 }

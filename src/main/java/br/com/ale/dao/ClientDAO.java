@@ -100,6 +100,30 @@ public class ClientDAO {
         }
     }
 
+    public int activate(Connection conn, Long clientId) {
+
+        String sql = """
+                UPDATE client
+                   SET email_verified = TRUE
+                 WHERE id = ?
+                   AND email_verified = FALSE
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, clientId);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while activating client " +
+                            "[clientId=" + clientId + "]",
+                    e
+            );
+        }
+    }
+
     public int deleteById(Connection conn, long id) {
 
         String sql = """
@@ -181,6 +205,7 @@ public class ClientDAO {
                         email_verified,
                         picture
                 FROM client WHERE email = ?
+                AND email_verified = TRUE
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -314,4 +339,6 @@ public class ClientDAO {
             );
         }
     }
+
+
 }

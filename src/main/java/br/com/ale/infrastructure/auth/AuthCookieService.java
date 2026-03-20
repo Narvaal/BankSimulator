@@ -20,6 +20,7 @@ public class AuthCookieService {
 
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
                 .httpOnly(true)
+                .domain("api.alessandro-bezerra.me")
                 .secure(true)
                 .sameSite("None")
                 .path("/")

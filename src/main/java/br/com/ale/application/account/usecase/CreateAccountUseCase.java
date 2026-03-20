@@ -1,43 +1,48 @@
 package br.com.ale.application.account.usecase;
 
 import br.com.ale.application.account.command.CreateAccountCommand;
-import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
-import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.domain.auth.PasswordHasher;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
+import br.com.ale.domain.emailVerification.EmailVerificationType;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateClientRequest;
-import br.com.ale.service.account.AccountService;
+import br.com.ale.dto.CreateEmailVerificationRequest;
 import br.com.ale.service.ClientService;
+import br.com.ale.service.EmailVerificationService;
 import br.com.ale.service.account.AccountNumberGenerator;
-import br.com.ale.service.auth.JwtService;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.email.EmailVerificationSender;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 public class CreateAccountUseCase {
 
     private final AccountService accountService;
     private final ClientService clientService;
     private final AccountNumberGenerator accountNumberGenerator;
-    private final JwtService jwtService;
+    private final EmailVerificationService emailVerificationService;
+    private final EmailVerificationSender emailVerificationSender;
 
     public CreateAccountUseCase(
             AccountService accountService,
             ClientService clientService,
             AccountNumberGenerator accountNumberGenerator,
-            JwtService jwtService
-
+            EmailVerificationService emailVerificationService,
+            EmailVerificationSender emailVerificationSender
     ) {
         this.accountService = accountService;
-        this.clientService = clientService;
         this.accountNumberGenerator = accountNumberGenerator;
-        this.jwtService = jwtService;
+        this.clientService = clientService;
+        this.emailVerificationService = emailVerificationService;
+        this.emailVerificationSender = emailVerificationSender;
     }
 
-    public AuthToken execute(CreateAccountCommand command) {
+    public void execute(CreateAccountCommand command) {
 
         String hashedPassword = PasswordHasher.hash(command.password());
 
@@ -53,23 +58,35 @@ public class CreateAccountUseCase {
                 )
         );
 
-        String accountNumber = accountNumberGenerator.generate(client);
+        String token = UUID.randomUUID().toString();
 
-        accountService.createAccount(
-                new CreateAccountRequest(
-                        client.getId(),
-                        accountNumber,
-                        AccountType.DEFAULT,
-                        AccountStatus.ACTIVE
-                )
-        );
+        try {
+            emailVerificationSender.sendVerificationEmail(client, token);
 
-        String jwt = jwtService.generateToken(client.getId());
+            emailVerificationService.create(
+                    new CreateEmailVerificationRequest(
+                            client.getId(),
+                            token,
+                            EmailVerificationType.EMAIL_VERIFICATION,
+                            Instant.now().plus(1, ChronoUnit.DAYS),
+                            null
+                    )
+            );
 
-        return new AuthToken(
-                client.getId(),
-                jwt,
-                Instant.now()
-        );
+            String accountNumber = accountNumberGenerator.generate(client);
+
+            accountService.createAccount(
+                    new CreateAccountRequest(
+                            client.getId(),
+                            accountNumber,
+                            AccountType.DEFAULT,
+                            AccountStatus.ACTIVE
+                    )
+            );
+
+        } catch (Exception e) {
+            clientService.deleteClient(client.getId());
+            throw new RuntimeException("Failed to send verification email, account not created.", e);
+        }
     }
 }

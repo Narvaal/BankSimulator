@@ -7,18 +7,28 @@ public class EmailVerification {
     private Long id;
     private Long clientId;
     private String token;
+    private EmailVerificationType type;
     private Instant expiresAt;
     private Instant verifiedAt;
     private Instant createdAt;
 
-    public EmailVerification(Long id, Long clientId, String token,
+    public EmailVerification(Long id, Long clientId, String token, EmailVerificationType type,
                              Instant expiresAt, Instant verifiedAt, Instant createdAt) {
         this.id = id;
         this.clientId = clientId;
         this.token = token;
+        this.type = type;
         this.expiresAt = expiresAt;
         this.verifiedAt = verifiedAt;
         this.createdAt = createdAt;
+    }
+
+    public EmailVerificationType getType() {
+        return type;
+    }
+
+    public void setType(EmailVerificationType type) {
+        this.type = type;
     }
 
     public Instant getCreatedAt() {

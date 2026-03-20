@@ -3,6 +3,7 @@ package br.com.ale.application.config;
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
 import br.com.ale.application.account.usecase.DepositAccountUseCase;
+import br.com.ale.application.account.usecase.VerifyAccountUseCase;
 import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
 import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.application.client.query.GetClientProfileUseCase;
@@ -14,6 +15,7 @@ import br.com.ale.infrastructure.db.DefaultConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
 import br.com.ale.infrastructure.db.secrets.SecretsService;
 import br.com.ale.service.ClientService;
+import br.com.ale.service.EmailVerificationService;
 import br.com.ale.service.TransactionService;
 import br.com.ale.service.account.AccountNumberGenerator;
 import br.com.ale.service.account.AccountService;
@@ -25,6 +27,7 @@ import br.com.ale.service.crypto.FilePrivateKeyStorage;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.crypto.PrivateKeyStorage;
+import br.com.ale.service.email.EmailVerificationSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,12 +38,22 @@ import java.security.KeyPair;
 public class AuthConfig {
 
     @Bean
+    public SecretsService secretsService() {
+        return new SecretsService();
+    }
+
+    @Bean
     public ConnectionProvider connectionProvider(
             @Value("${db.default.url}") String url,
-            @Value("${db.default.user}") String user
+            @Value("${db.default.user}") String user,
+            SecretsService secretsService
     ) {
-        SecretsService secretsService = new SecretsService();
         String password = secretsService.getDbPassword();
+
+        if (password == null || password.isBlank()) {
+            throw new RuntimeException("DB password is null or empty");
+        }
+
         return new DefaultConnectionProvider(url, user, password);
     }
 
@@ -80,10 +93,9 @@ public class AuthConfig {
     public PrivateKeyStorage privateKeyStorage(
             @Value("${db.use.test:false}") boolean useTestDb
     ) {
-        if (useTestDb) {
-            return new InMemoryPrivateKeyStorage();
-        }
-        return new FilePrivateKeyStorage();
+        return useTestDb
+                ? new InMemoryPrivateKeyStorage()
+                : new FilePrivateKeyStorage();
     }
 
     @Bean
@@ -109,13 +121,15 @@ public class AuthConfig {
             AccountService accountService,
             ClientService clientService,
             AccountNumberGenerator accountNumberGenerator,
-            JwtService JwtService
+            EmailVerificationService emailVerificationService,
+            EmailVerificationSender emailVerificationSender
     ) {
         return new CreateAccountUseCase(
                 accountService,
                 clientService,
                 accountNumberGenerator,
-                JwtService
+                emailVerificationService,
+                emailVerificationSender
         );
     }
 
@@ -135,6 +149,19 @@ public class AuthConfig {
                 jwtService,
                 googleTokenVerifier,
                 googleClientId
+        );
+    }
+
+    @Bean
+    public VerifyAccountUseCase verifyAccountUseCase(
+            EmailVerificationService emailVerificationService,
+            ClientService clientService,
+            JwtService jwtService
+    ) {
+        return new VerifyAccountUseCase(
+                emailVerificationService,
+                clientService,
+                jwtService
         );
     }
 

@@ -25,9 +25,7 @@ public class CorsConfig {
 
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://*.amplifyapp.com",
-                "https://alessandro-bezerra.me",
-                "https://bankapi.alessandro-bezerra.me"
+                "https://*.amplifyapp.com"
         ));
 
         configuration.setAllowedMethods(List.of(
@@ -36,6 +34,7 @@ public class CorsConfig {
 
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Set-Cookie"));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
