@@ -20,14 +20,14 @@ public class AuthCookieService {
 
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
                 .httpOnly(true)
-                .domain("api.alessandro-bezerra.me")
+                .domain(".alessandro-bezerra.me")
                 .secure(true)
                 .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofDays(1))
                 .build();
 
-        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public String extractToken(HttpServletRequest request) {

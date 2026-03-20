@@ -45,7 +45,7 @@ public class AuthController {
 
         authCookieService.addAuthCookie(response, authToken.getToken());
 
-        response.sendRedirect("https://api.d1ptri81oftix8.amplifyapp.com/");
+        response.sendRedirect("https://app.alessandro-bezerra.me");
     }
 
     @PostMapping("/login")
