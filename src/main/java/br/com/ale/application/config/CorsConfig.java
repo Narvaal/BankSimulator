@@ -24,8 +24,7 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://*.amplifyapp.com"
+                "https://*.alessandro-bezerra.me"
         ));
 
         configuration.setAllowedMethods(List.of(

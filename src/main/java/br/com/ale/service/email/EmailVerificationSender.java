@@ -47,37 +47,22 @@ public class EmailVerificationSender {
             throw new IllegalArgumentException("Token cannot be null or empty");
         }
 
-        String link = "https://bankapi.alessandro-bezerra.me" + "/auth/verify?token=" + token;
+        String link = "https://api.alessandro-bezerra.me" + "/auth/verify?token=" + token;
 
         String html = templateService.buildVerifyEmailTemplate(
                 Objects.toString(client.getName(), "User"),
                 link
         );
 
-        System.out.println("=== EMAIL DEBUG ===");
-        System.out.println("TO: [" + email + "]");
-        System.out.println("TOKEN: [" + token + "]");
-        System.out.println("LINK: [" + link + "]");
-        System.out.println("===================");
-
         try {
+            
             emailService.send(
                     email,
                     "Confirm your account",
                     html
             );
 
-            System.out.println("Email successfully sent to: [" + email + "]");
-
         } catch (Exception e) {
-            System.err.println("Failed to send email");
-            System.err.println("TO: [" + email + "]");
-            System.err.println("ERROR: " + e.getMessage());
-
-            if (e.getCause() != null) {
-                System.err.println("ROOT CAUSE: " + e.getCause().getMessage());
-            }
-
             throw new RuntimeException("Error sending email [to=" + email + "]", e);
         }
     }
