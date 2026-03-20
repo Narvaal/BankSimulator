@@ -3,6 +3,7 @@ package br.com.ale.application.config;
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
 import br.com.ale.application.account.usecase.DepositAccountUseCase;
+import br.com.ale.application.account.usecase.ResendVerificationUseCase;
 import br.com.ale.application.account.usecase.VerifyAccountUseCase;
 import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
 import br.com.ale.application.auth.usecase.LocalLoginUseCase;
@@ -162,6 +163,19 @@ public class AuthConfig {
                 emailVerificationService,
                 clientService,
                 jwtService
+        );
+    }
+
+    @Bean
+    public ResendVerificationUseCase resendVerificationUseCase(
+            ClientService clientService,
+            EmailVerificationService emailVerificationService,
+            EmailVerificationSender emailVerificationSender
+    ) {
+        return new ResendVerificationUseCase(
+                clientService,
+                emailVerificationService,
+                emailVerificationSender
         );
     }
 

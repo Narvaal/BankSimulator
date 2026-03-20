@@ -1,6 +1,8 @@
 package br.com.ale.application.api;
 
+import br.com.ale.application.account.command.ResendVerificationCommand;
 import br.com.ale.application.account.command.VerifyAccountCommand;
+import br.com.ale.application.account.usecase.ResendVerificationUseCase;
 import br.com.ale.application.account.usecase.VerifyAccountUseCase;
 import br.com.ale.application.auth.command.GoogleLoginCommand;
 import br.com.ale.application.auth.command.LocalLoginCommand;
@@ -10,6 +12,7 @@ import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.dto.AuthResponse;
 import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.dto.CreateGoogleAuthenticationRequest;
+import br.com.ale.dto.ResendVerificationRequest;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
@@ -24,15 +27,20 @@ public class AuthController {
     private final GoogleLoginUseCase googleLoginUseCase;
     private final AuthCookieService authCookieService;
     private final VerifyAccountUseCase verifyAccountUseCase;
+    private final ResendVerificationUseCase resendVerificationUseCase;
 
     public AuthController(LocalLoginUseCase localLoginUseCase,
                           GoogleLoginUseCase googleLoginUseCase,
+                          AuthCookieService authCookieService,
                           VerifyAccountUseCase verifyAccountUseCase,
-                          AuthCookieService authCookieService) {
+                          ResendVerificationUseCase resendVerificationUseCase
+
+    ) {
         this.localLoginUseCase = localLoginUseCase;
         this.googleLoginUseCase = googleLoginUseCase;
         this.authCookieService = authCookieService;
         this.verifyAccountUseCase = verifyAccountUseCase;
+        this.resendVerificationUseCase = resendVerificationUseCase;
     }
 
     @GetMapping("/verify")
@@ -46,6 +54,15 @@ public class AuthController {
         authCookieService.addAuthCookie(response, authToken.getToken());
 
         response.sendRedirect("https://app.alessandro-bezerra.me");
+    }
+
+    @PostMapping("/auth/resend-verification")
+    public void resend(@RequestBody ResendVerificationRequest request) {
+        resendVerificationUseCase.execute(
+                new ResendVerificationCommand(
+                        request.email()
+                )
+        );
     }
 
     @PostMapping("/login")
