@@ -148,6 +148,7 @@ function Marketplace() {
 
     async function openListing(listing: ListingView) {
         setSelectedListing(listing);
+        setPriceHistory([]);
         setLoadingHistory(true);
 
         try {
@@ -180,9 +181,9 @@ function Marketplace() {
 
     /* ===================== CANCEL ===================== */
 
-    if (error) return <div className="p-10 text-center">Checking session...</div>;
     if (authLoading) return <div className="p-10 text-center">Checking session...</div>;
     if (authError || !account) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
+    if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
 
     return (
         <div className="min-h-screen bg-slate-100">
@@ -196,7 +197,10 @@ function Marketplace() {
                 imageUrl={account.picture}
             />
 
-            <main className="pt-22 p-6">
+            <main
+                className="pt-22 p-6 transition-all duration-300"
+                style={{ marginLeft: collapsed ? 80 : 256 }}
+            >
 
                 {/* ===================== SWITCH ===================== */}
 
@@ -290,13 +294,13 @@ function Marketplace() {
                                         try {
                                             await cancelOffer(selectedListing.id);
 
-                                            setListings((prev) => {
-                                                if (!prev) return prev;
-                                                return {
-                                                    ...prev,
-                                                    items: prev.items.filter(l => l.id !== selectedListing.id)
-                                                };
-                                            });
+                                                setListings(prev => {
+                                                    if (!prev) return prev;
+                                                    return {
+                                                        ...prev,
+                                                        items: prev.items.filter(i => i.id !== selectedListing.id)
+                                                    };
+                                                });
 
                                             setSelectedListing(null);
 
