@@ -1,30 +1,29 @@
 package br.com.ale.application.marketplace.usecase;
 
 import br.com.ale.application.marketplace.command.CancelAssetCommand;
-import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.service.asset.AssetListingService;
-import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 
 public class CancelAssetOfferUseCase {
 
     private final AssetListingService assetListingService;
-    private final AuthService authService;
+    private final JwtService jwtService;
 
     public CancelAssetOfferUseCase(
             AssetListingService assetListingService,
-            AuthService authService
+            JwtService jwtService
     ) {
         this.assetListingService = assetListingService;
-        this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     public void execute(CancelAssetCommand command) {
 
-        TokenClaims claims = authService.validateToken(command.token());
+        long clientId = jwtService.extractClientId(command.token());
 
         assetListingService.cancelListing(
                 command.assetListingId(),
-                claims.clientId()
+                clientId
         );
     }
 }

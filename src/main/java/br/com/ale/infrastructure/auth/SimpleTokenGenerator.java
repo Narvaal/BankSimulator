@@ -4,6 +4,8 @@ import br.com.ale.domain.auth.AuthToken;
 import br.com.ale.domain.auth.TokenClaims;
 import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.service.SignatureService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
@@ -59,44 +61,38 @@ public class SimpleTokenGenerator implements TokenGenerator {
 
         try {
             String[] parts = token.split("\\.");
-            if (parts.length != 2) {
+
+            if (parts.length != 3) {
                 throw new InvalidCredentialsException("Invalid token format");
             }
 
-            String payload =
-                    new String(
-                            Base64.getDecoder().decode(parts[0]),
-                            StandardCharsets.UTF_8
-                    );
+            String payloadJson = new String(
+                    Base64.getDecoder().decode(parts[1]),
+                    StandardCharsets.UTF_8
+            );
 
-            String signature = parts[1];
+            String signature = parts[2];
 
-            boolean valid =
-                    SignatureService.verify(payload, signature, publicKey);
+            boolean valid = SignatureService.verify(payloadJson, signature, publicKey);
 
             if (!valid) {
                 throw new InvalidCredentialsException("Invalid token signature");
             }
 
-            String[] fields = payload.split(":");
-            if (fields.length != 4) {
-                throw new InvalidCredentialsException("Invalid token payload");
-            }
+            // Parse JSON do payload
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(payloadJson);
 
-            long clientId = Long.parseLong(fields[0]);
-            long expiresAtMillis = Long.parseLong(fields[2]);
+            long clientId = node.get("sub").asLong();
+            long expiresAtMillis = node.get("exp").asLong() * 1000;
 
-            Instant expiresAt =
-                    Instant.ofEpochMilli(expiresAtMillis);
+            Instant expiresAt = Instant.ofEpochMilli(expiresAtMillis);
 
             if (expiresAt.isBefore(Instant.now())) {
                 throw new InvalidCredentialsException("Token expired");
             }
 
-            return new TokenClaims(
-                    clientId,
-                    expiresAt
-            );
+            return new TokenClaims(clientId, expiresAt);
 
         } catch (InvalidCredentialsException e) {
             throw e;

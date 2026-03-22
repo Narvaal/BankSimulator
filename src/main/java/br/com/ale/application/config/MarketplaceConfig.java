@@ -5,7 +5,6 @@ import br.com.ale.application.marketplace.usecase.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.asset.*;
-import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;
 import br.com.ale.service.marketplace.AssetPurchaseService;
@@ -195,11 +194,11 @@ public class MarketplaceConfig {
     @Bean
     public CancelAssetOfferUseCase cancelAssetOfferUseCase(
             AssetListingService assetListingService,
-            AuthService authService
+            JwtService jwtService
     ) {
         return new CancelAssetOfferUseCase(
                 assetListingService,
-                authService
+                jwtService
         );
     }
 }

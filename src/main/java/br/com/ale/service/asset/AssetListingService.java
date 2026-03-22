@@ -5,7 +5,10 @@ import br.com.ale.dao.asset.AssetListingDAO;
 import br.com.ale.dao.asset.AssetPriceHistoryDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.account.Account;
-import br.com.ale.domain.asset.*;
+import br.com.ale.domain.asset.AssetListing;
+import br.com.ale.domain.asset.AssetListingStatus;
+import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.asset.ReasonType;
 import br.com.ale.domain.exception.InvalidAssetListingStateException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.AssetListingPageView;
@@ -108,7 +111,7 @@ public class AssetListingService {
 
                 assetListingDAO.updateStatus(conn, listingId, AssetListingStatus.CANCELED);
 
-                assetUnityDAO.updateStatus(conn, unity.getId(), AssetUnityStatus.AVAILABLE);
+                assetUnityDAO.updateStatus(conn, unity.getId());
 
                 conn.commit();
 

@@ -138,25 +138,23 @@ public class AssetUnityDAO {
         }
     }
 
-    public void updateStatus(Connection conn, long assetUnitId, AssetUnityStatus status) {
+    public void updateStatus(Connection conn, long assetUnitId) {
 
         String sql = """
                 UPDATE asset_unit
-                SET status = ?
+                SET status = 'AVAILABLE'
                 WHERE id = ?
                 """;
-
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, status.name());
-            stmt.setLong(2, assetUnitId);
+            stmt.setLong(1, assetUnitId);
 
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Database error while updating asset unity status " +
-                            "[assetUnitId=" + assetUnitId + ", status=" + status + "]",
+                            "[assetUnitId=" + assetUnitId + ", status=AVAILABLE" + "]",
                     e
             );
         }
