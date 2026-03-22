@@ -172,12 +172,12 @@ public class MarketplaceConfig {
     @Bean
     public CreateAssetOfferUseCase createAssetOfferUseCase(
             AssetListingService assetListingService,
-            AssetUnityService assetUnityService,
+            AccountService accountService,
             JwtService jwtService
     ) {
         return new CreateAssetOfferUseCase(
                 assetListingService,
-                assetUnityService,
+                accountService,
                 jwtService
         );
     }

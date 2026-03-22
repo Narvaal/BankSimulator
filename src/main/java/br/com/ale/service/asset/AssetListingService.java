@@ -89,7 +89,7 @@ public class AssetListingService {
 
                 validatePrice(request.price());
 
-                boolean locked = assetUnityDAO.tryUpdateToMarket(conn, request.assetUnityId());
+                boolean locked = assetUnityDAO.tryUpdateToMarket(conn, request.assetUnityId(), request.sellerAccountId());
 
                 if (!locked) {
                     throw new UnauthorizedOperationException("Asset not owned or not available");

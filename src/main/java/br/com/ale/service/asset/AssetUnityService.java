@@ -3,16 +3,12 @@ package br.com.ale.service.asset;
 import br.com.ale.dao.asset.AssetDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
 import br.com.ale.domain.asset.AssetUnity;
-import br.com.ale.domain.asset.AssetUnityStatus;
 import br.com.ale.dto.AssetUnityPageView;
-import br.com.ale.dto.AssetUnityView;
 import br.com.ale.dto.CreateAssetUnityRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
 
 import java.sql.Connection;
-import java.util.List;
-import java.util.Optional;
 
 public class AssetUnityService {
 
@@ -27,11 +23,11 @@ public class AssetUnityService {
         this.webhookNotifier = webhookNotifier;
     }
 
-    public boolean tryUpdateToMarket(long unityId) {
+    public boolean tryUpdateToMarket(long assetUnitId, long accountId) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return assetUnityDAO.tryUpdateToMarket(conn, unityId);
+            return assetUnityDAO.tryUpdateToMarket(conn, assetUnitId, accountId);
         } catch (Exception e) {
-            throw new RuntimeException("Service error while lock for market [unityId=" + unityId + "]", e);
+            throw new RuntimeException("Service error while lock for market [unityId=" + assetUnitId + "]", e);
         }
     }
 

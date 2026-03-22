@@ -167,26 +167,25 @@ public class AssetUnityDAO {
         }
     }
 
-    public boolean tryUpdateToMarket(Connection conn, long id) {
+    public boolean tryUpdateToMarket(Connection conn, long assetUnitId, long accountId) {
 
         String sql = """
-                UPDATE asset_unit
-                   SET status = 'IN_MARKET'
-                 WHERE id = ?
-                   AND status = 'AVAILABLE'
+                    UPDATE asset_unit
+                    SET status = 'IN_MARKET'
+                    WHERE id = ?
+                      AND owner_account_id = ?
+                      AND status = 'AVAILABLE'
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, id);
+            stmt.setLong(1, assetUnitId);
+            stmt.setLong(2, accountId);
 
-            return stmt.executeUpdate() == 1;
+            return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Failed to reserve asset unity [id=" + id + "]",
-                    e
-            );
+            throw new RuntimeException("Error updating asset unit to market", e);
         }
     }
 
