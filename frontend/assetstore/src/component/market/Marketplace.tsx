@@ -240,16 +240,39 @@ function Marketplace() {
 
                 {loading && <p className="text-center">Loading...</p>}
 
-                {listings && (
+                {!loading && !error && listings && (
+
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        {listings.items.map(item => (
-                            <div key={item.id} onClick={() => openListing(item)}
-                                 className="bg-white p-4 rounded-xl cursor-pointer hover:shadow">
-                                <div>{item.assetText}</div>
-                                <div className="text-emerald-500">${item.price}</div>
+
+                        {listings.items.map((item) => (
+
+                            <div
+                                key={item.id}
+                                onClick={() => openListing(item)}
+                                className="rounded-xl border border-slate-200 bg-white shadow-sm
+                                hover:shadow-md hover:scale-[1.02] transition
+                                p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
+                            >
+
+                                <span className="text-slate-800 font-semibold">
+                                    {item.assetText}
+                                </span>
+
+                                <div className="mt-1 text-xs text-slate-500">
+                                    Asset #{item.assetId} • Unity #{item.assetUnityId} •{" "}
+                                    {new Date(item.createdAt).toLocaleDateString()}
+                                </div>
+
+                                <span className="mt-2 text-emerald-500 font-bold text-sm">
+                                    ${item.price.toFixed(2)}
+                                </span>
+
                             </div>
+
                         ))}
+
                     </div>
+
                 )}
 
                 <Pagination
