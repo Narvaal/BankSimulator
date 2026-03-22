@@ -13,7 +13,7 @@ export default function Router() {
 
                 <Route path="/" element={<KineticVault/>}/>
 
-                <Route path="/singing" element={<Login/>}/>
+                <Route path="/signin" element={<Login/>}/>
                 <Route path="/signup" element={<CreateAccount/>}/>
                 <Route path="/inventory" element={<Home/>}/>
                 <Route path="/market" element={<Marketplace/>}/>
