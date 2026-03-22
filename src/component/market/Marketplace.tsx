@@ -257,70 +257,120 @@ function Marketplace() {
             {/* ===================== MODAL ===================== */}
 
             {selectedListing && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-                    <div className="bg-white p-6 rounded-xl w-[400px]">
+                <div className="bg-white rounded-2xl w-[440px] p-6 shadow-xl">
 
-                        <h2 className="text-xl font-bold mb-2">
-                            {mode === "market" ? "Buy Asset" : "Manage Listing"}
-                        </h2>
+                  <h2 className="text-xl font-bold mb-2">
+                    {mode === "market" ? "Buy Asset" : "Manage Listing"}
+                  </h2>
 
-                        <div className="mb-4">
-                            {selectedListing.assetText}
-                        </div>
+                  <div className="text-left mb-4">
 
-                        {loadingHistory
-                            ? <p>Loading...</p>
-                            : <PriceHistoryChart priceHistory={priceHistory}/>
-                        }
-
-                        <div className="flex justify-end gap-3 mt-6">
-
-                            <button onClick={() => setSelectedListing(null)}>
-                                Close
-                            </button>
-
-                            {mode === "market" ? (
-                                <button
-                                    onClick={handleBuy}
-                                    disabled={account.balance < selectedListing.price}
-                                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
-                                >
-                                    Confirm Purchase
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            await cancelOffer(selectedListing.id);
-
-                                                setListings(prev => {
-                                                    if (!prev) return prev;
-                                                    return {
-                                                        ...prev,
-                                                        items: prev.items.filter(i => i.id !== selectedListing.id)
-                                                    };
-                                                });
-
-                                            setSelectedListing(null);
-
-                                        } catch {
-                                            alert("Failed to cancel listing");
-                                        }
-                                    }}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
-                                >
-                                    Cancel Offer
-                                </button>
-                            )}
-
-                        </div>
-
+                    <div className="text-slate-800 font-semibold">
+                      {selectedListing.assetText}
                     </div>
 
-                </div>
-            )}
+                    <div className="text-xs text-slate-500 mb-1">
+                      Asset #{selectedListing.assetId} • Unity #{selectedListing.assetUnityId} •{" "}
+                      {new Date(selectedListing.createdAt).toLocaleDateString()}
+                    </div>
 
+                    <span className="text-emerald-500 font-bold text-lg">
+                      ${selectedListing.price.toFixed(2)}
+                    </span>
+
+                  </div>
+
+                  <div className="mb-5">
+                    <h3 className="text-sm font-semibold mb-2">
+                      Price History
+                    </h3>
+
+                    {loadingHistory ? (
+                      <p className="text-sm text-slate-500">
+                        Loading history...
+                      </p>
+                    ) : (
+                      <PriceHistoryChart priceHistory={priceHistory}/>
+                    )}
+                  </div>
+
+                  {mode === "market" && (
+                    <div className="mb-8">
+
+                      <div className="text-sm font-semibold mb-2">
+                        Purchase summary
+                      </div>
+
+                      <div className="flex justify-between text-slate-500 text-sm">
+                        <span>Balance</span>
+                        <span>${account.balance.toFixed(2)}</span>
+                      </div>
+
+                      <div className="flex justify-between text-slate-500 text-sm">
+                        <span>Item price</span>
+                        <span>- ${selectedListing.price.toFixed(2)}</span>
+                      </div>
+
+                      <div className="border-t border-slate-300 mt-2 pt-2 flex justify-between text-sm text-slate-800">
+                        <span>Remaining</span>
+                        <span>
+                          ${(account.balance - selectedListing.price).toFixed(2)}
+                        </span>
+                      </div>
+
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3">
+
+                    <button
+                      onClick={() => setSelectedListing(null)}
+                      className="px-4 py-2 border rounded-lg text-black hover:bg-slate-900 hover:text-white transition"
+                    >
+                      Close
+                    </button>
+
+                    {mode === "market" ? (
+                      <button
+                        onClick={handleBuy}
+                        disabled={account.balance < selectedListing.price}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition"
+                      >
+                        Confirm Purchase
+                      </button>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await cancelOffer(selectedListing.id);
+
+                            setListings(prev => {
+                              if (!prev) return prev;
+                              return {
+                                ...prev,
+                                items: prev.items.filter(l => l.id !== selectedListing.id)
+                              };
+                            });
+
+                            setSelectedListing(null);
+
+                          } catch {
+                            alert("Failed to cancel listing");
+                          }
+                        }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
+                      >
+                        Cancel Offer
+                      </button>
+                    )}
+
+                  </div>
+
+                </div>
+              </div>
+            )}
         </div>
     );
 }
