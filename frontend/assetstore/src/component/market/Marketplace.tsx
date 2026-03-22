@@ -96,33 +96,53 @@ function Marketplace() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [collapsed, setCollapsed] = useState(() => {
+        const saved = localStorage.getItem("sidebar-collapsed");
+        return saved ? JSON.parse(saved) : false;
+    });
+
     /* ===================== LOAD ===================== */
 
-    useEffect(() => {
+     useEffect(() => {
 
-        if (!account) return;
+         if (!account) return;
 
-        setLoading(true);
+         localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
 
-        async function load() {
-            try {
+         async function load() {
 
-                const data = mode === "market"
-                    ? await getListings(page, pageSize)
-                    : await getUserListings(page, pageSize);
+             setLoading(true);
+             setError(null);
 
-                setListings(data);
+             try {
 
-            } catch {
-                setError("Failed to load listings");
-            } finally {
-                setLoading(false);
-            }
-        }
+                 const data =
+                     mode === "market"
+                         ? await getListings(page, pageSize)
+                         : await getUserListings(page, pageSize);
 
-        load();
+                 setListings(data);
 
-    }, [account, page, mode]);
+             } catch {
+
+                 setError("Failed to load listings");
+
+             } finally {
+
+                 setLoading(false);
+
+             }
+         }
+
+         load();
+
+     }, [account, page, collapsed, mode]);
+
+    function handleSwitch(newMode: "market" | "user") {
+        setMode(newMode);
+        setPage(0);
+        setListings(null);
+    }
 
     /* ===================== OPEN MODAL ===================== */
 
@@ -160,31 +180,14 @@ function Marketplace() {
 
     /* ===================== CANCEL ===================== */
 
-    async function handleCancel() {
-        if (!selectedListing) return;
-
-        try {
-            await cancelOffer(selectedListing.id);
-
-            setListings(prev => ({
-                ...prev!,
-                items: prev!.items.filter(i => i.id !== selectedListing.id)
-            }));
-
-            setSelectedListing(null);
-
-        } catch {
-            alert("Cancel failed");
-        }
-    }
-    if (error) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
+    if (error) return <div className="p-10 text-center">Checking session...</div>;
     if (authLoading) return <div className="p-10 text-center">Checking session...</div>;
     if (authError || !account) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
 
     return (
         <div className="min-h-screen bg-slate-100">
 
-            <NavBar collapsed={false} setCollapsed={() => {}}/>
+            <NavBar collapsed={collapsed} setCollapsed={setCollapsed}/>
 
             <UserMenu
                 balance={account.balance}
@@ -197,32 +200,30 @@ function Marketplace() {
 
                 {/* ===================== SWITCH ===================== */}
 
-                <div className="flex justify-center mb-6">
-                    <div className="bg-white rounded-lg p-1 shadow flex">
+                <div className="flex gap-3 mb-6">
 
-                        <button
-                            onClick={() => { setMode("market"); setPage(0); }}
-                            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
-                                mode === "market"
-                                    ? "bg-slate-900 text-white"
-                                    : "text-slate-500"
-                            }`}
-                        >
-                            Marketplace
-                        </button>
+                    <button
+                        onClick={() => handleSwitch("market")}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                            mode === "market"
+                                ? "bg-[#0f172a] text-white"
+                                : "bg-white text-slate-500 hover:bg-slate-200"
+                        }`}
+                    >
+                        Marketplace
+                    </button>
 
-                        <button
-                            onClick={() => { setMode("user"); setPage(0); }}
-                            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
-                                mode === "user"
-                                    ? "bg-slate-900 text-white"
-                                    : "text-slate-500"
-                            }`}
-                        >
-                            My Listings
-                        </button>
+                    <button
+                        onClick={() => handleSwitch("user")}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                            mode === "user"
+                                ? "bg-[#0f172a] text-white"
+                                : "bg-white text-slate-500 hover:bg-slate-200"
+                        }`}
+                    >
+                        My Listings
+                    </button>
 
-                    </div>
                 </div>
 
                 {/* ===================== GRID ===================== */}
@@ -256,7 +257,7 @@ function Marketplace() {
 
                     <div className="bg-white p-6 rounded-xl w-[400px]">
 
-                        <h2 className="text-xl font-bold mb-4">
+                        <h2 className="text-xl font-bold mb-2">
                             {mode === "market" ? "Buy Asset" : "Manage Listing"}
                         </h2>
 
@@ -276,11 +277,35 @@ function Marketplace() {
                             </button>
 
                             {mode === "market" ? (
-                                <button onClick={handleBuy} className="bg-emerald-600 text-white px-4 py-2 rounded">
-                                    Buy
+                                <button
+                                    onClick={handleBuy}
+                                    disabled={account.balance < selectedListing.price}
+                                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
+                                >
+                                    Confirm Purchase
                                 </button>
                             ) : (
-                                <button onClick={handleCancel} className="bg-red-600 text-white px-4 py-2 rounded">
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await cancelOffer(selectedListing.id);
+
+                                            setListings((prev) => {
+                                                if (!prev) return prev;
+                                                return {
+                                                    ...prev,
+                                                    items: prev.items.filter(l => l.id !== selectedListing.id)
+                                                };
+                                            });
+
+                                            setSelectedListing(null);
+
+                                        } catch {
+                                            alert("Failed to cancel listing");
+                                        }
+                                    }}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                >
                                     Cancel Offer
                                 </button>
                             )}
