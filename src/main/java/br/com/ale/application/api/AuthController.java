@@ -53,7 +53,7 @@ public class AuthController {
 
         authCookieService.addAuthCookie(response, authToken.getToken());
 
-        response.sendRedirect("https://app.alessandro-bezerra.me");
+        response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
     }
 
     @PostMapping("/auth/resend-verification")

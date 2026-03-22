@@ -100,7 +100,7 @@ export default function Sidebar({collapsed, setCollapsed}: Props) {
                 <hr className="border-slate-200"/>
 
                 <nav className="mt-4 px-2 space-y-1">
-                    <NavItem icon={BriefcaseIcon} text="Inventory" collapsed={collapsed} link="/"/>
+                    <NavItem icon={BriefcaseIcon} text="Inventory" collapsed={collapsed} link="/inventory"/>
                     <NavItem icon={ShoppingCartIcon} text="Marketplace" collapsed={collapsed} link="/market"/>
                     <NavItem icon={GiftIcon} text="Rewards" collapsed={collapsed} link="/reward"/>
                 </nav>
