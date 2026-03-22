@@ -51,12 +51,18 @@ async function getUserListings(page: number, pageSize: number) {
 }
 
 async function cancelOffer(assetListingId: number) {
-    const res = await fetch(`https://api.alessandro-bezerra.me/asset-offers/${assetListingId}/cancel`, {
+    const res = await fetch(`https://api.alessandro-bezerra.me/asset-offers/cancel`, {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            assetListingId
+        })
     });
+
     if (!res.ok) throw new Error();
-    return res.json();
 }
 
 async function getAssetPriceHistory(assetUnityId: number) {
