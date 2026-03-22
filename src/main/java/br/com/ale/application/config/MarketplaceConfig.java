@@ -1,28 +1,10 @@
 package br.com.ale.application.config;
 
-import br.com.ale.application.marketplace.query.GetAssetByIdUseCase;
-import br.com.ale.application.marketplace.query.GetAssetListingByIdUseCase;
-import br.com.ale.application.marketplace.query.ListActiveAssetListingsUseCase;
-import br.com.ale.application.marketplace.query.ListAssetsUseCase;
-import br.com.ale.application.marketplace.query.ListAssetListingsByOwnerUseCase;
-import br.com.ale.application.marketplace.query.ListAssetBundlesUseCase;
-import br.com.ale.application.marketplace.query.ListAssetBundleItemsUseCase;
-import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByAssetIdUseCase;
-import br.com.ale.application.marketplace.query.ListAssetPriceHistoryByListingUseCase;
-import br.com.ale.application.marketplace.query.ListAssetUnitsByOwnerUseCase;
-import br.com.ale.application.marketplace.usecase.CancelAssetOfferUseCase;
-import br.com.ale.application.marketplace.usecase.CreateAssetBundleUseCase;
-import br.com.ale.application.marketplace.usecase.CreateAssetOfferUseCase;
-import br.com.ale.application.marketplace.usecase.CreateAssetUnityForAccountUseCase;
-import br.com.ale.application.marketplace.usecase.PurchaseAssetUseCase;
+import br.com.ale.application.marketplace.query.*;
+import br.com.ale.application.marketplace.usecase.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.account.AccountService;
-import br.com.ale.service.asset.AssetBundleService;
-import br.com.ale.service.asset.AssetGenerationManager;
-import br.com.ale.service.asset.AssetGenerationService;
-import br.com.ale.service.asset.AssetService;
-import br.com.ale.service.asset.AssetListingService;
-import br.com.ale.service.asset.AssetUnityService;
+import br.com.ale.service.asset.*;
 import br.com.ale.service.auth.AuthService;
 import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;
@@ -126,9 +108,12 @@ public class MarketplaceConfig {
 
     @Bean
     public ListAssetListingsByOwnerUseCase listAssetListingsByOwnerUseCase(
-            AssetListingService assetListingService
+            AccountService accountService,
+            AssetListingService assetListingService,
+            JwtService jwtService
     ) {
-        return new ListAssetListingsByOwnerUseCase(assetListingService);
+        return new ListAssetListingsByOwnerUseCase(accountService,
+                assetListingService, jwtService);
     }
 
     @Bean

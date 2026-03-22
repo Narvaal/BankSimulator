@@ -42,4 +42,12 @@ public class AssetListingQueryController {
         String token = authCookieService.extractToken(response);
         return listActiveAssetListingsUseCase.execute(token, page, pageSize);
     }
+
+    @GetMapping("me")
+    public AssetListingPageView user(@RequestParam("page") int page,
+                                     @RequestParam("pageSize") int pageSize,
+                                     HttpServletRequest response) {
+        String token = authCookieService.extractToken(response);
+        return listAssetListingsByOwnerUseCase.execute(token, page, pageSize);
+    }
 }

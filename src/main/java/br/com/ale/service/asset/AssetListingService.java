@@ -201,14 +201,14 @@ public class AssetListingService {
     }
 
 
-    public List<AssetListing> selectByOwnerAccount(long ownerAccountId, AssetListingStatus status) {
+    public AssetListingPageView selectByOwnerAccount(long accountId, int page, int pageSize) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return assetListingDAO.selectByOwnerAccount(conn, ownerAccountId, status);
+            return assetListingDAO.selectByOwnerAccount(conn, accountId, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting asset listing " +
-                            "[ownerAccountId=" + ownerAccountId + ", "
-                            + "status=" + status.name() + "]",
+                            "[accountId=" + accountId + ", "
+                            + "page=" + page + "]",
                     e
             );
         }
