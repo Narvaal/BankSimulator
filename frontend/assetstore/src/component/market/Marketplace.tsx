@@ -177,7 +177,7 @@ function Marketplace() {
             alert("Cancel failed");
         }
     }
-
+    if (error) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
     if (authLoading) return <div className="p-10 text-center">Checking session...</div>;
     if (authError || !account) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
 
