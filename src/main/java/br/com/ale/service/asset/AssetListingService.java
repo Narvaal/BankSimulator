@@ -1,11 +1,12 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.asset.AssetListingDAO;
 import br.com.ale.dao.asset.AssetPriceHistoryDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
-import br.com.ale.domain.asset.AssetListing;
-import br.com.ale.domain.asset.AssetListingStatus;
-import br.com.ale.domain.asset.ReasonType;
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.asset.*;
+import br.com.ale.domain.exception.InvalidAssetListingStateException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.AssetListingPageView;
 import br.com.ale.dto.CreateAssetListingRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 
 public class AssetListingService {
     private final ConnectionProvider connectionProvider;
+    private final AccountDAO accountDAO = new AccountDAO();
     private final AssetListingDAO assetListingDAO = new AssetListingDAO();
     private final AssetUnityDAO assetUnityDAO = new AssetUnityDAO();
     private final AssetPriceHistoryDAO assetPriceHistoryDAO = new AssetPriceHistoryDAO();
@@ -76,6 +78,47 @@ public class AssetListingService {
 
         } catch (Exception e) {
             throw new RuntimeException("Error while changing listing price", e);
+        }
+    }
+
+    public void cancelListing(long listingId, long clientId) {
+
+        try (Connection conn = connectionProvider.getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try {
+
+                AssetListing listing = assetListingDAO.selectById(conn, listingId)
+                        .orElseThrow();
+
+                if (listing.getStatus() != AssetListingStatus.ACTIVE) {
+                    throw new InvalidAssetListingStateException(listingId);
+                }
+
+                AssetUnity unity = assetUnityDAO.selectById(conn, listing.getAssetUnityId())
+                        .orElseThrow();
+
+                Account account = accountDAO.selectById(conn, unity.getOwnerAccountId())
+                        .orElseThrow();
+
+                if (account.getClientId() != clientId) {
+                    throw new UnauthorizedOperationException("Not owner");
+                }
+
+                assetListingDAO.updateStatus(conn, listingId, AssetListingStatus.CANCELED);
+
+                assetUnityDAO.updateStatus(conn, unity.getId(), AssetUnityStatus.AVAILABLE);
+
+                conn.commit();
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error canceling listing", e);
         }
     }
 

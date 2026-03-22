@@ -56,10 +56,8 @@ public class AssetOfferController {
 
         cancelAssetOfferUseCase.execute(
                 new CancelAssetCommand(
-                        body.accountId(),
                         body.assetListingId(),
                         token
-
                 )
         );
     }

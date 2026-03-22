@@ -194,15 +194,11 @@ public class MarketplaceConfig {
 
     @Bean
     public CancelAssetOfferUseCase cancelAssetOfferUseCase(
-            AccountService accountService,
             AssetListingService assetListingService,
-            AssetUnityService assetUnityService,
             AuthService authService
     ) {
         return new CancelAssetOfferUseCase(
-                accountService,
                 assetListingService,
-                assetUnityService,
                 authService
         );
     }
