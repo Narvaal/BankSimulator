@@ -1,4 +1,4 @@
 package br.com.ale.dto;
 
-public record CancelAssetOfferApiRequest(long accountId, String token) {
+public record CancelAssetOfferApiRequest(long accountId, long assetListingId) {
 }
