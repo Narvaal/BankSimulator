@@ -51,7 +51,7 @@ async function getUserListings(page: number, pageSize: number) {
 }
 
 async function cancelOffer(assetListingId: number) {
-    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings/${assetListingId}/cancel`, {
+    const res = await fetch(`https://api.alessandro-bezerra.me/asset-offers/${assetListingId}/cancel`, {
         method: "POST",
         credentials: "include"
     });
