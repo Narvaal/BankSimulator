@@ -226,8 +226,8 @@ public class AssetListingDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, accountId);
-            stmt.setLong(2, pageSize);
-            stmt.setLong(3, page);
+            stmt.setInt(2, pageSize);
+            stmt.setInt(3, page * pageSize);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
@@ -355,13 +355,11 @@ public class AssetListingDAO {
                 LIMIT ? OFFSET ?
                 """;
 
-        int offset = page * pageSize;
-
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, accountId);
             stmt.setInt(2, pageSize);
-            stmt.setInt(3, offset);
+            stmt.setInt(3, page * pageSize);
 
             try (ResultSet rs = stmt.executeQuery()) {
 

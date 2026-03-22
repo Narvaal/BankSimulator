@@ -35,19 +35,19 @@ public class AssetListingQueryController {
         return getAssetListingByIdUseCase.execute(id);
     }
 
-    @GetMapping
+    @GetMapping("")
     public AssetListingPageView list(@RequestParam("page") int page,
                                      @RequestParam("pageSize") int pageSize,
-                                     HttpServletRequest response) {
-        String token = authCookieService.extractToken(response);
+                                     HttpServletRequest request) {
+        String token = authCookieService.extractToken(request);
         return listActiveAssetListingsUseCase.execute(token, page, pageSize);
     }
 
-    @GetMapping("me")
+    @GetMapping("/me")
     public AssetListingPageView user(@RequestParam("page") int page,
                                      @RequestParam("pageSize") int pageSize,
-                                     HttpServletRequest response) {
-        String token = authCookieService.extractToken(response);
+                                     HttpServletRequest request) {
+        String token = authCookieService.extractToken(request);
         return listAssetListingsByOwnerUseCase.execute(token, page, pageSize);
     }
 }

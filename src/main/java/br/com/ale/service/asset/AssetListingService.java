@@ -190,25 +190,34 @@ public class AssetListingService {
 
 
     public AssetListingPageView selectActiveByActiveStatus(long accountId, int page, int pageSize) {
+
+        if (page < 0 || pageSize <= 0) {
+            throw new IllegalArgumentException("Invalid pagination params");
+        }
+
         try (Connection conn = connectionProvider.getConnection()) {
             return assetListingDAO.selectActiveByActiveStatus(conn, accountId, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while selecting active asset listing",
+                    "Service error while selecting active asset listing " +
+                            "[accountId=" + accountId + ", page=" + page + "]",
                     e
             );
         }
     }
 
-
     public AssetListingPageView selectByOwnerAccount(long accountId, int page, int pageSize) {
+
+        if (page < 0 || pageSize <= 0) {
+            throw new IllegalArgumentException("Invalid pagination params");
+        }
+
         try (Connection conn = connectionProvider.getConnection()) {
             return assetListingDAO.selectByOwnerAccount(conn, accountId, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting asset listing " +
-                            "[accountId=" + accountId + ", "
-                            + "page=" + page + "]",
+                            "[accountId=" + accountId + ", page=" + page + "]",
                     e
             );
         }
