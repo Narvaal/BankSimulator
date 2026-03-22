@@ -34,24 +34,36 @@ interface assetListingPageView {
 
 /* ===================== API ===================== */
 
-async function getListings(page: number, pageSize: number): Promise<assetListingPageView> {
+async function getListings(page: number, pageSize: number) {
     const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings?page=${page}&pageSize=${pageSize}`, {
-        method: "GET",
         credentials: "include"
     });
-
-    if (!res.ok) throw new Error("Failed to load listings");
-
+    if (!res.ok) throw new Error();
     return res.json();
 }
 
-async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
+async function getUserListings(page: number, pageSize: number) {
+    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings/me?page=${page}&pageSize=${pageSize}`, {
+        credentials: "include"
+    });
+    if (!res.ok) throw new Error();
+    return res.json();
+}
+
+async function cancelOffer(assetListingId: number) {
+    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings/${assetListingId}/cancel`, {
+        method: "POST",
+        credentials: "include"
+    });
+    if (!res.ok) throw new Error();
+    return res.json();
+}
+
+async function getAssetPriceHistory(assetUnityId: number) {
     const res = await fetch(
         `https://api.alessandro-bezerra.me/assets/${assetUnityId}/price-history`
     );
-
-    if (!res.ok) throw new Error("Failed to load price history");
-
+    if (!res.ok) throw new Error();
     return res.json();
 }
 
@@ -60,48 +72,8 @@ async function buyAssetUnity(assetListingId: number) {
         `https://api.alessandro-bezerra.me/asset-listings/${assetListingId}/purchase`,
         {method: "POST", credentials: "include"}
     );
-
-    if (!res.ok) throw new Error("Failed to buy asset");
+    if (!res.ok) throw new Error();
     return res.json();
-}
-
-/* ===================== CARD ===================== */
-
-function ListingCard({
-                         listing,
-                         onOpen
-                     }: {
-    listing: ListingView;
-    onOpen: (listing: ListingView) => void;
-}) {
-
-    return (
-        <div
-            onClick={() => onOpen(listing)}
-            className="bg-white rounded-xl border border-slate-200 shadow-sm
-            hover:shadow-lg hover:scale-[1.02] transition
-            p-5 flex flex-col gap-3 cursor-pointer"
-        >
-
-            <div className="text-center">
-
-                <span className="text-slate-800 font-semibold">
-                    {listing.assetText}
-                </span>
-
-                <div className="mt-1 text-xs text-slate-500">
-                    Asset #{listing.assetId} • Unity
-                    #{listing.assetUnityId} • {new Date(listing.createdAt).toLocaleDateString()}
-                </div>
-
-            </div>
-
-            <span className="text-emerald-500 font-bold text-lg text-center">
-                    ${listing.price.toFixed(2)}
-            </span>
-
-        </div>
-    );
 }
 
 /* ===================== PAGE ===================== */
@@ -109,279 +81,215 @@ function ListingCard({
 function Marketplace() {
 
     const {data: account, isLoading: authLoading, error: authError} = useAccount();
-    const [collapsed, setCollapsed] = useState(() => {
-        const saved = localStorage.getItem("sidebar-collapsed");
-        return saved ? JSON.parse(saved) : false;
-    });
+
+    const [mode, setMode] = useState<"market" | "user">("market");
 
     const [listings, setListings] = useState<assetListingPageView | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
     const [selectedListing, setSelectedListing] = useState<ListingView | null>(null);
+
     const [priceHistory, setPriceHistory] = useState<AssetPriceHistory[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [page, setPage] = useState(0);
     const pageSize = 24;
 
-    /* ===================== LOAD MARKET ===================== */
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    /* ===================== LOAD ===================== */
 
     useEffect(() => {
 
         if (!account) return;
 
-        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+        setLoading(true);
 
         async function load() {
-
             try {
 
-                const listingsData = await getListings(page, pageSize);
-                setListings(listingsData);
+                const data = mode === "market"
+                    ? await getListings(page, pageSize)
+                    : await getUserListings(page, pageSize);
+
+                setListings(data);
 
             } catch {
-
-                setError("Failed to load marketplace");
-
+                setError("Failed to load listings");
             } finally {
-
                 setLoading(false);
-
             }
         }
 
         load();
 
-    }, [account, page, collapsed]);
+    }, [account, page, mode]);
 
     /* ===================== OPEN MODAL ===================== */
 
     async function openListing(listing: ListingView) {
-
         setSelectedListing(listing);
-        setPriceHistory([]);
         setLoadingHistory(true);
 
         try {
-
             const history = await getAssetPriceHistory(listing.assetUnityId);
             setPriceHistory(history);
-
-        } catch {
-
-            setPriceHistory([]);
-
         } finally {
-
             setLoadingHistory(false);
-
         }
     }
 
     /* ===================== BUY ===================== */
 
     async function handleBuy() {
-
         if (!selectedListing) return;
 
         try {
-
             await buyAssetUnity(selectedListing.id);
 
-            setListings((prev) => {
-
-                if (!prev) return prev;
-
-                return {
-                    ...prev,
-                    items: prev.items.filter(
-                        (l) => l.id !== selectedListing.id
-                    )
-                };
-
-            });
+            setListings(prev => ({
+                ...prev!,
+                items: prev!.items.filter(i => i.id !== selectedListing.id)
+            }));
 
             setSelectedListing(null);
 
         } catch {
-
             alert("Purchase failed");
-
         }
     }
 
-    /* ===================== AUTH STATES ===================== */
+    /* ===================== CANCEL ===================== */
 
-    if (authLoading) {
-        return <div className="p-10 text-center">Checking session...</div>;
+    async function handleCancel() {
+        if (!selectedListing) return;
+
+        try {
+            await cancelOffer(selectedListing.id);
+
+            setListings(prev => ({
+                ...prev!,
+                items: prev!.items.filter(i => i.id !== selectedListing.id)
+            }));
+
+            setSelectedListing(null);
+
+        } catch {
+            alert("Cancel failed");
+        }
     }
 
-    if (authError || !account) {
-        return <div className="p-10 text-center text-red-500">Not authenticated</div>;
-    }
-
-    /* ===================== UI ===================== */
+    if (authLoading) return <div className="p-10 text-center">Checking session...</div>;
+    if (authError || !account) return <div className="p-10 text-center text-red-500">Not authenticated</div>;
 
     return (
-
         <div className="min-h-screen bg-slate-100">
 
-            <NavBar collapsed={collapsed} setCollapsed={setCollapsed}/>
+            <NavBar collapsed={false} setCollapsed={() => {}}/>
 
-            <UserMenu balance={account.balance} nextFreeAssetAt={account.nextFreeAssetAt} name={account.name}
-                      imageUrl={account.picture}></UserMenu>
+            <UserMenu
+                balance={account.balance}
+                nextFreeAssetAt={account.nextFreeAssetAt}
+                name={account.name}
+                imageUrl={account.picture}
+            />
 
-            <main
-                className="pt-22 transition-all duration-300 p-6 min-h-screen flex flex-col"
-                style={{marginLeft: collapsed ? 80 : 256}}
-            >
+            <main className="pt-22 p-6">
 
-                {loading && (
-                    <p className="text-center text-slate-500">
-                        Loading...
-                    </p>
-                )}
+                {/* ===================== SWITCH ===================== */}
 
-                {error && (
-                    <p className="text-center text-red-500">
-                        {error}
-                    </p>
-                )}
+                <div className="flex justify-center mb-6">
+                    <div className="bg-white rounded-lg p-1 shadow flex">
 
-                <div className="flex-1">
+                        <button
+                            onClick={() => { setMode("market"); setPage(0); }}
+                            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
+                                mode === "market"
+                                    ? "bg-slate-900 text-white"
+                                    : "text-slate-500"
+                            }`}
+                        >
+                            Marketplace
+                        </button>
 
-                    {!loading && !error && listings && (
+                        <button
+                            onClick={() => { setMode("user"); setPage(0); }}
+                            className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
+                                mode === "user"
+                                    ? "bg-slate-900 text-white"
+                                    : "text-slate-500"
+                            }`}
+                        >
+                            My Listings
+                        </button>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
-                            {listings.items.map((item) => (
-
-                                <ListingCard
-                                    key={item.id}
-                                    listing={item}
-                                    onOpen={openListing}
-                                />
-
-                            ))}
-
-                        </div>
-
-                    )}
-
+                    </div>
                 </div>
 
-                <div className="mt-auto pt-10">
-                    <Pagination
-                        page={page}
-                        totalPages={listings?.totalPages ?? 0}
-                        onPageChange={setPage}
-                    />
-                </div>
+                {/* ===================== GRID ===================== */}
+
+                {loading && <p className="text-center">Loading...</p>}
+
+                {listings && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {listings.items.map(item => (
+                            <div key={item.id} onClick={() => openListing(item)}
+                                 className="bg-white p-4 rounded-xl cursor-pointer hover:shadow">
+                                <div>{item.assetText}</div>
+                                <div className="text-emerald-500">${item.price}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <Pagination
+                    page={page}
+                    totalPages={listings?.totalPages ?? 0}
+                    onPageChange={setPage}
+                />
 
             </main>
-
 
             {/* ===================== MODAL ===================== */}
 
             {selectedListing && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl w-[400px]">
 
-                    <div className="bg-white rounded-2xl w-110 p-6 shadow-xl">
-
-                        <h2 className="text-xl font-bold mb-2">
-                            Buy Asset
+                        <h2 className="text-xl font-bold mb-4">
+                            {mode === "market" ? "Buy Asset" : "Manage Listing"}
                         </h2>
 
-                        <div className="text-left mb-4">
-                            <div className="text-slate-800 font-semibold">
-                                {selectedListing.assetText}
-                            </div>
-
-                            <div className="text-xs text-slate-500 mb-1">
-                                Asset #{selectedListing.assetId} • Unity
-                                #{selectedListing.assetUnityId} • {new Date(selectedListing.createdAt).toLocaleDateString()}
-                            </div>
-
-                            <span className="text-emerald-500 font-bold text-lg">
-                                    ${selectedListing.price.toFixed(2)}
-                            </span>
+                        <div className="mb-4">
+                            {selectedListing.assetText}
                         </div>
 
-                        {/* PRICE HISTORY */}
+                        {loadingHistory
+                            ? <p>Loading...</p>
+                            : <PriceHistoryChart priceHistory={priceHistory}/>
+                        }
 
-                        <div className="mb-5">
+                        <div className="flex justify-end gap-3 mt-6">
 
-                            <h3 className="text-sm font-semibold mb-2">
-                                Price History
-                            </h3>
+                            <button onClick={() => setSelectedListing(null)}>
+                                Close
+                            </button>
 
-                            {loadingHistory ? (
-
-                                <p className="text-sm text-slate-500">
-                                    Loading history...
-                                </p>
-
+                            {mode === "market" ? (
+                                <button onClick={handleBuy} className="bg-emerald-600 text-white px-4 py-2 rounded">
+                                    Buy
+                                </button>
                             ) : (
-
-                                <PriceHistoryChart priceHistory={priceHistory}/>
-
+                                <button onClick={handleCancel} className="bg-red-600 text-white px-4 py-2 rounded">
+                                    Cancel Offer
+                                </button>
                             )}
-
-                        </div>
-
-                        {/* Balance resume */}
-
-                        <div className="mb-8">
-                            <div className="text-sm font-semibold mb-2">
-                                Purchase summary
-                            </div>
-
-                            <div className="flex justify-between text-slate-500 text-sm">
-                                <span>Balance</span>
-                                <span>${account.balance.toFixed(2)}</span>
-                            </div>
-
-                            <div className="flex justify-between text-slate-500 text-sm">
-                                <span>Item price</span>
-                                <span>- ${selectedListing.price.toFixed(2)}</span>
-                            </div>
-
-                            <div className="border-t border-slate-500  flex justify-between text-sm text-slate-800">
-                                <span>Remaining</span>
-                                <span>
-                                    ${(account.balance - selectedListing.price).toFixed(2)}
-                                </span>
-                            </div>
-
-                        </div>
-
-                        {/* BUTTONS */}
-
-                        <div className="flex justify-end gap-3">
-
-                            <button
-                                onClick={() => setSelectedListing(null)}
-                                className="px-4 py-2 border rounded-lg text-black hover:bg-slate-900 hover:text-white"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={handleBuy}
-                                disabled={account.balance < selectedListing.price}
-                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
-                            >
-                                Confirm Purchase
-                            </button>
 
                         </div>
 
                     </div>
 
                 </div>
-
             )}
 
         </div>
