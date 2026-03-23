@@ -105,6 +105,7 @@ function Reward() {
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [loadingClaim, setLoadingClaim] = useState(false);
+    const [showUpcomingModal, setShowUpcomingModal] = useState(true);
 
 
     /* ===================== LOAD BUNDLES ===================== */
@@ -324,6 +325,57 @@ function Reward() {
                         {error}
                     </p>
                 )}
+
+                {/* ===================== UPCOMING NOTICE ===================== */}
+
+                {showUpcomingModal && (
+                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+
+                        <div className="bg-white border border-slate-200 shadow-xl rounded-xl px-6 py-4 w-[420px]">
+
+                            <div className="flex justify-between items-start gap-4">
+
+                                <div>
+
+                                    <h3 className="font-semibold text-slate-800 mb-1">
+                                        🚧 Feature coming soon
+                                    </h3>
+
+                                    <p className="text-sm text-slate-600">
+                                        Asset bundles will be generated automatically at scheduled times.
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    onClick={() => setShowUpcomingModal(false)}
+                                    className="text-slate-400 hover:text-slate-700 text-lg"
+                                >
+                                    ✕
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )}
+
+                {/* ===================== INFO ===================== */}
+
+                <div className="mb-6 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+
+                    <p className="text-sm text-slate-700 mb-2">
+                        Each asset bundle is automatically generated at a predefined time.
+                        Once available, assets can be claimed until the supply runs out.
+                    </p>
+
+                    <p className="text-xs text-slate-500">
+                        Disclaimer: Generated phrases may contain inconsistencies or inaccuracies.
+                        We are not responsible for any unintended meanings.
+                    </p>
+
+                </div>
 
                 {/* ===================== BUNDLE LIST ===================== */}
 
