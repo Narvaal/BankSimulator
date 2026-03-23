@@ -428,7 +428,7 @@ function Marketplace() {
 
                                 setTimeout(() => {
                                     setSelectedListing(null);
-                                 }, 800
+                                 }, 800);
                             }
                         }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
