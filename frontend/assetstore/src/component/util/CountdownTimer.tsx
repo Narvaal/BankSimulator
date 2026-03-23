@@ -13,7 +13,6 @@ export default function CountdownTimer({targetDate}: CountdownTimerProps) {
             return {finished: true, time: "00:00"};
         }
 
-        const hours = Math.floor(difference / (1000 * 60 * 60));
         const minutes = Math.floor((difference / (1000 * 60)) % 60);
         const seconds = Math.floor((difference / 1000) % 60);
 
