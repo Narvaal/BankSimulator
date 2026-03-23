@@ -10,7 +10,7 @@ export default function CountdownTimer({targetDate}: CountdownTimerProps) {
             new Date(targetDate).getTime() - new Date().getTime();
 
         if (difference <= 0) {
-            return {finished: true, time: "00:00:00"};
+            return {finished: true, time: "00:00"};
         }
 
         const hours = Math.floor(difference / (1000 * 60 * 60));

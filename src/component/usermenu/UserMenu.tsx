@@ -20,7 +20,7 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
                     <div className="flex-1"></div>
 
-                    <div className="absolute left-1/2 -translate-x-1/2">
+                    <div className="flex-1 flex justify-end items-center gap-4">
                         <CountdownTimer targetDate={nextFreeAssetAt}/>
                     </div>
 
@@ -81,7 +81,6 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                             src="https://ko-fi.com/alessandrobezerra/?hidefeed=true&widget=true&embed=true"
                             className="w-full h-full mt-3"
                         />
-
 
                     </div>
                 </div>
