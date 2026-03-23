@@ -13,8 +13,8 @@ public class AssetGenerationScheduler {
         this.assetGenerationManager = assetGenerationManager;
     }
 
-    @Scheduled(cron = "0 0 2 ? * MON", zone = "UTC")
-    public void generateWeeklyAssets() {
+    @Scheduled(cron = "0 0 8 * * ?", zone = "UTC")
+    public void generateDailyAssets() {
         assetGenerationManager.generateWeeklyAssets();
     }
 }
