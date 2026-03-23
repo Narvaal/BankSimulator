@@ -181,7 +181,7 @@ function CreateAccount() {
                 </AnimatePresence>
 
                 <div className="block text-xs text-gray-500 text-center p-3">
-                    Already have an account? <a className="underline text-black" href="/singin">Sing in</a>
+                    Already have an account? <a className="underline text-black" href="/signin">Sing in</a>
                 </div>
 
                 <button
