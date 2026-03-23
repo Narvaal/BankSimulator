@@ -107,6 +107,11 @@ function Marketplace() {
         return saved ? JSON.parse(saved) : false;
     });
 
+    const [message, setMessage] = useState<{
+        type: "success" | "error";
+        text: string;
+    } | null>(null);
+
     /* ===================== LOAD ===================== */
 
      useEffect(() => {
@@ -157,6 +162,8 @@ function Marketplace() {
         setPriceHistory([]);
         setLoadingHistory(true);
 
+        setMessage(null);
+
         try {
             const history = await getAssetPriceHistory(listing.assetUnityId);
             setPriceHistory(history);
@@ -168,20 +175,42 @@ function Marketplace() {
     /* ===================== BUY ===================== */
 
     async function handleBuy() {
+
         if (!selectedListing) return;
 
+        if (account.balance < selectedListing.price) {
+            setMessage({
+                type: "error",
+                text: "Insufficient balance"
+            });
+            return;
+        }
+
         try {
+
             await buyAssetUnity(selectedListing.id);
+
+            setMessage({
+                type: "success",
+                text: "Purchase successful"
+            });
 
             setListings(prev => ({
                 ...prev!,
                 items: prev!.items.filter(i => i.id !== selectedListing.id)
             }));
 
-            setSelectedListing(null);
+            setTimeout(() => {
+                setSelectedListing(null);
+            }, 800);
 
         } catch {
-            alert("Purchase failed");
+
+            setMessage({
+                type: "error",
+                text: "Purchase failed"
+            });
+
         }
     }
 
@@ -383,11 +412,19 @@ function Marketplace() {
                               };
                             });
 
+                            setMessage({
+                                type: "success",
+                                text: "Listing canceled"
+                            });
+
                             setSelectedListing(null);
 
                           } catch {
-                            alert("Failed to cancel listing");
-                          }
+                                setMessage({
+                                    type: "error",
+                                    text: "Failed to cancel listing"
+                                });
+                            }
                         }}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
                       >
@@ -396,7 +433,17 @@ function Marketplace() {
                     )}
 
                   </div>
-
+                    {message && (
+                        <div
+                            className={`mb-4 text-sm px-3 py-2 rounded-md ${
+                                message.type === "error"
+                                    ? "bg-red-100 text-red-600"
+                                    : "bg-emerald-100 text-emerald-600"
+                            }`}
+                        >
+                            {message.text}
+                        </div>
+                    )}
                 </div>
               </div>
             )}
