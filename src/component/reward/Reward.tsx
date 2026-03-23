@@ -105,7 +105,12 @@ function Reward() {
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [loadingClaim, setLoadingClaim] = useState(false);
-    const [showUpcomingModal, setShowUpcomingModal] = useState(true);
+
+
+    /* ===================== MODAL TIME ===================== */
+
+    const [timeLeft, setTimeLeft] = useState("");
+    const NEXT_BUNDLE_DATE = new Date("2026-04-01T20:00:00");
 
 
     /* ===================== LOAD BUNDLES ===================== */
@@ -193,6 +198,35 @@ function Reward() {
 
     }, [loadBundles]);
 
+    useEffect(() => {
+
+        function updateTimer() {
+
+            const now = new Date().getTime();
+            const distance = NEXT_BUNDLE_DATE.getTime() - now;
+
+            if (distance <= 0) {
+                setTimeLeft("Available now");
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((distance / (1000 * 60)) % 60);
+            const seconds = Math.floor((distance / 1000) % 60);
+
+            setTimeLeft(
+                `${days}d ${hours}h ${minutes}m ${seconds}s`
+            );
+        }
+
+        updateTimer();
+
+        const interval = setInterval(updateTimer, 1000);
+
+        return () => clearInterval(interval);
+
+    }, []);
 
     /* ===================== TOGGLE BUNDLE ===================== */
 
@@ -326,41 +360,6 @@ function Reward() {
                     </p>
                 )}
 
-                {/* ===================== UPCOMING NOTICE ===================== */}
-
-                {showUpcomingModal && (
-                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-
-                        <div className="bg-white border border-slate-200 shadow-xl rounded-xl px-6 py-4 w-[420px]">
-
-                            <div className="flex justify-between items-start gap-4">
-
-                                <div>
-
-                                    <h3 className="font-semibold text-slate-800 mb-1">
-                                        🚧 Feature coming soon
-                                    </h3>
-
-                                    <p className="text-sm text-slate-600">
-                                        Asset bundles will be generated automatically at scheduled times.
-                                    </p>
-
-                                </div>
-
-                                <button
-                                    onClick={() => setShowUpcomingModal(false)}
-                                    className="text-slate-400 hover:text-slate-700 text-lg"
-                                >
-                                    ✕
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-                )}
-
                 {/* ===================== INFO ===================== */}
 
                 <div className="mb-6 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
@@ -374,6 +373,48 @@ function Reward() {
                         Disclaimer: Generated phrases may contain inconsistencies or inaccuracies.
                         We are not responsible for any unintended meanings.
                     </p>
+
+                </div>
+
+                {/* ===================== UPCOMING BUNDLE ===================== */}
+
+                <div className="mb-6">
+
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl p-6 shadow-lg border border-slate-800">
+
+                        <div className="flex justify-between items-center">
+
+                            <div>
+
+                                <h2 className="text-xl font-semibold mb-1">
+                                    🔒 Upcoming Bundle
+                                </h2>
+
+                                <p className="text-sm text-slate-300">
+                                    This bundle is locked and will be available soon
+                                </p>
+
+                            </div>
+
+                            <div className="text-right">
+
+                                <p className="text-xs text-slate-400 mb-1">
+                                    Releases in
+                                </p>
+
+                                <div className="text-lg font-bold text-emerald-400">
+                                    {timeLeft}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div className="mt-4 text-xs text-slate-400">
+                            Release date: {NEXT_BUNDLE_DATE.toLocaleString()}
+                        </div>
+
+                    </div>
 
                 </div>
 
