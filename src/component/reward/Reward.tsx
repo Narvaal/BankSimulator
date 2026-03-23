@@ -109,8 +109,8 @@ function Reward() {
 
     /* ===================== MODAL TIME ===================== */
 
+    const [nextDate, setNextDate] = useState(getNextBundleDateUTC());
     const [timeLeft, setTimeLeft] = useState("");
-    const NEXT_BUNDLE_DATE = new Date("2026-04-01T20:00:00");
 
 
     /* ===================== LOAD BUNDLES ===================== */
@@ -277,6 +277,18 @@ function Reward() {
         setMessage(null);
     }
 
+    function getNextBundleDateUTC() {
+        const now = new Date();
+
+        const next = new Date();
+        next.setUTCHours(8, 0, 0, 0);
+
+        if (now.getTime() >= next.getTime()) {
+            next.setUTCDate(next.getUTCDate() + 1);
+        }
+
+        return next;
+    }
 
     /* ===================== CLAIM ASSET ===================== */
 
@@ -362,17 +374,42 @@ function Reward() {
 
                 {/* ===================== INFO ===================== */}
 
-                <div className="mb-6 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                <div className="mb-6 bg-yellow-50 border border-yellow-300 rounded-xl p-4 shadow-sm">
 
-                    <p className="text-sm text-slate-700 mb-2">
-                        Each asset bundle is automatically generated at a predefined time.
-                        Once available, assets can be claimed until the supply runs out.
-                    </p>
+                    <div className="flex items-start gap-3">
 
-                    <p className="text-xs text-slate-500">
-                        Disclaimer: Generated phrases may contain inconsistencies or inaccuracies.
-                        We are not responsible for any unintended meanings.
-                    </p>
+                        <div className="text-yellow-600 mt-0.5">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                />
+                            </svg>
+                        </div>
+
+                        <div>
+
+                            <p className="text-sm text-yellow-800 font-medium mb-1">
+                                Each asset bundle is automatically generated at a predefined time.
+                                Once available, assets can be claimed until the supply runs out.
+                            </p>
+
+                            <p className="text-xs text-yellow-700">
+                                Disclaimer: Generated phrases may contain inconsistencies or inaccuracies.
+                                We are not responsible for any unintended meanings.
+                            </p>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
