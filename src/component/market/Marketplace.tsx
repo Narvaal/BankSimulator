@@ -189,7 +189,6 @@ function Marketplace() {
         try {
 
             await buyAssetUnity(selectedListing.id);
-
             setMessage({
                 type: "success",
                 text: "Purchase successful"
@@ -210,7 +209,6 @@ function Marketplace() {
                 type: "error",
                 text: "Purchase failed"
             });
-
         }
     }
 
@@ -393,7 +391,7 @@ function Marketplace() {
                     {mode === "market" ? (
                       <button
                         onClick={handleBuy}
-                        disabled={account.balance < selectedListing.price}
+                        disabled={!account || account.balance < selectedListing.price}
                         className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition"
                       >
                         Confirm Purchase
@@ -417,13 +415,20 @@ function Marketplace() {
                                 text: "Listing canceled"
                             });
 
-                            setSelectedListing(null);
+                            setTimeout(() => {
+                                setSelectedListing(null);
+                            }, 800);
 
                           } catch {
+
                                 setMessage({
                                     type: "error",
                                     text: "Failed to cancel listing"
                                 });
+
+                                setTimeout(() => {
+                                    setSelectedListing(null);
+                                 }, 800
                             }
                         }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
