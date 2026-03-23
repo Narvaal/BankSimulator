@@ -178,7 +178,7 @@ function Marketplace() {
 
         if (!selectedListing) return;
 
-        if (account.balance < selectedListing.price) {
+        if (!account || account.balance < selectedListing.price) {
             setMessage({
                 type: "error",
                 text: "Insufficient balance"
@@ -426,16 +426,18 @@ function Marketplace() {
                                 });
                             }
                         }}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
-                      >
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
+                    >
                         Cancel Offer
-                      </button>
+                    </button>
                     )}
 
-                  </div>
+                    </div>
+
+                    {/* MESSAGE */}
                     {message && (
                         <div
-                            className={`mb-4 text-sm px-3 py-2 rounded-md ${
+                            className={`mt-4 text-sm px-3 py-2 rounded-md ${
                                 message.type === "error"
                                     ? "bg-red-100 text-red-600"
                                     : "bg-emerald-100 text-emerald-600"
@@ -444,8 +446,9 @@ function Marketplace() {
                             {message.text}
                         </div>
                     )}
+
+                    </div>
                 </div>
-              </div>
             )}
         </div>
     );
