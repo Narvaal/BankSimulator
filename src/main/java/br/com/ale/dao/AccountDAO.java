@@ -343,7 +343,7 @@ public class AccountDAO {
 
         String sql = """
                 UPDATE account
-                SET next_free_asset_at = now() + interval '2 hours'
+                SET next_free_asset_at = now() + interval '2 minutes'
                 WHERE account_number = ?
                 AND next_free_asset_at <= now()
                 RETURNING next_free_asset_at;

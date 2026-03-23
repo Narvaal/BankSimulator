@@ -9,8 +9,8 @@ import java.util.List;
 
 public class AssetGenerationService {
 
-    public static final int NUMBER_OF_ASSETS_PER_WEEK = 10;
-    public static final int TOTAL_ASSETS_SUPPLY = 100;
+    public static final int NUMBER_OF_ASSETS_PER_WEEK = 12;
+    public static final int TOTAL_ASSETS_SUPPLY = 10;
 
     private final List<String> nouns = JsonUtils.readArray("words/nouns.json");
     private final List<String> verbs = JsonUtils.readArray("words/verbs.json");
