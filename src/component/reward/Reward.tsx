@@ -199,25 +199,20 @@ function Reward() {
     }, [loadBundles]);
 
     useEffect(() => {
-
         function updateTimer() {
-
             const now = new Date().getTime();
-            const distance = NEXT_BUNDLE_DATE.getTime() - now;
+            const distance = nextDate.getTime() - now;
 
             if (distance <= 0) {
                 setTimeLeft("Available now");
                 return;
             }
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
             const minutes = Math.floor((distance / (1000 * 60)) % 60);
             const seconds = Math.floor((distance / 1000) % 60);
 
-            setTimeLeft(
-                `${days}d ${hours}h ${minutes}m ${seconds}s`
-            );
+            setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
         }
 
         updateTimer();
@@ -225,7 +220,14 @@ function Reward() {
         const interval = setInterval(updateTimer, 1000);
 
         return () => clearInterval(interval);
+    }, [nextDate]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNextDate(getNextBundleDateUTC());
+        }, 60000);
+
+        return () => clearInterval(interval);
     }, []);
 
     /* ===================== TOGGLE BUNDLE ===================== */
@@ -448,7 +450,7 @@ function Reward() {
                         </div>
 
                         <div className="mt-4 text-xs text-slate-400">
-                            Release date: {NEXT_BUNDLE_DATE.toLocaleString()}
+                            Release date: {nextDate.toLocaleString()}
                         </div>
 
                     </div>
