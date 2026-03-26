@@ -12,12 +12,17 @@ async function handleLogin(email: string, password: string) {
     });
 
     if (!res.ok) {
-        throw new Error("Invalid email or password");
+        const text = await res.text();
+
+        if (text.includes("Email not verified")) {
+            throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
+        throw new Error("INVALID_CREDENTIALS");
     }
 
     return;
 }
-
 function Login() {
     const [show, setShow] = useState(false);
     const [email, setEmail] = useState("");
@@ -37,12 +42,16 @@ function Login() {
 
             setSuccess("Login successful");
 
-            setTimeout(() => {
-                window.location.href = "/inventory";
-            }, 1500);
+            window.location.href = "/inventory";
 
-        } catch {
-            setError("Invalid email or password");
+        } catch (err: any) {
+
+            if (err.message === "EMAIL_NOT_VERIFIED") {
+                setError("Please verify your email before logging in.");
+            } else {
+                setError("Invalid email or password");
+            }
+
         } finally {
             setLoading(false);
         }
