@@ -4,7 +4,7 @@ import NavBar from "../navBar/NavBar";
 import {useCallback, useEffect, useState} from "react";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
-
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ===================== TYPES ===================== */
 
@@ -68,7 +68,7 @@ async function claimAsset(assetId: number) {
 function Reward() {
 
     const {data: account, isLoading: authLoading, error: authError} = useAccount();
-
+    const queryClient = useQueryClient();
 
     /* ===================== UI STATE ===================== */
 
@@ -266,7 +266,6 @@ function Reward() {
 
     }
 
-
     /* ===================== MODAL CONTROLS ===================== */
 
     function openAsset(asset: Asset) {
@@ -304,6 +303,8 @@ function Reward() {
 
             await claimAsset(selectedAsset.id);
 
+            queryClient.invalidateQueries({ queryKey: ["account"] });
+
             setMessage({
                 type: "success",
                 text: "Asset claimed successfully!"
@@ -323,7 +324,6 @@ function Reward() {
         } finally {
             setLoadingClaim(false);
         }
-
     }
 
 
