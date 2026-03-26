@@ -1,11 +1,13 @@
 package br.com.ale.application.api;
 
+import br.com.ale.application.account.command.ChangePasswordCommand;
+import br.com.ale.application.account.command.ChangePasswordSenderCommand;
 import br.com.ale.application.account.command.CreateAccountCommand;
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
+import br.com.ale.application.account.usecase.ChangePasswordUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
-import br.com.ale.dto.AccountDetailsResponse;
-import br.com.ale.dto.CreateAccountApiRequest;
-import br.com.ale.dto.CreateAccountResponse;
+import br.com.ale.application.account.usecase.RequestPasswordResetUseCase;
+import br.com.ale.dto.*;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
@@ -14,18 +16,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/accounts")
 public class AccountController {
 
-    private final CreateAccountUseCase createAccountUseCase;
-    private final GetAccountDetailsUseCase getAccountDetailsUseCase;
     private final AuthCookieService authCookieService;
+    private final CreateAccountUseCase createAccountUseCase;
+    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
+    private final GetAccountDetailsUseCase getAccountDetailsUseCase;
 
     public AccountController(
+            AuthCookieService authCookieService,
             CreateAccountUseCase createAccountUseCase,
-            GetAccountDetailsUseCase getAccountDetailsUseCase,
-            AuthCookieService authCookieService
+            RequestPasswordResetUseCase requestPasswordResetUseCase,
+            ChangePasswordUseCase changePasswordUseCase,
+            GetAccountDetailsUseCase getAccountDetailsUseCase
     ) {
-        this.createAccountUseCase = createAccountUseCase;
-        this.getAccountDetailsUseCase = getAccountDetailsUseCase;
         this.authCookieService = authCookieService;
+        this.createAccountUseCase = createAccountUseCase;
+        this.requestPasswordResetUseCase = requestPasswordResetUseCase;
+        this.changePasswordUseCase = changePasswordUseCase;
+        this.getAccountDetailsUseCase = getAccountDetailsUseCase;
     }
 
     @PostMapping
@@ -48,5 +56,19 @@ public class AccountController {
     public AccountDetailsResponse me(HttpServletRequest request) {
         String token = authCookieService.extractToken(request);
         return getAccountDetailsUseCase.execute(token);
+    }
+
+    @PostMapping("/password/reset-request")
+    public void requestReset(@RequestBody EmailRequest request) {
+        requestPasswordResetUseCase.execute(
+                new ChangePasswordSenderCommand(request.email())
+        );
+    }
+
+    @PostMapping("/password/reset")
+    public void resetPassword(@RequestBody CreateResetPasswordRequest request) {
+        changePasswordUseCase.execute(
+                new ChangePasswordCommand(request.password(), request.token())
+        );
     }
 }

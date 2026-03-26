@@ -8,26 +8,36 @@ public class EmailTemplateService {
     public String buildVerifyEmailTemplate(String name, String link) {
 
         return """
-                <div style="font-family: Arial; max-width: 600px; margin: auto;">
-                    <h2>Confirme sua conta</h2>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #1f2937;">
                 
-                    <p>Olá, %s 👋</p>
+                    <h2 style="color: #111827;">Confirm your email address</h2>
                 
-                    <p>Clique no botão abaixo para confirmar seu e-mail:</p>
+                    <p>Hello, %s 👋</p>
+                
+                    <p>
+                        Thank you for signing up. Please confirm your email address by clicking the button below:
+                    </p>
                 
                     <a href="%s"
                        style="display: inline-block;
+                              margin-top: 10px;
                               padding: 12px 20px;
-                              background-color: #4CAF50;
+                              background-color: #16a34a;
                               color: white;
                               text-decoration: none;
-                              border-radius: 5px;">
-                        Confirmar Email
+                              border-radius: 6px;
+                              font-weight: 500;">
+                        Verify Email
                     </a>
                 
-                    <p style="margin-top:20px;">
-                        Se você não criou essa conta, ignore este e-mail.
+                    <p style="margin-top: 20px;">
+                        If you did not create an account, you can safely ignore this email.
                     </p>
+                
+                    <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">
+                        This link may expire for security reasons.
+                    </p>
+                
                 </div>
                 """.formatted(name, link);
     }

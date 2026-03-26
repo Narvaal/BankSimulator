@@ -4,6 +4,7 @@ import br.com.ale.application.account.command.CreateAccountCommand;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.auth.PasswordHasher;
+import br.com.ale.domain.auth.PasswordValidator;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.domain.emailVerification.EmailVerificationType;
@@ -44,13 +45,13 @@ public class CreateAccountUseCase {
 
     public void execute(CreateAccountCommand command) {
 
-        String hashedPassword = PasswordHasher.hash(command.password());
-
+        PasswordValidator.validate(command.password());
+        
         Client client = clientService.createClient(
                 new CreateClientRequest(
                         command.name(),
                         command.email(),
-                        hashedPassword,
+                        PasswordHasher.hash(command.password()),
                         Provider.LOCAL,
                         null,
                         false,

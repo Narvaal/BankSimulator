@@ -139,15 +139,17 @@ public class EmailVerificationDAO {
                 UPDATE email_verification
                 SET verified_at = now()
                 WHERE id = ?
+                AND verified_at IS NULL
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setLong(1, id);
+
             int rows = stmt.executeUpdate();
+
             if (rows == 0) {
-                throw new RuntimeException(
-                        "Failed to mark email verification as verified [id=" + id + "]"
-                );
+                throw new RuntimeException("Token already used or invalid");
             }
 
         } catch (SQLException e) {

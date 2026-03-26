@@ -55,10 +55,50 @@ public class EmailVerificationSender {
         );
 
         try {
-            
+
             emailService.send(
                     email,
                     "Confirm your account",
+                    html
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error sending email [to=" + email + "]", e);
+        }
+    }
+
+    public void sendPasswordReset(Client client, String token) {
+        if (client == null) {
+            throw new IllegalArgumentException("Client cannot be null");
+        }
+
+        String rawEmail = client.getEmail();
+        String email = Objects.toString(rawEmail, "").trim();
+
+        if (email.isEmpty()) {
+            throw new IllegalArgumentException("Client email is empty or null");
+        }
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            throw new IllegalArgumentException("Client email format is invalid: [" + email + "]");
+        }
+
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token cannot be null or empty");
+        }
+
+        String link = "https://api.alessandro-bezerra.me" + "/auth/reset?token=" + token;
+
+        String html = templateService.buildVerifyEmailTemplate(
+                Objects.toString(client.getName(), "User"),
+                link
+        );
+
+        try {
+
+            emailService.send(
+                    email,
+                    "Reset your password",
                     html
             );
 

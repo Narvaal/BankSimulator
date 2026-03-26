@@ -79,13 +79,13 @@ public class ClientDAO {
 
         String sql = """
                 UPDATE client
-                   SET name = ?
+                   SET password = ?
                  WHERE id = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, request.name());
+            stmt.setString(1, request.password());
             stmt.setLong(2, request.id());
 
             return stmt.executeUpdate();
@@ -94,7 +94,7 @@ public class ClientDAO {
             throw new RuntimeException(
                     "Database error while updating client " +
                             "[clientId=" + request.id() +
-                            ", name=" + request.name() + "]",
+                            ", password=" + request.password() + "]",
                     e
             );
         }

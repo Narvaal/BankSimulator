@@ -83,7 +83,7 @@ public class ClientService {
             throw new RuntimeException(
                     "Service error while updating client " +
                             "[id=" + request.id() +
-                            ", name=" + request.name() + "]",
+                            ", password=" + request.password() + "]",
                     e
             );
         }
