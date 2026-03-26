@@ -107,7 +107,6 @@ function CreateAccount() {
         setTimeout(() => {
             window.location.href = "/login";
         }, 2500);
-
     }
 
     return (

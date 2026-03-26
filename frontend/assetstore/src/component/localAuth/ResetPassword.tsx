@@ -50,6 +50,8 @@ async function handleResetPassword(token: string, password: string) {
     if (!res.ok) {
         throw new Error("Invalid or expired token");
     }
+
+    window.location.href = "/login";
 }
 
 function ResetPassword() {
