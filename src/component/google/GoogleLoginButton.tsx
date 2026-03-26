@@ -37,6 +37,7 @@ function GoogleLoginButton() {
         window.google.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
             size: "large",
+            type: "standard",
             width: googleBtnRef.current.offsetWidth,
         });
 
