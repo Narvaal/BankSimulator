@@ -9,7 +9,6 @@ import br.com.ale.application.auth.command.LocalLoginCommand;
 import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
 import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.domain.auth.AuthToken;
-import br.com.ale.dto.AuthResponse;
 import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.dto.CreateGoogleAuthenticationRequest;
 import br.com.ale.dto.ResendVerificationRequest;
@@ -66,8 +65,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody CreateAuthenticationRequest request,
-                              HttpServletResponse response) {
+    public void login(@RequestBody CreateAuthenticationRequest request,
+                      HttpServletResponse response) throws IOException {
 
         AuthToken authToken = localLoginUseCase.execute(
                 new LocalLoginCommand(
@@ -78,12 +77,12 @@ public class AuthController {
 
         authCookieService.addAuthCookie(response, authToken.getToken());
 
-        return new AuthResponse(authToken.getClientId(), "Authenticated");
+        response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
     }
 
     @PostMapping("/google")
-    public AuthResponse login(@RequestBody CreateGoogleAuthenticationRequest request,
-                              HttpServletResponse response) {
+    public void login(@RequestBody CreateGoogleAuthenticationRequest request,
+                      HttpServletResponse response) throws IOException {
 
         AuthToken authToken = googleLoginUseCase.execute(
                 new GoogleLoginCommand(request.token())
@@ -91,6 +90,6 @@ public class AuthController {
 
         authCookieService.addAuthCookie(response, authToken.getToken());
 
-        return new AuthResponse(authToken.getClientId(), "Authenticated");
+        response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
     }
 }

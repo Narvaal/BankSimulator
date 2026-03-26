@@ -5,6 +5,8 @@ import Home from "./component/home/Home"
 import Marketplace from "./component/market/Marketplace.tsx";
 import Reward from "./component/reward/Reward.tsx";
 import KineticVault from "./component/landpage/KineticVault.tsx"
+import EmailVerification from "./component/localAuth/EmailVerification.tsx"
+import ResetPassword from  "./component/localAuth/ResetPassword.tsx"
 
 export default function Router() {
     return (
@@ -13,11 +15,15 @@ export default function Router() {
 
                 <Route path="/" element={<KineticVault/>}/>
 
-                <Route path="/signin" element={<Login/>}/>
-                <Route path="/signup" element={<CreateAccount/>}/>
+                <Route path="/login" element={<Login/>}/>
+                <Route path="/register" element={<CreateAccount/>}/>
+                <Route path="/forgot-password" element={<EmailVerification/>}/>
+                <Route path="/reset-password" element={<ResetPassword/>}/>
+
                 <Route path="/inventory" element={<Home/>}/>
                 <Route path="/market" element={<Marketplace/>}/>
                 <Route path="/reward" element={<Reward/>}/>
+
 
             </Routes>
         </BrowserRouter>

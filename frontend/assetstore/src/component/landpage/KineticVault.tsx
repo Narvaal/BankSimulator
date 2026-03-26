@@ -140,7 +140,7 @@ const KineticVault: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
 
               <a
-                href="https://app.alessandro-bezerra.me/signin/"
+                href="https://app.alessandro-bezerra.me/login/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-black bg-[#adc6ff] overflow-hidden transition-all duration-300 hover:-translate-y-1"

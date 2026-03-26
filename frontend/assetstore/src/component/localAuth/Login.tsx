@@ -86,7 +86,7 @@ function Login() {
                 </label>
 
                 <a
-                    href="#"
+                    href="/forgot-password"
                     className="block text-xs text-right text-gray-500 hover:text-black transition mb-4"
                 >
                     Forgot password?
@@ -103,7 +103,7 @@ function Login() {
             </form>
 
             <div className="block text-xs text-gray-500 text-center">
-                Don't have an account? <a className="underline text-black" href="/signup">Sign up</a>
+                Don't have an account? <a className="underline text-black" href="/register">Sign up</a>
             </div>
 
             <div className="flex items-center gap-2 my-4">
