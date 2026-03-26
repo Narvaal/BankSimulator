@@ -17,17 +17,15 @@ async function handleGoogleLogin(response: GoogleCredentialResponse) {
             token: response.credential,
         }),
     });
-
-    const data = await res.json();
-    console.log("Login success:", data);
 }
-
 
 function GoogleLoginButton() {
     const googleBtnRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+
+        googleBtnRef.current.innerHTML = "";
 
         window.google.accounts.id.initialize({
             client_id: "1002611612778-n0or7ldrme26ugbgmiccfsc5s1ctif9e.apps.googleusercontent.com",
@@ -39,11 +37,9 @@ function GoogleLoginButton() {
         window.google.accounts.id.renderButton(googleBtnRef.current, {
             theme: "outline",
             size: "large",
-            text: "signin_with",
-            shape: "rectangular",
-            logo_alignment: "left",
-            type: "standard"
+            width: googleBtnRef.current.offsetWidth,
         });
+
     }, []);
 
     return <div ref={googleBtnRef} className="w-full"/>;
