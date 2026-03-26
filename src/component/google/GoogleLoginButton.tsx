@@ -45,6 +45,10 @@ function GoogleLoginButton() {
             width: googleBtnRef.current.offsetWidth,
         });
 
+        setTimeout(() => {
+            window.location.href = "/login";
+        }, 1000);
+
     }, []);
 
     return <div ref={googleBtnRef} className="w-full"/>;
