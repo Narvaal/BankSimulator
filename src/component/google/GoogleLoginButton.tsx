@@ -17,6 +17,10 @@ async function handleGoogleLogin(response: GoogleCredentialResponse) {
             token: response.credential,
         }),
     });
+
+    if (!res.ok) {
+        throw new Error("Google email error");
+    }
 }
 
 function GoogleLoginButton() {
