@@ -43,20 +43,20 @@ async function handleResetPassword(token: string, password: string) {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             token,
-            password: password
+            password
         }),
     });
 
     if (!res.ok) {
         throw new Error("Invalid or expired token");
     }
-
-    return await res.json();
 }
 
 function ResetPassword() {
     const [show, setShow] = useState(false);
+
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -74,7 +74,15 @@ function ResetPassword() {
         setError(null);
         setSuccess(null);
 
-        if (!isPasswordValid(password)) return;
+        if (!isPasswordValid(password)) {
+            setError("Password does not meet requirements");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
 
         try {
             setLoading(true);
@@ -104,6 +112,7 @@ function ResetPassword() {
                     </p>
                 )}
 
+                {/* NEW PASSWORD */}
                 <label className="relative block mb-2">
                     <LockClosedIcon className="size-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
 
@@ -126,6 +135,21 @@ function ResetPassword() {
                     >
                         {show ? <EyeSlashIcon className="size-5"/> : <EyeIcon className="size-5"/>}
                     </button>
+                </label>
+
+                {/* CONFIRM PASSWORD */}
+                <label className="relative block mb-2">
+                    <LockClosedIcon className="size-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+
+                    <input
+                        type={show ? "text" : "password"}
+                        placeholder="Confirm password"
+                        className="w-full rounded-lg bg-gray-100 pl-10 pr-10 py-2.5 text-sm
+                       outline-none ring-1 ring-gray-200
+                       focus:ring-2 focus:ring-black transition"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
                 </label>
 
                 <AnimatePresence initial={false}>
