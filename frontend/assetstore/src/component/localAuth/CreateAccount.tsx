@@ -50,8 +50,6 @@ async function handleAccountCreation(name: string, email: string, password: stri
     if (!res.ok) {
         throw new Error("Email already registered");
     }
-
-    return await res.json();
 }
 
 function Rule({ok, text}: { ok: boolean, text: string }) {
@@ -73,6 +71,7 @@ function CreateAccount() {
     const [nameError, setNameError] = useState<string | null>(null);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [serverError, setServerError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     const [passFocused, setPassFocused] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -81,7 +80,9 @@ function CreateAccount() {
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
+
         setServerError(null);
+        setSuccess(null);
 
         const nErr = checkName(name);
         const eErr = checkEmail(email);
@@ -94,18 +95,28 @@ function CreateAccount() {
         try {
             setLoading(true);
             await handleAccountCreation(name, email, password);
+
+            setSuccess("Account created! Check your email to verify your account.");
+
         } catch {
             setServerError("Email already registered");
         } finally {
             setLoading(false);
         }
+
+        setTimeout(() => {
+            window.location.href = "/login";
+        }, 2500);
+
     }
 
     return (
-        <AuthLayout title={"Create a free account"} description={"Sing in for a complete experience"}>
+        <AuthLayout title={"Create a free account"} description={"Sign in for a complete experience"}>
             <form onSubmit={onSubmit}>
 
                 {serverError && <p className="text-red-500 text-xs text-center mb-4">{serverError}</p>}
+
+                {success && <p className="text-green-500 text-xs text-center mb-4">{success}</p>}
 
                 <GoogleLoginButton/>
 
@@ -181,7 +192,7 @@ function CreateAccount() {
                 </AnimatePresence>
 
                 <div className="block text-xs text-gray-500 text-center p-3">
-                    Already have an account? <a className="underline text-black" href="/login">Sing in</a>
+                    Already have an account? <a className="underline text-black" href="/login">Sign in</a>
                 </div>
 
                 <button

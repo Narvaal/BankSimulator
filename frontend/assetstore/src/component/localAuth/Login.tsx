@@ -15,7 +15,7 @@ async function handleLogin(email: string, password: string) {
         throw new Error("Invalid email or password");
     }
 
-    return await res.json();
+    return;
 }
 
 function Login() {
@@ -23,16 +23,24 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
+        setSuccess(null);
         setLoading(true);
 
         try {
             await handleLogin(email, password);
-            console.log("Login success");
+
+            setSuccess("Login successful");
+
+            setTimeout(() => {
+                window.location.href = "/inventory";
+            }, 1500);
+
         } catch {
             setError("Invalid email or password");
         } finally {
@@ -48,6 +56,12 @@ function Login() {
                 {error && (
                     <p className="text-red-500 text-xs text-center mb-4">
                         {error}
+                    </p>
+                )}
+
+                {success && (
+                    <p className="text-green-500 text-xs text-center mb-4">
+                        {success}
                     </p>
                 )}
 
