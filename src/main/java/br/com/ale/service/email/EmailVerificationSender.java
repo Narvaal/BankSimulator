@@ -87,9 +87,9 @@ public class EmailVerificationSender {
             throw new IllegalArgumentException("Token cannot be null or empty");
         }
 
-        String link = "https://api.alessandro-bezerra.me" + "/auth/reset?token=" + token;
+        String link = "https://app.alessandro-bezerra.me" + "/reset-password?token=" + token;
 
-        String html = templateService.buildVerifyEmailTemplate(
+        String html = templateService.buildResetPasswordTemplate(
                 Objects.toString(client.getName(), "User"),
                 link
         );

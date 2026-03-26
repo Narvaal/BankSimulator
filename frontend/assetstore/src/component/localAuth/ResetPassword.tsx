@@ -43,7 +43,7 @@ async function handleResetPassword(token: string, password: string) {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             token,
-            newPassword: password
+            password: password
         }),
     });
 

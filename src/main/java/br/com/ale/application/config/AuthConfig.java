@@ -1,10 +1,7 @@
 package br.com.ale.application.config;
 
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
-import br.com.ale.application.account.usecase.CreateAccountUseCase;
-import br.com.ale.application.account.usecase.DepositAccountUseCase;
-import br.com.ale.application.account.usecase.ResendVerificationUseCase;
-import br.com.ale.application.account.usecase.VerifyAccountUseCase;
+import br.com.ale.application.account.usecase.*;
 import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
 import br.com.ale.application.auth.usecase.LocalLoginUseCase;
 import br.com.ale.application.client.query.GetClientProfileUseCase;
@@ -176,6 +173,30 @@ public class AuthConfig {
                 clientService,
                 emailVerificationService,
                 emailVerificationSender
+        );
+    }
+
+    @Bean
+    public RequestPasswordResetUseCase requestPasswordResetUseCase(
+            ClientService clientService,
+            EmailVerificationService emailVerificationService,
+            EmailVerificationSender emailVerificationSender
+    ) {
+        return new RequestPasswordResetUseCase(
+                clientService,
+                emailVerificationService,
+                emailVerificationSender
+        );
+    }
+
+    @Bean
+    public ChangePasswordUseCase changePasswordUseCase(
+            ClientService clientService,
+            EmailVerificationService emailVerificationService
+    ) {
+        return new ChangePasswordUseCase(
+                clientService,
+                emailVerificationService
         );
     }
 
