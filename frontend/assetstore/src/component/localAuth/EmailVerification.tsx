@@ -13,7 +13,7 @@ async function handleResetPassword(email: string) {
         throw new Error("Email does not exist");
     }
 
-    return await res.json();
+    return;
 }
 
 function ForgotPassword() {
