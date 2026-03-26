@@ -21,6 +21,8 @@ async function handleGoogleLogin(response: GoogleCredentialResponse) {
     if (!res.ok) {
         throw new Error("Google email error");
     }
+
+    window.location.href = "/inventory";
 }
 
 function GoogleLoginButton() {
@@ -44,10 +46,6 @@ function GoogleLoginButton() {
             type: "standard",
             width: googleBtnRef.current.offsetWidth,
         });
-
-        setTimeout(() => {
-            window.location.href = "/login";
-        }, 1000);
 
     }, []);
 
