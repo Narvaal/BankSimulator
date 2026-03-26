@@ -305,6 +305,24 @@ function Reward() {
 
             queryClient.invalidateQueries({ queryKey: ["account"] });
 
+            setBundleAssets(prev => {
+                const updated = { ...prev };
+
+                for (const bundleId in updated) {
+                    updated[bundleId] = updated[bundleId].map(asset => {
+                        if (asset.id === selectedAsset.id) {
+                            return {
+                                ...asset,
+                                totalSupply: Math.max(0, asset.totalSupply - 1)
+                            };
+                        }
+                        return asset;
+                    });
+                }
+
+                return updated;
+            });
+
             setMessage({
                 type: "success",
                 text: "Asset claimed successfully!"
