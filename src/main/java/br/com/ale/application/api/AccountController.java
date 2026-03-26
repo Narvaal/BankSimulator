@@ -10,6 +10,7 @@ import br.com.ale.application.account.usecase.RequestPasswordResetUseCase;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -59,16 +60,21 @@ public class AccountController {
     }
 
     @PostMapping("/password/reset-request")
-    public void requestReset(@RequestBody EmailRequest request) {
+    public ResponseEntity<?> requestReset(@RequestBody EmailRequest request) {
+
         requestPasswordResetUseCase.execute(
                 new ChangePasswordSenderCommand(request.email())
         );
+
+        return ResponseEntity.ok("Reset email sent");
     }
 
     @PostMapping("/password/reset")
-    public void resetPassword(@RequestBody CreateResetPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@RequestBody CreateResetPasswordRequest request) {
         changePasswordUseCase.execute(
                 new ChangePasswordCommand(request.password(), request.token())
         );
+
+        return ResponseEntity.ok("Password reset");
     }
 }
