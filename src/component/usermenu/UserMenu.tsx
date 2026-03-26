@@ -21,7 +21,7 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                     <div className="flex-1"></div>
 
                     <div className="flex-1 flex justify-end items-center gap-4">
-                        <CountdownTimer targetDate={nextFreeAssetAt}/>
+                        <CountdownTimer key={account.nextFreeAssetAt} targetDate={nextFreeAssetAt}/>
                     </div>
 
                     <div className="flex-1 flex justify-end items-center gap-4">
