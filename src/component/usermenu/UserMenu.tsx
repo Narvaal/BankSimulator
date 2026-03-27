@@ -1,6 +1,6 @@
-import {useState} from "react";
+import { useState } from "react";
 import CountdownTimer from "../util/CountdownTimer.tsx";
-import {UserIcon} from "@heroicons/react/24/outline";
+import { UserIcon } from "@heroicons/react/24/outline";
 
 export interface Account {
     balance: number;
@@ -9,7 +9,7 @@ export interface Account {
     imageUrl: string;
 }
 
-export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Account) {
+export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Account) {
 
     const [kofiOpen, setKofiOpen] = useState(false);
     const [warningOpen, setWarningOpen] = useState(false);
@@ -17,47 +17,52 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
     return (
         <>
-            <header className="fixed top-0 left-0 w-full z-50 border-slate-200 bg-white/70 border backdrop-blur">
+            <header className="fixed top-0 left-0 w-full z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
                 <div className="w-full px-6 h-16 flex items-center text-slate-800">
 
-                    <div className="flex-1 flex items-center gap-2">
+                    <div className="flex-1 flex items-center gap-3">
                         <img
                             src="/icons/RareLines.png"
                             alt="Rare Lines"
-                            className="h-8 w-auto"
+                            className="h-9 w-auto object-contain drop-shadow-sm"
                         />
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-semibold text-slate-900 tracking-tight">
                             Rare Lines
                         </span>
                     </div>
 
-                    <div className="flex-1 flex justify-end items-center gap-4">
-                        <CountdownTimer key={nextFreeAssetAt} targetDate={nextFreeAssetAt}/>
+                    <div className="flex-1 flex justify-center">
+                        <div className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium shadow-sm">
+                            <CountdownTimer
+                                key={nextFreeAssetAt}
+                                targetDate={nextFreeAssetAt}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex-1 flex justify-end items-center gap-4">
 
                         <button
                             onClick={() => setWarningOpen(true)}
-                            className="flex items-center w-full max-w-xs bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md hover:bg-gray-50 transition"
+                            className="flex items-center gap-3 px-4 py-2 rounded-xl
+                                       bg-white border border-slate-200 shadow-sm
+                                       hover:shadow-md hover:border-slate-300 transition"
                         >
-                            {/* LEFT - BALANCE */}
-                            <div className="flex-1 text-sm text-gray-700 font-medium">
-                                Balance: <span className="text-black">${balance.toFixed(2)}</span>
-                            </div>
+                            <span className="text-sm text-slate-500">
+                                Balance
+                            </span>
 
-                            {/* RIGHT - CTA */}
-                            <div className="flex items-center gap-2 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-blue-700 transition">
-                                <span>Add via Ko-fi</span>
+                            <span className="text-sm font-semibold text-slate-900">
+                                ${balance.toFixed(2)}
+                            </span>
 
-                                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-blue-600 text-sm font-bold">
-                                    +
-                                </div>
-                            </div>
+                            <span className="text-xs text-slate-400">
+                                +
+                            </span>
                         </button>
 
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
+                            <span className="text-sm font-medium text-slate-700">
                                 {name}
                             </span>
 
