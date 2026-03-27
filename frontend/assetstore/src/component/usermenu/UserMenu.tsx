@@ -47,16 +47,16 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
                           onClick={() => setWarningOpen(true)}
                           className="flex items-center"
                         >
-                          <div className="flex items-center bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
+                          <div className="flex items-center bg-emerald-50 border border-emerald-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
 
-                            <div className="px-4 py-2 text-sm text-slate-600">
+                            <div className="px-4 py-2 text-sm text-emerald-700">
                               Balance:
                               <span className="ml-1 font-semibold text-emerald-600">
                                 ${balance.toFixed(2)}
                               </span>
                             </div>
 
-                            <div className="h-full flex items-stretch">
+                            <div className="flex items-stretch">
                               <div className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition flex items-center px-3">
                                 <HeartIcon className="w-4 h-4 text-white" />
                               </div>
