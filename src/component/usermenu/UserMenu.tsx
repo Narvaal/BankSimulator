@@ -20,7 +20,16 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
             <header className="fixed top-0 left-0 w-full z-50 border-slate-200 bg-white/70 border backdrop-blur">
                 <div className="w-full px-6 h-16 flex items-center text-slate-800">
 
-                    <div className="flex-1"></div>
+                    <div className="flex-1 flex items-center gap-2">
+                        <img
+                            src="/icons/RareLines.png"
+                            alt="Rare Lines"
+                            className="h-8 w-auto"
+                        />
+                        <span className="font-semibold text-slate-800">
+                            Rare Lines
+                        </span>
+                    </div>
 
                     <div className="flex-1 flex justify-end items-center gap-4">
                         <CountdownTimer key={nextFreeAssetAt} targetDate={nextFreeAssetAt}/>
