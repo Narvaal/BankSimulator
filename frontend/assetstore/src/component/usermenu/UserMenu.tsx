@@ -51,13 +51,13 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
 
                             <div className="px-4 py-2 text-sm text-emerald-700">
                               Balance:
-                              <span className="ml-1 font-semibold text-emerald-600">
+                              <span className="ml-1 mr-1 font-semibold text-emerald-600">
                                 ${balance.toFixed(2)}
                               </span>
                             </div>
 
                             <div className="flex items-stretch">
-                              <div className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition flex items-center px-3">
+                              <div className="active:scale-95 transition flex items-center px-3">
                                 <HeartIcon className="w-4 h-4 text-white" />
                               </div>
                             </div>
