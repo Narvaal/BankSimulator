@@ -25,7 +25,6 @@ async function handleGoogleLogin(response: GoogleCredentialResponse) {
   window.location.href = "/inventory";
 }
 
-// 🔥 função que garante carregamento
 function loadGoogleScript(): Promise<void> {
   return new Promise((resolve) => {
     if (window.google?.accounts?.id) {
