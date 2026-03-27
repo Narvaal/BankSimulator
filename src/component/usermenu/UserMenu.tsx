@@ -32,7 +32,7 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
                     </div>
 
                     <div className="flex-1 flex justify-center">
-                        <div className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium shadow-sm">
+                        <div className="px-4 py-1.5 text-slate-600 text-xs font-medium">
                             <CountdownTimer
                                 key={nextFreeAssetAt}
                                 targetDate={nextFreeAssetAt}
@@ -44,9 +44,7 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
 
                         <button
                             onClick={() => setWarningOpen(true)}
-                            className="flex items-center gap-3 px-4 py-2 rounded-xl
-                                       bg-white border border-slate-200 shadow-sm
-                                       hover:shadow-md hover:border-slate-300 transition"
+                            className="flex items-center gap-3 px-4 py-2"
                         >
                             <span className="text-sm text-slate-500">
                                 Balance
