@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
+import { ArrowRightIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
 
-const KineticVault: React.FC = () => {
+const RareLines: React.FC = () => {
   useEffect(() => {
     const linkFonts = document.createElement("link");
     linkFonts.href =
@@ -62,7 +63,7 @@ const KineticVault: React.FC = () => {
         <nav className="flex justify-between items-center px-6 py-3 max-w-7xl mx-auto">
           <div className="flex items-center gap-8">
             <h1 className="text-lg font-semibold tracking-tight text-white">
-              <span className="text-[#adc6ff]">Kinetic</span> Vault
+              <span className="text-[#adc6ff]">Rare</span> Lines
             </h1>
 
             <div className="hidden md:flex gap-6 text-sm">
@@ -147,29 +148,25 @@ const KineticVault: React.FC = () => {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Try it
-                  <span className="material-symbols-outlined text-sm transition group-hover:translate-x-1">
-                    arrow_forward
-                  </span>
+                    <ArrowRightIcon className="w-4 h-4 transition group-hover:translate-x-1" />
                 </span>
 
                 <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition"></span>
               </a>
 
-              <a
-                href="https://github.com/Narvaal/BankSimulator"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 px-4 py-3 text-gray-400 hover:text-white transition"
-              >
-                <span className="material-symbols-outlined text-lg">
-                  code
-                </span>
+            <a
+              href="https://github.com/Narvaal/BankSimulator"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 px-4 py-3 text-gray-400 hover:text-white transition"
+            >
+              <CodeBracketIcon className="w-5 h-5" />
 
-                <span className="relative">
-                  View Code
-                  <span className="absolute left-0 -bottom-1 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
-                </span>
-              </a>
+              <span className="relative">
+                View Code
+                <span className="absolute left-0 -bottom-1 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
+              </span>
+            </a>
 
             </div>
         </div>
@@ -234,7 +231,7 @@ const KineticVault: React.FC = () => {
             </h2>
 
             <p className="text-gray-400 text-lg leading-relaxed">
-              Kinetic Vault is a distributed asset management and trading system engineered
+              Rare Lines is a distributed asset management and trading system engineered
               to enforce strict ownership integrity and transactional reliability.
             </p>
           </div>
@@ -338,11 +335,11 @@ const KineticVault: React.FC = () => {
         </section>
 
       <footer className="border-t border-white/5 px-6 py-4 flex justify-between text-xs text-gray-500">
-        <span>KINETIC_VAULT.dev</span>
+        <span>RERE_LINES.dev</span>
         <span className="text-green-400">System: Stable v2.4.0</span>
       </footer>
     </div>
   );
 };
 
-export default KineticVault;
+export default RareLines;
