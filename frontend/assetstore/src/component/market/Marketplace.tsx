@@ -151,6 +151,8 @@ function Marketplace() {
     }, [collapsed]);
 
     function handleSwitch(newMode: "market" | "user") {
+        if (newMode === mode) return;
+
         setMode(newMode);
         setPage(0);
         setListings(null);
@@ -238,30 +240,37 @@ function Marketplace() {
 
                 {/* ===================== SWITCH ===================== */}
 
-                <div className="flex gap-3 mb-6">
+                <div className="mb-6 flex justify-center">
+                  <div className="relative flex bg-slate-200 rounded-full p-1 w-[260px]">
 
+                    {/* Slider */}
+                    <div
+                      className={`absolute top-1 bottom-1 w-1/2 rounded-full bg-[#0f172a] transition-all duration-300 ${
+                        mode === "market" ? "left-1" : "left-1/2"
+                      }`}
+                    />
+
+                    {/* MARKET */}
                     <button
-                        onClick={() => handleSwitch("market")}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                            mode === "market"
-                                ? "bg-[#0f172a] text-white"
-                                : "bg-white text-slate-500 hover:bg-slate-200"
-                        }`}
+                      onClick={() => handleSwitch("market")}
+                      className={`relative z-10 flex-1 py-2 text-sm font-semibold transition ${
+                        mode === "market" ? "text-white" : "text-slate-500"
+                      }`}
                     >
-                        Marketplace
+                      Marketplace
                     </button>
 
+                    {/* USER */}
                     <button
-                        onClick={() => handleSwitch("user")}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                            mode === "user"
-                                ? "bg-[#0f172a] text-white"
-                                : "bg-white text-slate-500 hover:bg-slate-200"
-                        }`}
+                      onClick={() => handleSwitch("user")}
+                      className={`relative z-10 flex-1 py-2 text-sm font-semibold transition ${
+                        mode === "user" ? "text-white" : "text-slate-500"
+                      }`}
                     >
-                        My Listings
+                      My Listings
                     </button>
 
+                  </div>
                 </div>
 
                 {/* ===================== GRID ===================== */}
