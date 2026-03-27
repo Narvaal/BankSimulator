@@ -30,15 +30,20 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
                         <button
                             onClick={() => setWarningOpen(true)}
-                            className="flex items-center w-full max-w-xs bg-gray-100 rounded-full p-1 hover:bg-gray-200 transition"
+                            className="flex items-center w-full max-w-xs bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md hover:bg-gray-50 transition"
                         >
-                            <div className="flex-1 px-4 py-2 text-sm text-gray-700 text-left font-medium">
-                                Balance: ${balance.toFixed(2)}
+                            {/* LEFT - BALANCE */}
+                            <div className="flex-1 text-sm text-gray-700 font-medium">
+                                Balance: <span className="text-black">${balance.toFixed(2)}</span>
                             </div>
 
-                            <div className="flex items-center justify-center w-10 h-10 rounded-full
-                                            bg-blue-600 text-white text-lg font-bold hover:bg-blue-700 transition">
-                                +
+                            {/* RIGHT - CTA */}
+                            <div className="flex items-center gap-2 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-blue-700 transition">
+                                <span>Add via Ko-fi</span>
+
+                                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-blue-600 text-sm font-bold">
+                                    +
+                                </div>
                             </div>
                         </button>
 
@@ -79,12 +84,38 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
                         <div className="text-sm text-gray-600 space-y-3 mb-4">
 
+                            <p className="text-gray-700">
+                                Before continuing, please read how this works:
+                            </p>
+
+                            <p>
+                                • After clicking <b>Continue</b>, a Ko-fi window will open.
+                                You will need to <b>log in</b>, choose a donation amount, confirm the payment,
+                                and enter your email.
+                            </p>
+
+                            <p>
+                                • Once the payment is completed, your balance will be credited automatically
+                                to your account using your email.
+                            </p>
+
                             <p>
                                 • This app only accepts donations in <b>USD</b>. Any other currency may be lost during conversion.
                             </p>
 
                             <p>
-                                • You <b>must use the same email</b> in Ko-fi as your account here. Otherwise, your balance <b>cannot be credited</b>.
+                                • You <b>must use the same email</b> in Ko-fi as your account here.
+                                Otherwise, your balance <b>cannot be credited</b>.
+                            </p>
+
+                            <p>
+                                • Due to infrastructure and transaction costs, it's not feasible to allow unlimited free usage.
+                                A <b>small symbolic donation</b> is required to unlock asset purchases.
+                            </p>
+
+                            <p>
+                                • All payments are handled securely by <b>Ko-fi</b>.
+                                This app <b>does not process or store any payment information</b>, ensuring a 100% safe transaction.
                             </p>
 
                             <p>
@@ -125,7 +156,7 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                                 className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white
                                            hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Continue
+                                Continue to Ko-fi
                             </button>
                         </div>
                     </div>
