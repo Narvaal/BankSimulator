@@ -240,7 +240,7 @@ function Marketplace() {
 
                 {/* ===================== SWITCH ===================== */}
 
-                <div className="mb-6 flex justify-center">
+                <div className="mb-6 flex  gap-4">
                   <div className="relative flex bg-slate-200 rounded-full p-1 w-[260px]">
 
                     {/* Slider */}
