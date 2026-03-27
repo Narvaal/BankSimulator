@@ -26,15 +26,19 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
                     <div className="flex-1 flex justify-end items-center gap-4">
 
-                        <div className="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-sm font-semibold">
-                            Balance: ${balance.toFixed(2)}
-                        </div>
-
                         <button
                             onClick={() => setKofiOpen(true)}
-                            className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition"
+                            className="flex items-center justify-between gap-3 px-4 py-2 rounded-xl
+                                       bg-emerald-50 text-emerald-700 text-sm font-semibold
+                                       border border-emerald-200 hover:bg-emerald-100 transition w-full"
                         >
-                            Add balance
+                            <span>
+                                Balance: ${balance.toFixed(2)}
+                            </span>
+
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-sm font-bold">
+                                +
+                            </span>
                         </button>
 
                         <div className="flex items-center gap-2">
