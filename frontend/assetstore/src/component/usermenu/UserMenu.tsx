@@ -12,6 +12,8 @@ export interface Account {
 export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Account) {
 
     const [kofiOpen, setKofiOpen] = useState(false);
+    const [warningOpen, setWarningOpen] = useState(false);
+    const [accepted, setAccepted] = useState(false);
 
     return (
         <>
@@ -27,10 +29,10 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                     <div className="flex-1 flex justify-end items-center gap-4">
 
                         <button
-                            onClick={() => setKofiOpen(true)}
-                            className="flex items-center w-full max-w-xs bg-gray-100 rounded-full p-1"
+                            onClick={() => setWarningOpen(true)}
+                            className="flex items-center w-full max-w-xs bg-gray-100 rounded-full p-1 hover:bg-gray-200 transition"
                         >
-                            <div className="flex-1 px-4 py-2 text-sm text-gray-600 text-left">
+                            <div className="flex-1 px-4 py-2 text-sm text-gray-700 text-left font-medium">
                                 Balance: ${balance.toFixed(2)}
                             </div>
 
@@ -61,6 +63,76 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                 </div>
             </header>
 
+            {/* ================= WARNING MODAL ================= */}
+            {warningOpen && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+                    onClick={() => setWarningOpen(false)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-2xl w-[420px] p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-lg font-semibold mb-3">
+                            Before you continue
+                        </h2>
+
+                        <div className="text-sm text-gray-600 space-y-3 mb-4">
+
+                            <p>
+                                • This app only accepts donations in <b>USD</b>. Any other currency may be lost during conversion.
+                            </p>
+
+                            <p>
+                                • You <b>must use the same email</b> in Ko-fi as your account here. Otherwise, your balance <b>cannot be credited</b>.
+                            </p>
+
+                            <p>
+                                • This project is built and maintained by a <b>solo developer</b> as part of a portfolio.
+                                Donations help keep the project online and cover infrastructure costs.
+                            </p>
+
+                            <p>
+                                • I am currently unemployed, so any support truly helps and is greatly appreciated ❤️
+                            </p>
+
+                        </div>
+
+                        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={accepted}
+                                onChange={(e) => setAccepted(e.target.checked)}
+                                className="accent-blue-600"
+                            />
+                            I understand and accept all conditions
+                        </label>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setWarningOpen(false)}
+                                className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-100"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                disabled={!accepted}
+                                onClick={() => {
+                                    setWarningOpen(false);
+                                    setKofiOpen(true);
+                                }}
+                                className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white
+                                           hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ================= KO-FI MODAL ================= */}
             {kofiOpen && (
                 <div
                     className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
@@ -77,7 +149,6 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                         >
                             ✕
                         </button>
-
 
                         <iframe
                             title="Support the project on Ko-fi ☕"
