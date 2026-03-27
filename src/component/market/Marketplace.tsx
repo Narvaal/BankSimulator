@@ -114,40 +114,41 @@ function Marketplace() {
 
     /* ===================== LOAD ===================== */
 
-     useEffect(() => {
+    useEffect(() => {
+        if (!account) return;
 
-         if (!account) return;
+        let cancelled = false;
 
-         localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+        async function load() {
+            try {
+                setLoading(true);
+                setError(null);
 
-         async function load() {
+                const data =
+                    mode === "market"
+                        ? await getListings(page, pageSize)
+                        : await getUserListings(page, pageSize);
 
-             setLoading(true);
-             setError(null);
+                if (!cancelled) setListings(data);
 
-             try {
+            } catch {
+                if (!cancelled) setError("Failed to load listings");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
 
-                 const data =
-                     mode === "market"
-                         ? await getListings(page, pageSize)
-                         : await getUserListings(page, pageSize);
+        load();
 
-                 setListings(data);
+        return () => {
+            cancelled = true;
+        };
 
-             } catch {
+    }, [account, page, mode]);
 
-                 setError("Failed to load listings");
-
-             } finally {
-
-                 setLoading(false);
-
-             }
-         }
-
-         load();
-
-     }, [account, page, collapsed, mode]);
+    useEffect(() => {
+        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+    }, [collapsed]);
 
     function handleSwitch(newMode: "market" | "user") {
         setMode(newMode);

@@ -106,17 +106,13 @@ export default function Home() {
     /* ===================== LOAD INVENTORY ===================== */
 
     useEffect(() => {
-
         if (!account) return;
-
-        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
 
         const accountId = account.id;
         let cancelled = false;
 
         async function load() {
             try {
-
                 setLoading(true);
                 setError(null);
 
@@ -125,13 +121,9 @@ export default function Home() {
                 if (!cancelled) setAssets(units);
 
             } catch (e: any) {
-
                 if (!cancelled) setError(e.message);
-
             } finally {
-
                 if (!cancelled) setLoading(false);
-
             }
         }
 
@@ -141,7 +133,11 @@ export default function Home() {
             cancelled = true;
         };
 
-    }, [account, page, collapsed]);
+    }, [account, page]);
+
+    useEffect(() => {
+        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+    }, [collapsed]);
 
     /* ===================== OPEN ASSET ===================== */
 
