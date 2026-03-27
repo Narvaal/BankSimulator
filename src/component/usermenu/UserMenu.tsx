@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CountdownTimer from "../util/CountdownTimer.tsx";
 import { UserIcon } from "@heroicons/react/24/outline";
+import { HeartIcon } from "@heroicons/react/24/solid";
 
 export interface Account {
     balance: number;
@@ -43,24 +44,25 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
                     <div className="flex-1 flex justify-end items-center gap-4">
 
                         <button
-                            onClick={() => setWarningOpen(true)}
-                            className="flex items-center bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
+                          onClick={() => setWarningOpen(true)}
+                          className="flex items-center"
                         >
-                            <div className="px-4 py-2 flex items-center gap-2 bg-emerald-50">
-                                <span className="text-xs text-emerald-600 font-medium">
-                                    Balance
-                                </span>
+                          <div className="flex items-center bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
 
-                                <span className="text-sm font-semibold text-emerald-700">
-                                    ${balance.toFixed(2)}
-                                </span>
+                            <div className="px-4 py-2 text-sm text-slate-600">
+                              Balance:
+                              <span className="ml-1 font-semibold text-emerald-600">
+                                ${balance.toFixed(2)}
+                              </span>
                             </div>
 
-                            <div className="flex items-center justify-center px-3 h-full bg-emerald-500 hover:bg-emerald-600 transition">
-                                <span className="text-white font-bold text-sm">
-                                    +
-                                </span>
+                            <div className="h-full flex items-stretch">
+                              <div className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition flex items-center px-3">
+                                <HeartIcon className="w-4 h-4 text-white" />
+                              </div>
                             </div>
+
+                          </div>
                         </button>
 
                         <div className="flex items-center gap-2">
