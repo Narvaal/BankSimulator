@@ -26,20 +26,26 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
 
                     <div className="flex-1 flex justify-end items-center gap-4">
 
-                        <button
-                            onClick={() => setKofiOpen(true)}
-                            className="flex items-center justify-between gap-3 px-4 py-2 rounded-xl
-                                       bg-emerald-50 text-emerald-700 text-sm font-semibold
-                                       border border-emerald-200 hover:bg-emerald-100 transition w-full"
-                        >
-                            <span>
-                                Balance: ${balance.toFixed(2)}
-                            </span>
+                    <button
+                        onClick={() => setKofiOpen(true)}
+                        className="flex items-center gap-3 px-4 py-2 rounded-full
+                                   bg-white border border-gray-200 shadow-sm
+                                   hover:shadow-md transition group"
+                    >
+                        <span className="text-sm text-gray-500">
+                            Balance
+                        </span>
 
-                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-sm font-bold">
-                                +
-                            </span>
-                        </button>
+                        <span className="text-sm font-semibold text-gray-900">
+                            ${balance.toFixed(2)}
+                        </span>
+
+                        <div className="ml-2 flex items-center justify-center w-7 h-7 rounded-full
+                                        bg-black text-white text-sm
+                                        group-hover:scale-105 transition">
+                            +
+                        </div>
+                    </button>
 
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">
