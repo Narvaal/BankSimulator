@@ -44,19 +44,23 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
 
                         <button
                             onClick={() => setWarningOpen(true)}
-                            className="flex items-center gap-3 px-4 py-2"
+                            className="flex items-center bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
                         >
-                            <span className="text-sm text-slate-500">
-                                Balance
-                            </span>
+                            <div className="px-4 py-2 flex items-center gap-2 bg-emerald-50">
+                                <span className="text-xs text-emerald-600 font-medium">
+                                    Balance
+                                </span>
 
-                            <span className="text-sm font-semibold text-slate-900">
-                                ${balance.toFixed(2)}
-                            </span>
+                                <span className="text-sm font-semibold text-emerald-700">
+                                    ${balance.toFixed(2)}
+                                </span>
+                            </div>
 
-                            <span className="text-xs text-slate-400">
-                                +
-                            </span>
+                            <div className="flex items-center justify-center px-3 h-full bg-emerald-500 hover:bg-emerald-600 transition">
+                                <span className="text-white font-bold text-sm">
+                                    +
+                                </span>
+                            </div>
                         </button>
 
                         <div className="flex items-center gap-2">
