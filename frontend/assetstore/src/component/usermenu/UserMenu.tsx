@@ -57,7 +57,7 @@ export default function Navbar({ balance, nextFreeAssetAt, name, imageUrl }: Acc
                             </div>
 
                             <div className="flex items-stretch border-l border-emerald-200">
-                              <div className="flex items-center px-3 hover:bg-emerald-100 active:scale-95 transition">
+                              <div className="flex items-center px-3 h-8 active:scale-95 transition">
                                 <HeartIcon className="w-4 h-4 text-emerald-600" />
                               </div>
                             </div>
