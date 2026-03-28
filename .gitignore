@@ -1,20 +1,33 @@
+# =========================
+# Java / Maven
+# =========================
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# =========================
+# Kotlin
+# =========================
 .kotlin
 
-### IntelliJ IDEA ###
+# =========================
+# IntelliJ IDEA
+# =========================
 .idea/
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
 *.iws
 *.iml
 *.ipr
 
-### Eclipse ###
+# (arquivos específicos removidos)
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+
+# =========================
+# Eclipse
+# =========================
 .apt_generated
 .classpath
 .factorypath
@@ -23,7 +36,9 @@ target/
 .springBeans
 .sts4-cache
 
-### NetBeans ###
+# =========================
+# NetBeans
+# =========================
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -33,14 +48,23 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# =========================
+# VS Code
+# =========================
 .vscode/
 
-### Mac OS ###
+# =========================
+# Mac OS
+# =========================
 .DS_Store
 
-### Client keys ###
+# =========================
+# Keys / secrets
+# =========================
 keys/
 
-# Frontend build
+# =========================
+# Frontend (React/Vite)
+# =========================
+frontend/assetstore/node_modules/
 frontend/assetstore/dist/
