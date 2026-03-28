@@ -205,7 +205,6 @@ public class ClientDAO {
                         email_verified,
                         picture
                 FROM client WHERE email = ?
-                AND email_verified = TRUE
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

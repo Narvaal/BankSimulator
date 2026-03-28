@@ -15,9 +15,12 @@ import br.com.ale.dto.CreateGoogleAuthenticationRequest;
 import br.com.ale.dto.ResendVerificationRequest;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -66,19 +69,46 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody CreateAuthenticationRequest request,
-                              HttpServletResponse response) throws IOException {
+    public ResponseEntity<?> login(
+            @RequestBody CreateAuthenticationRequest request,
+            HttpServletResponse response
+    ) {
 
-        AuthToken authToken = localLoginUseCase.execute(
-                new LocalLoginCommand(
-                        request.email(),
-                        request.password()
-                )
-        );
+        try {
 
-        authCookieService.addAuthCookie(response, authToken.getToken());
+            AuthToken authToken = localLoginUseCase.execute(
+                    new LocalLoginCommand(
+                            request.email(),
+                            request.password()
+                    )
+            );
 
-        return new AuthResponse(authToken.getClientId(), "Authenticated");
+            authCookieService.addAuthCookie(response, authToken.getToken());
+
+            return ResponseEntity.ok(
+                    new AuthResponse(authToken.getClientId(), "Authenticated")
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            String message = e.getMessage();
+
+            if ("Email not verified".equals(message)) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of(
+                                "code", "EMAIL_NOT_VERIFIED",
+                                "message", message
+                        ));
+            }
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "code", "INVALID_CREDENTIALS",
+                            "message", message
+                    ));
+        }
     }
 
     @PostMapping("/google")
