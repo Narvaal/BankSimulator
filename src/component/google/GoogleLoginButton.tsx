@@ -65,7 +65,7 @@ function GoogleLoginButton() {
 
       window.google.accounts.id.initialize({
         client_id:
-          "1002611612778-n0or7ldrme26ugbgmiccfsc5s1ctif9e.apps.googleusercontent.com",
+          "1002611612778-vu90lu6se8gf5ifmpifitiimhjn0bruu.apps.googleusercontent.com",
         callback: handleGoogleLogin,
       });
 
