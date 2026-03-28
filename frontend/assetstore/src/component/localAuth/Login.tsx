@@ -114,9 +114,10 @@ function Login() {
                 {error === "EMAIL_NOT_VERIFIED" && (
                     <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs p-3 rounded-lg mb-4 text-center">
 
-                        <p className="mb-2">
-                            Your email is not verified.
-                        </p>
+                       <p className="mb-2">
+                           Your email is not verified yet. Please check your inbox for the verification email — it might take a few minutes to arrive.
+                           If you didn’t receive it, you can resend it below.
+                       </p>
 
                         {!resent ? (
                             <button
@@ -155,7 +156,7 @@ function Login() {
                         focus:ring-2 focus:ring-black transition"
                         onChange={(e) => {
                             setEmail(e.target.value);
-                            setResent(false); // 🔥 reset UX
+                            setResent(false);
                         }}
                     />
                 </label>

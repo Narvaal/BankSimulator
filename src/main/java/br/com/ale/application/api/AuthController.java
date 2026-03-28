@@ -59,7 +59,7 @@ public class AuthController {
         response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
     }
 
-    @PostMapping("/auth/resend-verification")
+    @PostMapping("/resend-verification")
     public void resend(@RequestBody ResendVerificationRequest request) {
         resendVerificationUseCase.execute(
                 new ResendVerificationCommand(
