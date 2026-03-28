@@ -55,29 +55,24 @@ function Login() {
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    async function onSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        setError(null);
-        setSuccess(null);
-        setLoading(true);
+    async function resendVerification(email: string) {
+        setResending(true);
 
         try {
-            await handleLogin(email, password);
+            const res = await fetch("https://api.alessandro-bezerra.me/auth/resend-verification", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
 
-            setSuccess("Login successful");
+            if (!res.ok) throw new Error();
 
-            window.location.href = "/inventory";
+            setResent(true);
 
-        } catch (err: any) {
-
-            if (err.message === "EMAIL_NOT_VERIFIED") {
-                setError("Please verify your email before logging in.");
-            } else {
-                setError("Invalid email or password");
-            }
-
+        } catch {
+            alert("Failed to resend email");
         } finally {
-            setLoading(false);
+            setResending(false);
         }
     }
 
