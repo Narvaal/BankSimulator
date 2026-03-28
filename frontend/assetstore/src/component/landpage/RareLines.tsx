@@ -96,7 +96,7 @@ const RareLines: React.FC = () => {
           </a>
 
           <a
-            href="https://www.linkedin.com/in/seu-link-aqui/"
+            href="https://www.linkedin.com/in/narvaal/"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold
