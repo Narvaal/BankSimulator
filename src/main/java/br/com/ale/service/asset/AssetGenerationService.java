@@ -4,20 +4,19 @@ import br.com.ale.domain.asset.Asset;
 import br.com.ale.infrastructure.json.JsonUtils;
 import br.com.ale.util.RandomUtils;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class AssetGenerationService {
 
-    public static final int NUMBER_OF_ASSETS_PER_WEEK = 10;
+    public static final int NUMBER_OF_ASSETS_PER_WEEK = 12;
+    public static final int TOTAL_ASSETS_SUPPLY = 10;
+
+    private final List<String> nouns = JsonUtils.readArray("words/nouns.json");
+    private final List<String> verbs = JsonUtils.readArray("words/verbs.json");
+    private final List<String> adjectives = JsonUtils.readArray("words/adjs.json");
 
     public List<Asset> generateWeeklyAssets() {
-
-        List<String> nouns = JsonUtils.readArray("words/nouns.json");
-        List<String> verbs = JsonUtils.readArray("words/verbs.json");
-        List<String> adjectives = JsonUtils.readArray("words/adjs.json");
 
         List<Asset> assets = new ArrayList<>();
 
@@ -37,8 +36,8 @@ public class AssetGenerationService {
 
     private Asset generate(String phrase) {
         return new Asset(
-                phrase + " • " + UUID.randomUUID().toString().substring(0, 6),
-                100
+                phrase,
+                TOTAL_ASSETS_SUPPLY
         );
     }
 }

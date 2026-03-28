@@ -9,6 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class AssetPriceHistoryDAO {
 
@@ -81,5 +84,130 @@ public class AssetPriceHistoryDAO {
                     e
             );
         }
+    }
+
+    public List<AssetPriceHistory> selectByAssetListingId(Connection conn, long assetListingId) {
+        String sql = """
+                SELECT id,
+                       asset_listing_id,
+                       asset_unity_id,
+                       old_price,
+                       new_price,
+                       changed_by_account_id,
+                       reason,
+                       created_at
+                  FROM asset_price_history
+                 WHERE asset_listing_id = ?
+                 ORDER BY created_at ASC
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, assetListingId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<AssetPriceHistory> result = new ArrayList<>();
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+                return result;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting asset price history " +
+                            "[assetListingId=" + assetListingId + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<AssetPriceHistory> selectLatestByAssetUnityId(
+            Connection conn,
+            long assetUnityId
+    ) {
+        String sql = """
+                SELECT id,
+                       asset_listing_id,
+                       asset_unity_id,
+                       old_price,
+                       new_price,
+                       changed_by_account_id,
+                       reason,
+                       created_at
+                  FROM asset_price_history
+                 WHERE asset_unity_id = ?
+                 ORDER BY created_at DESC
+                 LIMIT 1
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, assetUnityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting latest asset price history " +
+                            "[assetUnityId=" + assetUnityId + "]",
+                    e
+            );
+        }
+    }
+
+    public List<AssetPriceHistory> selectByAssetUnityId(Connection conn, long assetUnityId) {
+
+        String sql = """
+            SELECT aph.id,
+                   aph.asset_listing_id,
+                   aph.asset_unity_id,
+                   aph.old_price,
+                   aph.new_price,
+                   aph.changed_by_account_id,
+                   aph.reason,
+                   aph.created_at
+              FROM asset_price_history aph
+             WHERE aph.asset_unity_id = ?
+             ORDER BY aph.created_at ASC
+            """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, assetUnityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<AssetPriceHistory> result = new ArrayList<>();
+
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+
+                return result;
+            }
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException(
+                    "Database error while selecting asset price history " +
+                            "[assetUnityId=" + assetUnityId + "]",
+                    e
+            );
+        }
+    }
+
+    private static AssetPriceHistory mapRow(ResultSet rs) throws SQLException {
+        return new AssetPriceHistory(
+                rs.getLong("id"),
+                rs.getLong("asset_listing_id"),
+                rs.getLong("asset_unity_id"),
+                rs.getBigDecimal("old_price"),
+                rs.getBigDecimal("new_price"),
+                rs.getLong("changed_by_account_id"),
+                ReasonType.valueOf(rs.getString("reason")),
+                rs.getTimestamp("created_at").toInstant()
+        );
     }
 }

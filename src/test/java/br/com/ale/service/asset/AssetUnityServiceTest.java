@@ -1,32 +1,47 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.asset.Asset;
 import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
+import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateAssetRequest;
 import br.com.ale.dto.CreateAssetUnityRequest;
+import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.ClientService;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AssetUnityServiceTest {
 
     private TestConnectionProvider provider;
-
+    private ClientService clientService;
     private AssetService assetService;
+    private AccountService accountService;
     private AssetUnityService assetUnityService;
-
+    private AssetWebhookNotifier webhookNotifier;
+    private InMemoryPrivateKeyStorage inMemoryPrivateKeyStorage;
     private long ownerAccountId;
 
     @BeforeEach
     void setup() {
         provider = new TestConnectionProvider();
-
+        webhookNotifier = new AssetWebhookNotifier("", false);
+        inMemoryPrivateKeyStorage = new InMemoryPrivateKeyStorage();
         assetService = new AssetService(provider);
-        assetUnityService = new AssetUnityService(provider);
+        assetUnityService = new AssetUnityService(provider, webhookNotifier);
+        accountService = new AccountService(provider, inMemoryPrivateKeyStorage);
+        clientService = new ClientService(provider);
 
         cleanDatabase();
         ownerAccountId = createAccount();
@@ -52,54 +67,21 @@ class AssetUnityServiceTest {
     }
 
     private long createAccount() {
-        try (var conn = provider.getConnection()) {
+        Client client = clientService.createClient(
+                new CreateClientRequest("John", "John@mail.com", "123", Provider.LOCAL,
+                        null, false, null)
+        );
 
-            long clientId;
-            try (var stmt = conn.prepareStatement(
-                    "INSERT INTO client (name, document) VALUES (?, ?)",
-                    new String[]{"id"}
-            )) {
-                stmt.setString(1, "Client");
-                stmt.setString(2, "DOC-1");
-                stmt.executeUpdate();
+        Account account = accountService.createAccount(
+                new CreateAccountRequest(
+                        client.getId(),
+                        "999999999",
+                        AccountType.DEFAULT,
+                        AccountStatus.ACTIVE
+                )
+        );
 
-                try (var rs = stmt.getGeneratedKeys()) {
-                    rs.next();
-                    clientId = rs.getLong(1);
-                }
-            }
-
-            try (var stmt = conn.prepareStatement(
-                    """
-                            INSERT INTO account (
-                                client_id,
-                                account_number,
-                                account_type,
-                                status,
-                                balance,
-                                public_key
-                            )
-                            VALUES (?, ?, ?, ?, ?, ?)
-                            """,
-                    new String[]{"id"}
-            )) {
-                stmt.setLong(1, clientId);
-                stmt.setString(2, "ACC-1");
-                stmt.setString(3, "WALLET");
-                stmt.setString(4, "ACTIVE");
-                stmt.setBigDecimal(5, new BigDecimal("1000.00"));
-                stmt.setString(6, "pk-1");
-                stmt.executeUpdate();
-
-                try (var rs = stmt.getGeneratedKeys()) {
-                    rs.next();
-                    return rs.getLong(1);
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return account.getId();
     }
 
     private Asset createAsset() {

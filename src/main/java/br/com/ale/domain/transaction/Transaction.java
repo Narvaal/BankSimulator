@@ -27,7 +27,10 @@ public class Transaction {
     }
 
     public Long setFromAccountId(Long fromAccountId) {
-        if (fromAccountId == null || fromAccountId.compareTo(Long.MIN_VALUE) < 0) {
+        if (fromAccountId == null) {
+            return null;
+        }
+        if (fromAccountId.compareTo(Long.MIN_VALUE) < 0) {
             throw new IllegalArgumentException(
                     "Transaction fromAccountId must be positive " + "[fromAccountId=" + fromAccountId + "]"
             );
@@ -36,7 +39,10 @@ public class Transaction {
     }
 
     public String setFromAccountNumber(String fromAccountNumber) {
-        if (fromAccountNumber == null || fromAccountNumber.isBlank()) {
+        if (fromAccountNumber == null) {
+            return null;
+        }
+        if (fromAccountNumber.isBlank()) {
             throw new IllegalArgumentException(
                     "Transaction fromAccountNumber must not be blank " + "[fromAccountNumber=" + fromAccountNumber + "]"
             );
@@ -45,7 +51,10 @@ public class Transaction {
     }
 
     public Long setToAccountId(Long toAccountId) {
-        if (toAccountId == null || toAccountId.compareTo(Long.MIN_VALUE) < 0) {
+        if (toAccountId == null) {
+            return null;
+        }
+        if (toAccountId.compareTo(Long.MIN_VALUE) < 0) {
             throw new IllegalArgumentException(
                     "Transaction toAccountId must be positive " + "[toAccountId=" + toAccountId + "]"
             );
@@ -54,7 +63,10 @@ public class Transaction {
     }
 
     public String setToAccountNumber(String toAccountNumber) {
-        if (toAccountNumber == null || toAccountNumber.isBlank()) {
+        if (toAccountNumber == null) {
+            return null;
+        }
+        if (toAccountNumber.isBlank()) {
             throw new IllegalArgumentException(
                     "Transaction toAccountNumber must not be blank " + "[toAccountNumber=" + toAccountNumber + "]"
             );

@@ -2,19 +2,24 @@ package br.com.ale.service;
 
 import br.com.ale.dao.ClientDAO;
 import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
+import br.com.ale.service.account.HashAccountNumberGenerator;
 
 import java.sql.Connection;
+import java.util.Optional;
 
 public class ClientService {
 
     private final ClientDAO clientDAO = new ClientDAO();
+    private final HashAccountNumberGenerator hashAccountNumberGenerator = new HashAccountNumberGenerator();
     private final ConnectionProvider connectionProvider;
 
     public ClientService(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
+
     }
 
     public Client createClient(CreateClientRequest request) {
@@ -30,7 +35,12 @@ public class ClientService {
                 return new Client(
                         id,
                         request.name(),
-                        request.document()
+                        request.email(),
+                        request.password(),
+                        request.provider(),
+                        request.providerId(),
+                        request.emailVerified(),
+                        request.picture()
                 );
 
             } catch (Exception e) {
@@ -42,7 +52,7 @@ public class ClientService {
             throw new RuntimeException(
                     "Service error while creating client " +
                             "[name=" + request.name() +
-                            ", document=" + request.document() + "]",
+                            ", email=" + request.email() + "]",
                     e
             );
         }
@@ -73,27 +83,68 @@ public class ClientService {
             throw new RuntimeException(
                     "Service error while updating client " +
                             "[id=" + request.id() +
-                            ", name=" + request.name() + "]",
+                            ", password=" + request.password() + "]",
                     e
             );
         }
     }
 
-    public Client getClientByDocument(String document) {
+    public Client getClientByEmail(String email) {
 
         try (Connection conn = connectionProvider.getConnection()) {
 
-            return clientDAO.selectByDocument(conn, document)
+            return clientDAO.selectByEmail(conn, email)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "Client not found [document=" + document + "]"
+                                    "Client not found [email=" + email + "]"
                             )
                     );
 
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting client " +
-                            "[document=" + document + "]",
+                            "[email=" + email + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Client> getClientByProviderAndId(Provider provider, String providerId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.selectByProviderAndId(conn, provider, providerId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client " +
+                            "[providerId=" + providerId + "]",
+                    e
+            );
+        }
+    }
+
+    public Client getClientById(long clientId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.selectById(conn, clientId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Client not found [clientId=" + clientId + "]"
+                            )
+                    );
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client " +
+                            "[clientId=" + clientId + "]",
+                    e
+            );
+        }
+    }
+
+    public int activate(long clientId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return clientDAO.activate(conn, clientId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting client to activate " +
+                            "[clientId=" + clientId + "]",
                     e
             );
         }

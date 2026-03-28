@@ -1,30 +1,32 @@
 package br.com.ale.service.marketplace;
 
+import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.asset.AssetListingDAO;
 import br.com.ale.dao.asset.AssetTransferDAO;
 import br.com.ale.dao.asset.AssetUnityDAO;
-import br.com.ale.domain.asset.AssetListing;
-import br.com.ale.domain.asset.AssetListingStatus;
-import br.com.ale.domain.asset.AssetPurchase;
-import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.asset.*;
 import br.com.ale.dto.CreateAssetPurchaseRequest;
 import br.com.ale.dto.CreateAssetTransferRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
-import br.com.ale.service.crypto.PrivateKeyStorage;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
 
 import java.sql.Connection;
 
 public class AssetPurchaseService {
 
     private final ConnectionProvider connectionProvider;
+    private final AssetWebhookNotifier webhookNotifier;
     private final AssetUnityDAO assetUnityDAO = new AssetUnityDAO();
     private final AssetListingDAO assetListingDAO = new AssetListingDAO();
     private final AssetTransferDAO assetTransferDAO = new AssetTransferDAO();
 
     public AssetPurchaseService(
-            ConnectionProvider connectionProvider
+            ConnectionProvider connectionProvider,
+            AssetWebhookNotifier webhookNotifier
     ) {
         this.connectionProvider = connectionProvider;
+        this.webhookNotifier = webhookNotifier;
     }
 
     public AssetPurchase purchase(CreateAssetPurchaseRequest request) {
@@ -42,18 +44,21 @@ public class AssetPurchaseService {
                         );
 
                 if (listing.getStatus() != AssetListingStatus.ACTIVE)
-                    throw new RuntimeException("Listing not active");
+                    throw new RuntimeException("Listing already sold");
 
                 if (listing.getSellerAccountId() == request.buyerAccountId())
                     throw new RuntimeException("Buyer cannot be seller");
 
                 AssetUnity unity =
-                        assetUnityDAO.selectById(
+                        assetUnityDAO.selectByIdForUpdate(
                                 conn,
                                 listing.getAssetUnityId()
                         ).orElseThrow(() ->
                                 new RuntimeException("AssetUnity not found")
                         );
+
+                if (unity.getOwnerAccountId() != listing.getSellerAccountId())
+                    throw new RuntimeException("Asset already purchased by another client");
 
                 assetListingDAO.updateStatus(
                         conn,
@@ -61,7 +66,7 @@ public class AssetPurchaseService {
                         AssetListingStatus.SOLD
                 );
 
-                assetTransferDAO.insert(
+                AssetTransfer transfer = assetTransferDAO.insert(
                         conn,
                         new CreateAssetTransferRequest(
                                 unity.getId(),
@@ -70,21 +75,30 @@ public class AssetPurchaseService {
                         )
                 );
 
-                assetUnityDAO.updateOwner(
+                boolean transferred = assetUnityDAO.tryTransferOwnership(
                         conn,
                         unity.getId(),
+                        listing.getSellerAccountId(),
                         request.buyerAccountId()
                 );
 
+                if (!transferred)
+                    throw new RuntimeException("Asset not transferred");
+
                 conn.commit();
 
-                return new AssetPurchase(
+                AssetPurchase purchase = new AssetPurchase(
                         listing.getId(),
                         unity.getId(),
                         listing.getSellerAccountId(),
                         request.buyerAccountId(),
                         listing.getPrice()
                 );
+
+                webhookNotifier.notifyAssetTransferCreated(transfer);
+                webhookNotifier.notifyAssetPurchaseCompleted(purchase);
+
+                return purchase;
 
             } catch (Exception e) {
                 conn.rollback();

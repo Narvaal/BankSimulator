@@ -2,6 +2,8 @@ package br.com.ale.dao.asset;
 
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
+import br.com.ale.dto.AssetListingPageView;
+import br.com.ale.dto.AssetListingView;
 import br.com.ale.dto.CreateAssetListingRequest;
 
 import java.math.BigDecimal;
@@ -11,12 +13,29 @@ import java.util.List;
 import java.util.Optional;
 
 public class AssetListingDAO {
+    private static AssetListing mapRow(ResultSet rs) throws SQLException {
+
+        Timestamp updatedAt = rs.getTimestamp("updated_at");
+
+        return new AssetListing(
+                rs.getLong("id"),
+                rs.getLong("asset_unit_id"),
+                rs.getLong("seller_account_id"),
+                rs.getBigDecimal("price"),
+                AssetListingStatus.valueOf(
+                        rs.getString("status").toUpperCase()
+                ),
+                rs.getTimestamp("created_at").toInstant(),
+                updatedAt != null ? updatedAt.toInstant() : null
+        );
+    }
+
     public AssetListing insert(Connection conn, CreateAssetListingRequest request) {
 
         String sql = """
-        INSERT INTO asset_listing (asset_unit_id, seller_account_id, price, status)
-        VALUES (?, ?, ?, ?)
-        """;
+                INSERT INTO asset_listing (asset_unit_id, seller_account_id, price, status)
+                VALUES (?, ?, ?, ?)
+                """;
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -134,23 +153,6 @@ public class AssetListingDAO {
         }
     }
 
-    private static AssetListing mapRow(ResultSet rs) throws SQLException {
-
-        Timestamp updatedAt = rs.getTimestamp("updated_at");
-
-        return new AssetListing(
-                rs.getLong("id"),
-                rs.getLong("asset_unit_id"),
-                rs.getLong("seller_account_id"),
-                rs.getBigDecimal("price"),
-                AssetListingStatus.valueOf(
-                        rs.getString("status").toUpperCase()
-                ),
-                rs.getTimestamp("created_at").toInstant(),
-                updatedAt != null ? updatedAt.toInstant() : null
-        );
-    }
-
     public int updateStatus(Connection conn, long assetId, AssetListingStatus status) {
 
         String sql = """
@@ -201,36 +203,64 @@ public class AssetListingDAO {
         }
     }
 
-    public Optional<AssetListing> selectActiveByAssetUnitId(Connection conn, long assetUnityId) {
+    public AssetListingPageView selectActiveByActiveStatus(Connection conn, long accountId, int page, int pageSize) {
+
         String sql = """
-                SELECT id,
-                       asset_unit_id,
-                       seller_account_id,
-                       price,
-                       status,
-                       created_at,
-                       updated_at
-                  FROM asset_listing
-                 WHERE asset_unit_id = ?
-                   AND status = 'ACTIVE'
+                SELECT
+                    l.id,
+                    l.asset_unit_id,
+                    l.price,
+                    l.created_at,
+                    u.asset_id,
+                    a.text AS asset_text,
+                    COUNT(*) OVER() AS total_items
+                FROM asset_listing l
+                JOIN asset_unit u ON u.id = l.asset_unit_id
+                JOIN asset a ON a.id = u.asset_id
+                WHERE l.status = 'ACTIVE' AND l.seller_account_id != ?
+                ORDER BY  l.created_at DESC
+                LIMIT ?
+                OFFSET ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, assetUnityId);
+            stmt.setLong(1, accountId);
+            stmt.setInt(2, pageSize);
+            stmt.setInt(3, page * pageSize);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
+                ArrayList<AssetListingView> items = new ArrayList<>();
+
+                long totalItems = 0;
+
+                while (rs.next()) {
+
+                    if (totalItems == 0) {
+                        totalItems = rs.getLong("total_items");
+                    }
+
+                    items.add(
+                            new AssetListingView(
+                                    rs.getLong("id"),
+                                    rs.getLong("asset_unit_id"),
+                                    rs.getLong("asset_id"),
+                                    rs.getString("asset_text"),
+                                    rs.getBigDecimal("price"),
+                                    rs.getTimestamp("created_at").toInstant()
+                            )
+                    );
                 }
-                return Optional.empty();
+
+                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+                return new AssetListingPageView(items, page, pageSize, totalPages, totalItems);
             }
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while selecting active asset listing " +
-                            "[assetUnityId=" + assetUnityId + "]",
+                    "Database error while selecting active asset listing",
                     e
             );
         }
@@ -299,38 +329,75 @@ public class AssetListingDAO {
         }
     }
 
-    public List<AssetListing> selectByOwnerAccount(Connection conn, long ownerAccountId, AssetListingStatus status) {
+    public AssetListingPageView selectByOwnerAccount(
+            Connection conn,
+            long accountId,
+            int page,
+            int pageSize
+    ) {
+
         String sql = """
-                SELECT id,
-                       asset_unit_id,
-                       seller_account_id,
-                       price,
-                       status,
-                       created_at,
-                       updated_at
-                  FROM asset_listing
-                 WHERE seller_account_id = ? AND status = ?
+                SELECT
+                    l.id,
+                    l.asset_unit_id,
+                    u.asset_id,
+                    a.text AS asset_text,
+                    l.price,
+                    l.created_at,
+                    l.updated_at,
+                    COUNT(*) OVER() AS total_items
+                FROM asset_listing l
+                JOIN asset_unit u ON u.id = l.asset_unit_id
+                JOIN asset a ON a.id = u.asset_id
+                WHERE l.seller_account_id = ?
+                  AND l.status = 'ACTIVE'
+                ORDER BY l.created_at DESC
+                LIMIT ? OFFSET ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, ownerAccountId);
-            stmt.setString(2, status.name());
+            stmt.setLong(1, accountId);
+            stmt.setInt(2, pageSize);
+            stmt.setInt(3, page * pageSize);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
-                List<AssetListing> assetListings = new ArrayList<>();
+                ArrayList<AssetListingView> items = new ArrayList<>();
+                long totalItems = 0;
+
                 while (rs.next()) {
-                    assetListings.add(mapRow(rs));
+
+                    if (totalItems == 0) {
+                        totalItems = rs.getLong("total_items");
+                    }
+
+                    items.add(
+                            new AssetListingView(
+                                    rs.getLong("id"),
+                                    rs.getLong("asset_unit_id"),
+                                    rs.getLong("asset_id"),
+                                    rs.getString("asset_text"),
+                                    rs.getBigDecimal("price"),
+                                    rs.getTimestamp("created_at").toInstant()
+                            )
+                    );
                 }
-                return assetListings;
+
+                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+                return new AssetListingPageView(
+                        items,
+                        page,
+                        pageSize,
+                        totalPages,
+                        totalItems
+                );
             }
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while selecting asset listings " +
-                            "[ownerAccountId=" + ownerAccountId + ", "
-                            + "[status=" + status.name() + "]",
+                    "Database error while selecting asset listings [accountId=" + accountId + "]",
                     e
             );
         }

@@ -1,12 +1,15 @@
 package br.com.ale.dao.asset;
 
 import br.com.ale.domain.asset.Asset;
+import br.com.ale.dto.AssetSummaryResponse;
 import br.com.ale.dto.CreateAssetRequest;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class AssetDAO {
@@ -105,6 +108,32 @@ public class AssetDAO {
         );
     }
 
+    public List<AssetSummaryResponse> selectAllSummaries(Connection conn) {
+        String sql = """
+                SELECT text,
+                       total_supply,
+                       created_at
+                  FROM asset
+                 ORDER BY created_at DESC
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<AssetSummaryResponse> assets = new ArrayList<>();
+                while (rs.next()) {
+                    assets.add(new AssetSummaryResponse(
+                            rs.getString("text"),
+                            rs.getInt("total_supply"),
+                            rs.getTimestamp("created_at").toInstant()
+                    ));
+                }
+                return assets;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error while selecting assets", e);
+        }
+    }
+
     public int updateTotalSupply(Connection conn, long assetId, int supplyUsed) {
 
         String sql = """
@@ -115,8 +144,8 @@ public class AssetDAO {
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, assetId);
-            stmt.setInt(2, supplyUsed);
+            stmt.setInt(1, supplyUsed);
+            stmt.setLong(2, assetId);
             stmt.setInt(3, supplyUsed);
 
             return stmt.executeUpdate();

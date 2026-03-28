@@ -1,56 +1,47 @@
 package br.com.ale.application.marketplace.usecase;
 
 import br.com.ale.application.marketplace.command.CreateAssetOfferCommand;
+import br.com.ale.domain.account.Account;
 import br.com.ale.domain.asset.AssetListing;
 import br.com.ale.domain.asset.AssetListingStatus;
-import br.com.ale.domain.asset.AssetUnity;
-import br.com.ale.domain.auth.TokenClaims;
+import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.CreateAssetListingRequest;
-import br.com.ale.service.AccountService;
+import br.com.ale.service.account.AccountService;
 import br.com.ale.service.asset.AssetListingService;
-import br.com.ale.service.asset.AssetUnityService;
-import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 
 public class CreateAssetOfferUseCase {
 
-    private final AccountService accountService;
     private final AssetListingService assetListingService;
-    private final AssetUnityService assetUnityService;
-    private final AuthService authService;
+    private final AccountService accountService;
+    private final JwtService jwtService;
 
     public CreateAssetOfferUseCase(
-            AccountService accountService,
             AssetListingService assetListingService,
-            AssetUnityService assetUnityService,
-            AuthService authService
+            AccountService accountService,
+            JwtService jwtService
     ) {
-        this.accountService = accountService;
         this.assetListingService = assetListingService;
-        this.assetUnityService = assetUnityService;
-        this.authService = authService;
+        this.accountService = accountService;
+        this.jwtService = jwtService;
     }
 
     public AssetListing execute(CreateAssetOfferCommand command) {
 
-        TokenClaims claims = authService.validateToken(command.token());
-
-        AssetUnity assetUnity = assetUnityService.selectById(command.assetUnityId());
-
-        long ownerClientId =
-                accountService.getAccountById(assetUnity.getOwnerAccountId())
-                        .getClientId();
-
-        if (ownerClientId != claims.clientId()) {
-            throw new UnauthorizedOperationException(
-                    "Authenticated client does not own this asset"
-            );
+        if (!jwtService.isTokenValid(command.token())) {
+            throw new UnauthorizedOperationException("Invalid or expired token");
         }
 
-        return assetListingService.createAssetListing(
+        long clientId = jwtService.extractClientId(command.token());
+
+        Account account = accountService.getAccountByClientId(clientId)
+                .orElseThrow(() -> new InvalidCredentialsException("Client not found"));
+
+        return assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
-                        assetUnity.getId(),
-                        assetUnity.getOwnerAccountId(),
+                        command.assetUnityId(),
+                        account.getId(),
                         command.price(),
                         AssetListingStatus.ACTIVE
                 )

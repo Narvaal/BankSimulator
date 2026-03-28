@@ -1,9 +1,10 @@
 package br.com.ale.dao;
 
 import br.com.ale.domain.account.Account;
-import br.com.ale.domain.client.Client;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
 
@@ -20,15 +21,28 @@ public class ClientDAO {
     public long insert(Connection conn, CreateClientRequest request) {
 
         String sql = """
-                INSERT INTO client (name, document)
-                VALUES (?, ?)
+                INSERT INTO client (
+                    name,
+                    email,
+                    password,
+                    provider,
+                    provider_id,
+                    email_verified,
+                    picture
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
             stmt.setString(1, request.name());
-            stmt.setString(2, request.document());
+            stmt.setString(2, request.email());
+            stmt.setString(3, request.password());
+            stmt.setString(4, String.valueOf(request.provider()));
+            stmt.setString(5, request.providerId());
+            stmt.setBoolean(6, request.emailVerified());
+            stmt.setString(7, request.picture());
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -36,7 +50,7 @@ public class ClientDAO {
 
                 throw new RuntimeException(
                         "Failed to insert client [name=" + request.name() +
-                                ", document=" + request.document() + "]"
+                                ", email=" + request.email() + "]"
                 );
             }
 
@@ -47,7 +61,7 @@ public class ClientDAO {
 
                 throw new RuntimeException(
                         "Failed to retrieve client id [name=" + request.name() +
-                                ", document=" + request.document() + "]"
+                                ", email=" + request.email() + "]"
                 );
             }
 
@@ -55,7 +69,7 @@ public class ClientDAO {
             throw new RuntimeException(
                     "Database error while inserting client " +
                             "[name=" + request.name() +
-                            ", document=" + request.document() + "]",
+                            ", email=" + request.email() + "]",
                     e
             );
         }
@@ -65,13 +79,13 @@ public class ClientDAO {
 
         String sql = """
                 UPDATE client
-                   SET name = ?
+                   SET password = ?
                  WHERE id = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, request.name());
+            stmt.setString(1, request.password());
             stmt.setLong(2, request.id());
 
             return stmt.executeUpdate();
@@ -80,7 +94,31 @@ public class ClientDAO {
             throw new RuntimeException(
                     "Database error while updating client " +
                             "[clientId=" + request.id() +
-                            ", name=" + request.name() + "]",
+                            ", password=" + request.password() + "]",
+                    e
+            );
+        }
+    }
+
+    public int activate(Connection conn, Long clientId) {
+
+        String sql = """
+                UPDATE client
+                   SET email_verified = TRUE
+                 WHERE id = ?
+                   AND email_verified = FALSE
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, clientId);
+
+            return stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while activating client " +
+                            "[clientId=" + clientId + "]",
                     e
             );
         }
@@ -111,9 +149,15 @@ public class ClientDAO {
     public Optional<Client> selectById(Connection conn, long id) {
 
         String sql = """
-                SELECT id, name, document
-                  FROM client
-                 WHERE id = ?
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE id = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -127,7 +171,12 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("document")
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
                             )
                     );
                 }
@@ -144,17 +193,23 @@ public class ClientDAO {
         }
     }
 
-    public Optional<Client> selectByDocument(Connection conn, String document) {
+    public Optional<Client> selectByEmail(Connection conn, String email) {
 
         String sql = """
-                SELECT id, name, document
-                  FROM client
-                 WHERE document = ?
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE email = ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, document);
+            stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
 
@@ -163,7 +218,12 @@ public class ClientDAO {
                             new Client(
                                     rs.getLong("id"),
                                     rs.getString("name"),
-                                    rs.getString("document")
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
                             )
                     );
                 }
@@ -174,7 +234,56 @@ public class ClientDAO {
         } catch (SQLException e) {
             throw new RuntimeException(
                     "Database error while selecting client " +
-                            "[clientDocument=" + document + "]",
+                            "[clientEmail=" + email + "]",
+                    e
+            );
+        }
+    }
+
+    public Optional<Client> selectByProviderAndId(Connection conn, Provider provider, String providerId) {
+
+        String sql = """
+                SELECT  id,
+                        name,
+                        email,
+                        password,
+                        provider,
+                        provider_id,
+                        email_verified,
+                        picture
+                FROM client WHERE provider = ? AND provider_id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, String.valueOf(provider));
+            stmt.setString(2, providerId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return Optional.of(
+                            new Client(
+                                    rs.getLong("id"),
+                                    rs.getString("name"),
+                                    rs.getString("email"),
+                                    rs.getString("password"),
+                                    Provider.valueOf(rs.getString("provider")),
+                                    rs.getString("provider_id"),
+                                    rs.getBoolean("email_verified"),
+                                    rs.getString("picture")
+                            )
+                    );
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting client " +
+                            "[provider=" + String.valueOf(provider) + ", "
+                            + "providerId=" + providerId + "]",
                     e
             );
         }
@@ -189,7 +298,8 @@ public class ClientDAO {
                        account_type,
                        balance,
                        status,
-                       public_key
+                       public_key,
+                        next_free_asset_at
                   FROM account
                  WHERE client_id = ?
                 """;
@@ -211,7 +321,8 @@ public class ClientDAO {
                                     AccountType.valueOf(rs.getString("account_type")),
                                     rs.getBigDecimal("balance"),
                                     AccountStatus.valueOf(rs.getString("status")),
-                                    rs.getString("public_key")
+                                    rs.getString("public_key"),
+                                    rs.getTimestamp("next_free_asset_at").toInstant()
                             )
                     );
                 }
@@ -227,4 +338,6 @@ public class ClientDAO {
             );
         }
     }
+
+
 }

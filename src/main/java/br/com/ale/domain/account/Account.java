@@ -1,6 +1,7 @@
 package br.com.ale.domain.account;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 
 public class Account {
@@ -9,9 +10,10 @@ public class Account {
     private final long clientId;
     private final String accountNumber;
     private final AccountType accountType;
-    private BigDecimal balance = BigDecimal.ZERO;
     private final AccountStatus status;
+    private BigDecimal balance = BigDecimal.ZERO;
     private String publicKey;
+    private Instant nextFreeAssetAt;
 
     public Account(
             long id,
@@ -20,7 +22,8 @@ public class Account {
             AccountType accountType,
             BigDecimal balance,
             AccountStatus status,
-            String publicKey
+            String publicKey,
+            Instant nextFreeAssetAt
     ) {
         this.id = id;
         this.clientId = validateClientId(clientId);
@@ -29,6 +32,7 @@ public class Account {
         this.balance = validateBalance(balance);
         this.status = Objects.requireNonNull(status);
         this.publicKey = publicKey;
+        this.nextFreeAssetAt = nextFreeAssetAt;
     }
 
     public Account(

@@ -1,0 +1,138 @@
+### Health check
+GET http://localhost:8080/health
+
+### Claim Asset
+POST http://localhost:8080/assets/claim
+Content-Type: application/json
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcyNzY0ODkxLCJleHAiOjE3NzI4NTEyOTF9.CFuBgH5b5SjAydFKJznGoeuxmyz2Rtw46S1UH4IxCPw
+
+{
+  "assetId": 1
+}
+
+### Login
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@a.com",
+  "password": "pass"
+}
+
+### Create Account
+POST http://localhost:8080/accounts
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "a@a.com",
+  "password": "pass"
+}
+
+### Purchase asset
+POST http://localhost:8080/asset-listings/1/purchase
+Content-Type: application/json
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzcyODMyNzQzLCJleHAiOjE3NzI5MTkxNDN9.LaddkqGFcO1Q2JkVxQHGsnOP_IJRn2SZzsL1wJQsipg
+
+### Post assetOffer
+POST http://localhost:8080/asset-offers
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcwOTU1MDczLCJleHAiOjE3NzEwNDE0NzN9.cZEkBYO2lemqQz5lGFGcHlRMpQVWewleF6qOY9iMN78
+
+{
+  "assetUnityId": 1,
+  "price": 200.00
+}
+
+### Cancel assetOffer
+POST http://localhost:8080/asset-offers/5/cancel
+Content-Type: application/json
+
+{
+  "accountId": 5,
+  "token": "MTA6MTc2OTgyODIyMTM3ODoxNzY5ODMxODIxMzc4OjkyYjA1YTFlLWVlODgtNDQ3NS1hYzg1LWNjOGNmNzBhMDQwNA==.hkQ5c9jaw7BH5/Diunrv3YIDPcGq//tHV6CZ3fd/aaP1Io+GNJHRnA5S0R3WXHowtNLQE6WxcY/dxu5j202zBrnso2sKN8LEAbdQkMoZith0k9l7XXVaaIgflETX+37rqONeQ+d4yINVSeOLJ1h2C7TBIbMeiwUwBMQbyunYjwUo5wYX2yWlXtgnV7d/ccOVOCTwj9S0FDQP7wtRTyEsjQyyEweiLPXsMUR8uzsspiqh8PeLzltAYi5hHyBE4suCrV5LBoAjLufITBxqjoewZBWYIFKo5S11G4ZzP4EWomP3OVjtTt4xUAd2MRgFL13gc3boM8h79e7gXEGqladkIQ=="
+}
+
+### Account Deposit
+POST http://localhost:8080/accounts/2/deposit
+Content-Type: application/json
+
+{
+  "amount": 1000.00,
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcyODM5NjMxLCJleHAiOjE3NzI5MjYwMzF9.wXPKhXMWqZePSgWN8E4azHbsjxWhAWnaAM36qspHZAg"
+}
+
+### Give assetUnity
+POST http://localhost:8080/assets/4/units
+Content-Type: application/json
+
+{
+  "ownerAccountId": 2,
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcyOTQwNTE3LCJleHAiOjE3NzMwMjY5MTd9.OCjP4noHOam3Uy_LbXym-u4hEGx3aWSTJ7sFUGzZk7A"
+}
+
+### Create Asset bundle
+POST http://localhost:8080/assets/bundles
+Content-Type: application/json
+X-Admin-Token: root
+
+{
+  "identifier": "weekly",
+  "assets": [
+    {
+      "text": "X: Rares",
+      "totalSupply": 1
+    },
+    {
+      "text": "E: Epics",
+      "totalSupply": 1
+    }
+  ]
+}
+
+### Get Asset bundle
+GET http://localhost:8080/assets/bundles?page=0&size=10
+
+### Get Asset bundle itemns
+GET http://localhost:8080/assets/bundles/1/items?page=0&size=20
+
+### Generate Assets
+POST http://localhost:8080/admin/assets/generate
+X-Admin-Token: root
+
+### Account Details
+GET http://localhost:8080/accounts/me
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxMDE5OTAxLCJleHAiOjE3NzExMDYzMDF9.dyGIklwrkeri6khTPt-x89PsMMWnTUymBKPtOJlLjHk
+
+### Client details
+GET http://localhost:8080/clients/me
+Authorization: Bearer NzoxNzY5ODMzOTUwMTkyOjE3Njk4Mzc1NTAxOTI6ZDg2OGJjNWUtYmJjZC00NTVhLWI1ZmMtMGIwNDhlODA1Zjk0.uDdonalFG3quAc5fejdRV7kX1ZvL296nAkBxjEVQPnZaa9DM+RTFpkBmJrhIhtfGKQowRZ7e4L2ScmjHuD4MfdRoIvrjTFMiRgcpC4JufQtcsciw6bGNhOaCHXC+EBXHu5Nwto3TrwqaXZ1QJ5MJtKnz2hVxitiHX4530g3bX5GT9tQ1bizEn4ZcItQ770A9MHN9qlVcjB2BzIUcNCsyJ6JrJpaMBs6acmRXOdpJbcaA09NFTc1sfsNBR1Wo4XLCgl4sHND4BXSqBiMAD5ymbsVnDsERNxrBvfpEBgoempCiLwSU261DhGNhQ/86RoiZZrO9E42d0nrrP47D8Dxg1g==
+
+### Get transactions by user
+GET http://localhost:8080/accounts/5/transfers
+Authorization: Bearer NzoxNzY5ODMzMjM1NDEwOjE3Njk4MzY4MzU0MTA6NjIwMGQ1YzItNTQ5Ny00MzdhLTg2NDQtZTdlMzcyY2Q1NGRl.r1Baund2/WSU4D95pt6lC2yV3GVG7qfVqSfWlyzBpygPgdXB1UOwUmkamRIf2HZvwqu00/vJ4bDDgEunh8S6VRqKCcdjpUfOQYZvFpxzXcnzU0ppHUrJyTJSgw1f6nelGdanY3o2VWObBMqZcBj6fP9fPeJ4yq2AXkAd6yPYDTh1IK9Xm5Wz4llEFiyrAziY7BKX0WfZpEHvy3i05PblSJkgbaTX3AJZYDRO/rqggBjilkW7FySpAeZQc8BvrWsXsbVV1fEy8yBODneM48LxpZHWutzyiXiXudAdIDMf7FuMYo7HpyTXKSjfiYqltk7M1j3nh7Kpz5EizxFSG5dj9w==
+
+### GET asset Price History
+GET http://localhost:8080/assets/6/price-history
+
+### Get asset price history
+GET localhost:8080/asset-listings/7/price-history
+
+### Get asset by id
+GET localhost:8080/assets/1
+
+### Get asset listing by id
+GET localhost:8080/asset-listings/1
+
+### Get active asset listings active
+GET localhost:8080/asset-listings?page=0&pageSize=10
+Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzcyODMyNzQzLCJleHAiOjE3NzI5MTkxNDN9.LaddkqGFcO1Q2JkVxQHGsnOP_IJRn2SZzsL1wJQsipg
+
+### Get asset listing by owner
+GET localhost:8080/asset-listings?ownerId=2
+
+### Get assets
+GET localhost:8080/assets
+
+### Get asset-units by owner
+GET localhost:8080/asset-units?ownerId=1&page=0&pageSize=10
