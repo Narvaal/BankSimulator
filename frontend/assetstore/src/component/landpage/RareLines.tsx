@@ -335,7 +335,7 @@ const RareLines: React.FC = () => {
         </section>
 
       <footer className="border-t border-white/5 px-6 py-4 flex justify-between text-xs text-gray-500">
-        <span>RERE_LINES.dev</span>
+        <span>RARE_LINES.dev</span>
         <span className="text-green-400">System: Stable v2.4.0</span>
       </footer>
     </div>
