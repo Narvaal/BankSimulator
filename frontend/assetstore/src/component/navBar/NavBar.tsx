@@ -114,7 +114,7 @@ export default function Sidebar({collapsed, setCollapsed}: Props) {
                             transition={{duration: 0.2}}
                             className="absolute bottom-0 left-0 w-full p-4 border-t border-slate-200 text-xs text-slate-500"
                         >
-                            Version <span className="text-slate-800 font-medium">1.0.2</span>
+                            Version <span className="text-slate-800 font-medium">1.0.3</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
