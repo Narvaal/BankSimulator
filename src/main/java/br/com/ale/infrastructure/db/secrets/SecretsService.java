@@ -14,10 +14,8 @@ public class SecretsService {
     private final SecretsManagerClient client;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public SecretsService() {
-        this.client = SecretsManagerClient.builder()
-                .region(Region.of("us-east-2"))
-                .build();
+    public SecretsService(SecretsManagerClient client) {
+        this.client = client;
     }
 
     public String getDbPassword() {
@@ -28,9 +26,9 @@ public class SecretsService {
                     .secretId(secretName)
                     .build();
 
-            String secretString = client.getSecretValue(request).secretString();
+            var response = client.getSecretValue(request);
 
-            Map<String, Object> json = mapper.readValue(secretString, Map.class);
+            Map<String, Object> json = mapper.readValue(response.secretString(), Map.class);
 
             return (String) json.get("password");
 

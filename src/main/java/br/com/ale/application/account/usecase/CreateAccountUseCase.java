@@ -1,6 +1,7 @@
 package br.com.ale.application.account.usecase;
 
 import br.com.ale.application.account.command.CreateAccountCommand;
+import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.auth.PasswordHasher;
@@ -15,8 +16,11 @@ import br.com.ale.service.ClientService;
 import br.com.ale.service.EmailVerificationService;
 import br.com.ale.service.account.AccountNumberGenerator;
 import br.com.ale.service.account.AccountService;
+import br.com.ale.service.crypto.KeyPairService;
+import br.com.ale.service.crypto.PrivateKeyStorage;
 import br.com.ale.service.email.EmailVerificationSender;
 
+import java.security.KeyPair;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -28,25 +32,31 @@ public class CreateAccountUseCase {
     private final AccountNumberGenerator accountNumberGenerator;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationSender emailVerificationSender;
+    private final KeyPairService keyPairService;
+    private final PrivateKeyStorage privateKeyStorage;
 
     public CreateAccountUseCase(
             AccountService accountService,
             ClientService clientService,
             AccountNumberGenerator accountNumberGenerator,
             EmailVerificationService emailVerificationService,
-            EmailVerificationSender emailVerificationSender
+            EmailVerificationSender emailVerificationSender,
+            KeyPairService keyPairService,
+            PrivateKeyStorage privateKeyStorage
     ) {
         this.accountService = accountService;
         this.accountNumberGenerator = accountNumberGenerator;
         this.clientService = clientService;
         this.emailVerificationService = emailVerificationService;
         this.emailVerificationSender = emailVerificationSender;
+        this.keyPairService = keyPairService;
+        this.privateKeyStorage = privateKeyStorage;
     }
 
     public void execute(CreateAccountCommand command) {
 
         PasswordValidator.validate(command.password());
-        
+
         Client client = clientService.createClient(
                 new CreateClientRequest(
                         command.name(),
@@ -76,7 +86,7 @@ public class CreateAccountUseCase {
 
             String accountNumber = accountNumberGenerator.generate(client);
 
-            accountService.createAccount(
+            Account account = accountService.createAccount(
                     new CreateAccountRequest(
                             client.getId(),
                             accountNumber,
@@ -85,9 +95,16 @@ public class CreateAccountUseCase {
                     )
             );
 
+            KeyPair keyPair = keyPairService.generate();
+
+            privateKeyStorage.save(
+                    account.getId(),
+                    keyPair.getPrivate().getEncoded()
+            );
+
         } catch (Exception e) {
             clientService.deleteClient(client.getId());
-            throw new RuntimeException("Failed to send verification email, account not created.", e);
+            throw new RuntimeException("Failed to create account", e);
         }
     }
 }

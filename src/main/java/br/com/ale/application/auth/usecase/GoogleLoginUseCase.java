@@ -14,7 +14,10 @@ import br.com.ale.service.account.AccountNumberGenerator;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.auth.GoogleTokenVerifier;
 import br.com.ale.service.auth.JwtService;
+import br.com.ale.service.crypto.KeyPairService;
+import br.com.ale.service.crypto.PrivateKeyStorage;
 
+import java.security.KeyPair;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +30,8 @@ public class GoogleLoginUseCase {
     private final JwtService jwtService;
     private final GoogleTokenVerifier googleTokenVerifier;
     private final String googleClientId;
+    private final KeyPairService keyPairService;
+    private final PrivateKeyStorage privateKeyStorage;
 
     public GoogleLoginUseCase(
             AccountNumberGenerator accountNumberGenerator,
@@ -34,7 +39,9 @@ public class GoogleLoginUseCase {
             ClientService clientService,
             JwtService jwtService,
             GoogleTokenVerifier googleTokenVerifier,
-            String googleClientId
+            String googleClientId,
+            KeyPairService keyPairService,
+            PrivateKeyStorage privateKeyStorage
     ) {
         this.accountNumberGenerator = accountNumberGenerator;
         this.accountService = accountService;
@@ -42,6 +49,8 @@ public class GoogleLoginUseCase {
         this.jwtService = jwtService;
         this.googleTokenVerifier = googleTokenVerifier;
         this.googleClientId = googleClientId;
+        this.keyPairService = keyPairService;
+        this.privateKeyStorage = privateKeyStorage;
     }
 
     private Client findOrCreateGoogleClient(
@@ -64,21 +73,32 @@ public class GoogleLoginUseCase {
                 emailVerified,
                 picture
         )));
-
     }
 
     private Account findOrCreateAccount(Client client) {
 
         Optional<Account> existing = accountService.getAccountByClientId(client.getId());
 
-        return existing.orElseGet(() ->
-                accountService.createAccount(new CreateAccountRequest(
-                        client.getId(),
-                        accountNumberGenerator.generate(client),
-                        AccountType.DEFAULT,
-                        AccountStatus.ACTIVE
-                ))
-        );
+        return existing.orElseGet(() -> {
+
+            Account account = accountService.createAccount(
+                    new CreateAccountRequest(
+                            client.getId(),
+                            accountNumberGenerator.generate(client),
+                            AccountType.DEFAULT,
+                            AccountStatus.ACTIVE
+                    )
+            );
+
+            KeyPair keyPair = keyPairService.generate();
+
+            privateKeyStorage.save(
+                    account.getId(),
+                    keyPair.getPrivate().getEncoded()
+            );
+
+            return account;
+        });
     }
 
     public AuthToken execute(GoogleLoginCommand command) {

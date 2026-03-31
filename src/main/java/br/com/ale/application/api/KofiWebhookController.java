@@ -43,7 +43,7 @@ public class KofiWebhookController {
             return ResponseEntity.ok("ok");
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("error");
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

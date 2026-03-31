@@ -29,6 +29,8 @@ import br.com.ale.service.email.EmailVerificationSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 
 import java.security.KeyPair;
 
@@ -36,8 +38,10 @@ import java.security.KeyPair;
 public class AuthConfig {
 
     @Bean
-    public SecretsService secretsService() {
-        return new SecretsService();
+    public SecretsManagerClient secretsManagerClient() {
+        return SecretsManagerClient.builder()
+                .region(Region.of("us-east-2"))
+                .build();
     }
 
     @Bean
@@ -120,14 +124,18 @@ public class AuthConfig {
             ClientService clientService,
             AccountNumberGenerator accountNumberGenerator,
             EmailVerificationService emailVerificationService,
-            EmailVerificationSender emailVerificationSender
+            EmailVerificationSender emailVerificationSender,
+            KeyPairService keyPairService,
+            PrivateKeyStorage privateKeyStorage
     ) {
         return new CreateAccountUseCase(
                 accountService,
                 clientService,
                 accountNumberGenerator,
                 emailVerificationService,
-                emailVerificationSender
+                emailVerificationSender,
+                keyPairService,
+                privateKeyStorage
         );
     }
 
@@ -138,7 +146,9 @@ public class AuthConfig {
             ClientService clientService,
             JwtService jwtService,
             GoogleTokenVerifier googleTokenVerifier,
-            @Value("${google.client-id}") String googleClientId
+            @Value("${google.client-id}") String googleClientId,
+            KeyPairService keyPairService,
+            PrivateKeyStorage privateKeyStorage
     ) {
         return new GoogleLoginUseCase(
                 accountNumberGenerator,
@@ -146,7 +156,9 @@ public class AuthConfig {
                 clientService,
                 jwtService,
                 googleTokenVerifier,
-                googleClientId
+                googleClientId,
+                keyPairService,
+                privateKeyStorage
         );
     }
 

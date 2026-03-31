@@ -380,6 +380,7 @@ public class AccountService {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(
                     "Service error while crediting " +
                             "[accountNumber=" + accountNumber +

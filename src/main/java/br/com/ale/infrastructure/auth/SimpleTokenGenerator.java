@@ -62,29 +62,28 @@ public class SimpleTokenGenerator implements TokenGenerator {
         try {
             String[] parts = token.split("\\.");
 
-            if (parts.length != 3) {
+            if (parts.length != 2) {
                 throw new InvalidCredentialsException("Invalid token format");
             }
 
-            String payloadJson = new String(
-                    Base64.getDecoder().decode(parts[1]),
+            String payload = new String(
+                    Base64.getDecoder().decode(parts[0]),
                     StandardCharsets.UTF_8
             );
 
-            String signature = parts[2];
+            String signature = parts[1];
 
-            boolean valid = SignatureService.verify(payloadJson, signature, publicKey);
+            boolean valid = SignatureService.verify(payload, signature, publicKey);
 
             if (!valid) {
                 throw new InvalidCredentialsException("Invalid token signature");
             }
 
-            // Parse JSON do payload
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(payloadJson);
+            String[] values = payload.split(":");
 
-            long clientId = node.get("sub").asLong();
-            long expiresAtMillis = node.get("exp").asLong() * 1000;
+            long clientId = Long.parseLong(values[0]);
+            long issuedAtMillis = Long.parseLong(values[1]);
+            long expiresAtMillis = Long.parseLong(values[2]);
 
             Instant expiresAt = Instant.ofEpochMilli(expiresAtMillis);
 
