@@ -2,8 +2,6 @@
 
 A full-stack banking simulator built to explore real-world backend architecture, secure transaction handling, and modern web development.
 
----
-
 ## 🚀 Overview
 
 Bank Simulator is a project focused on simulating core banking operations such as account management, transactions, and asset handling, while applying production-level design decisions.
@@ -13,8 +11,6 @@ The system emphasizes:
 - Security
 - Clean architecture
 - Test-driven development
-
----
 
 ## 🧠 Backend
 
@@ -44,8 +40,6 @@ Built with **Java + Spring**, following a **layered architecture** (Clean Archit
 - ✅ Test-Driven Development (TDD)
 - Automated tests using H2 in-memory database
 
----
-
 ## 🎨 Frontend
 
 Built with **React + TypeScript**
@@ -57,8 +51,6 @@ Built with **React + TypeScript**
 - Asset marketplace interface
 - Integration with backend APIs
 
----
-
 ## ☁️ Infrastructure
 
 - AWS (deployment & backend services)
@@ -66,16 +58,12 @@ Built with **React + TypeScript**
 - HTTPS-enabled APIs
 - Integration with external services (e.g. Ko-fi webhooks)
 
----
-
 ## 🔐 Security Highlights
 
 - Token-based authentication
 - Cryptographic signing of transactions
 - Secure key management
 - Validation layers across the system
-
----
 
 ## 📦 Project Purpose
 
@@ -85,8 +73,6 @@ This project was built as a **learning and portfolio project**, aiming to simula
 - System design
 - Security fundamentals
 - Real-world trade-offs
-
----
 
 ## 🛠️ Tech Stack
 
@@ -106,8 +92,6 @@ This project was built as a **learning and portfolio project**, aiming to simula
 ### Infrastructure
 - AWS
 
----
-
 ## 📌 Future Improvements
 
 - Real-time transactions (WebSockets)
@@ -115,7 +99,17 @@ This project was built as a **learning and portfolio project**, aiming to simula
 - Rate limiting & fraud detection
 - Observability (logs, metrics, tracing)
 
----
+## 📄 License
+
+This project is licensed under the MIT License.
+
+You are free to use, modify, and distribute this project, as long as proper credit is given.
+
+## 🤝 Usage
+
+Feel free to use this project for learning, personal, or commercial purposes.
+
+If you use this project, please give proper credit by referencing this repository.
 
 ## 👨‍💻 Author
 
