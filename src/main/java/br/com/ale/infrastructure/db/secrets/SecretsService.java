@@ -14,11 +14,27 @@ public class SecretsService {
     private final SecretsManagerClient client;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private String cachedPassword;
+    private long lastFetchTime = 0;
+
+    private static final long TTL = 5 * 60 * 1000;
+
     public SecretsService(SecretsManagerClient client) {
         this.client = client;
     }
 
-    public String getDbPassword() {
+    public synchronized String getDbPassword() {
+        long now = System.currentTimeMillis();
+
+        if (cachedPassword == null || (now - lastFetchTime) > TTL) {
+            cachedPassword = fetchPassword();
+            lastFetchTime = now;
+        }
+
+        return cachedPassword;
+    }
+
+    private String fetchPassword() {
         try {
             String secretName = "rds!db-afd0eb8d-fa08-474e-b202-51f06b07506b";
 
@@ -28,7 +44,8 @@ public class SecretsService {
 
             var response = client.getSecretValue(request);
 
-            Map<String, Object> json = mapper.readValue(response.secretString(), Map.class);
+            Map<String, Object> json =
+                    mapper.readValue(response.secretString(), Map.class);
 
             return (String) json.get("password");
 

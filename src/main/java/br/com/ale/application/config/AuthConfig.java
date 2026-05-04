@@ -9,7 +9,7 @@ import br.com.ale.application.transaction.query.ListTransfersByAccountUseCase;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
-import br.com.ale.infrastructure.db.DefaultConnectionProvider;
+import br.com.ale.infrastructure.db.DynamicConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
 import br.com.ale.infrastructure.db.secrets.SecretsService;
 import br.com.ale.service.ClientService;
@@ -50,13 +50,7 @@ public class AuthConfig {
             @Value("${db.default.user}") String user,
             SecretsService secretsService
     ) {
-        String password = secretsService.getDbPassword();
-
-        if (password == null || password.isBlank()) {
-            throw new RuntimeException("DB password is null or empty");
-        }
-
-        return new DefaultConnectionProvider(url, user, password);
+        return new DynamicConnectionProvider(url, user, secretsService);
     }
 
     @Bean
