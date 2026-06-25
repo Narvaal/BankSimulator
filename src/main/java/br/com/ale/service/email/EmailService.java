@@ -1,7 +1,7 @@
 package br.com.ale.service.email;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
@@ -9,43 +9,26 @@ import software.amazon.awssdk.services.ses.model.*;
 public class EmailService {
 
     private final SesClient sesClient;
+    private final String fromEmail;
 
-    public EmailService() {
-        this.sesClient = SesClient.builder()
-                .region(Region.US_EAST_2)
-                .build();
+    public EmailService(@Value("${aws.ses.from}") String fromEmail) {
+        this.sesClient = SesClient.create();
+        this.fromEmail = fromEmail;
     }
 
     public void send(String to, String subject, String htmlBody) {
 
         try {
 
-            Destination destination = Destination.builder()
-                    .toAddresses(to)
-                    .build();
-
-            Content subjectContent = Content.builder()
-                    .data(subject)
-                    .build();
-
-            Content htmlContent = Content.builder()
-                    .data(htmlBody)
-                    .build();
-
-            Body body = Body.builder()
-                    .html(htmlContent)
-                    .build();
-
-            Message message = Message.builder()
-                    .subject(subjectContent)
-                    .body(body)
-                    .build();
-
-            String fromEmail = "no-reply@alessandro-bezerra.me";
             SendEmailRequest request = SendEmailRequest.builder()
                     .source(fromEmail)
-                    .destination(destination)
-                    .message(message)
+                    .destination(Destination.builder().toAddresses(to).build())
+                    .message(Message.builder()
+                            .subject(Content.builder().data(subject).build())
+                            .body(Body.builder()
+                                    .html(Content.builder().data(htmlBody).build())
+                                    .build())
+                            .build())
                     .build();
 
             sesClient.sendEmail(request);

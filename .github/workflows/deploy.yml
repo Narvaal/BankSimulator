@@ -1,0 +1,65 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ prod ]
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Build
+        run: mvn clean package -DskipTests
+
+      - name: Deploy to EC2
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          echo "$SSH_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+
+          JAR=$(ls target/bank-simulator-*.jar | head -1)
+
+          scp -i /tmp/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            "$JAR" "ec2-user@$EC2_HOST:/opt/banksimulator/app.jar"
+
+          ssh -i /tmp/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            "ec2-user@$EC2_HOST" \
+            "sudo chown banksimulator:banksimulator /opt/banksimulator/app.jar \
+             && sudo systemctl restart banksimulator \
+             && sleep 8 \
+             && sudo systemctl is-active banksimulator"
+
+          rm -f /tmp/deploy_key
+
+      - name: Health check
+        run: |
+          echo "Waiting for app to be ready..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.alessandro-bezerra.me/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i/12: HTTP $STATUS — retrying in 10s..."
+            sleep 10
+          done
+          echo "ERROR: Health check failed after 2 minutes"
+          exit 1

@@ -56,7 +56,7 @@ public class JwtService {
     public boolean isTokenValid(String token, long expectedClientId) {
         try {
             long clientId = extractClientId(token);
-            return clientId == expectedClientId && isTokenExpired(token);
+            return clientId == expectedClientId && !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }

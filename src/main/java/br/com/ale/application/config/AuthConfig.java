@@ -9,9 +9,8 @@ import br.com.ale.application.transaction.query.ListTransfersByAccountUseCase;
 import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
-import br.com.ale.infrastructure.db.DynamicConnectionProvider;
+import br.com.ale.infrastructure.db.HikariConnectionProvider;
 import br.com.ale.infrastructure.db.SchemaInitializer;
-import br.com.ale.infrastructure.db.secrets.SecretsService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.EmailVerificationService;
 import br.com.ale.service.TransactionService;
@@ -29,28 +28,18 @@ import br.com.ale.service.email.EmailVerificationSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-
 import java.security.KeyPair;
 
 @Configuration
 public class AuthConfig {
 
     @Bean
-    public SecretsManagerClient secretsManagerClient() {
-        return SecretsManagerClient.builder()
-                .region(Region.of("us-east-2"))
-                .build();
-    }
-
-    @Bean
     public ConnectionProvider connectionProvider(
             @Value("${db.default.url}") String url,
             @Value("${db.default.user}") String user,
-            SecretsService secretsService
+            @Value("${db.default.password}") String password
     ) {
-        return new DynamicConnectionProvider(url, user, secretsService);
+        return new HikariConnectionProvider(url, user, password);
     }
 
     @Bean

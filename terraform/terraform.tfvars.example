@@ -1,0 +1,14 @@
+# Copie este arquivo para terraform.tfvars e preencha os valores
+# cp terraform.tfvars.example terraform.tfvars
+
+# Gere sua chave SSH se não tiver uma:
+# ssh-keygen -t ed25519 -f ~/.ssh/banksimulator -N ""
+ssh_public_key = "ssh-ed25519 AAAA... your-email@example.com"
+
+# Segredos da aplicação
+jwt_secret_key          = "PREENCHA_COM_VALOR_ATUAL"
+admin_trigger_token     = "PREENCHA_COM_VALOR_ATUAL"
+kofi_verification_token = "PREENCHA_COM_VALOR_ATUAL"
+
+# Google OAuth
+google_client_id = "PREENCHA_COM_VALOR_ATUAL"
