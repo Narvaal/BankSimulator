@@ -37,13 +37,14 @@ jobs:
           scp -i /tmp/deploy_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=30 \
-            "$JAR" "ec2-user@$EC2_HOST:/opt/banksimulator/app.jar"
+            "$JAR" "ec2-user@$EC2_HOST:/tmp/app.jar"
 
           ssh -i /tmp/deploy_key \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=30 \
             "ec2-user@$EC2_HOST" \
-            "sudo chown banksimulator:banksimulator /opt/banksimulator/app.jar \
+            "sudo mv /tmp/app.jar /opt/banksimulator/app.jar \
+             && sudo chown banksimulator:banksimulator /opt/banksimulator/app.jar \
              && sudo systemctl restart banksimulator \
              && sleep 8 \
              && sudo systemctl is-active banksimulator"
