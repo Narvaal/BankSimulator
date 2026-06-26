@@ -1,11 +1,12 @@
 import AuthLayout from "./AuthLayout.tsx";
 import {useEffect, useState} from "react";
 import {EnvelopeIcon} from "@heroicons/react/24/solid";
+import { API_URL } from "../../config";
 
 const COOLDOWN_KEY = "resetCooldown";
 
 async function handleResetPassword(email: string) {
-    const res = await fetch("https://api.alessandro-bezerra.me/accounts/password/reset-request", {
+    const res = await fetch(`${API_URL}/accounts/password/reset-request`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({email}),

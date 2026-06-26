@@ -1,5 +1,6 @@
 /// <reference types="@types/google.accounts" />
 import { useEffect, useRef } from "react";
+import { API_URL } from "../../config";
 
 type GoogleCredentialResponse = {
   credential: string;
@@ -7,7 +8,7 @@ type GoogleCredentialResponse = {
 };
 
 async function handleGoogleLogin(response: GoogleCredentialResponse) {
-  const res = await fetch("https://api.alessandro-bezerra.me/auth/google", {
+  const res = await fetch(`${API_URL}/auth/google`, {
     method: "POST",
     credentials: "include",
     headers: {

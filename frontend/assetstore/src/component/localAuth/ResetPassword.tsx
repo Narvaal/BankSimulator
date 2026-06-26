@@ -6,6 +6,7 @@ import {
 } from "@heroicons/react/24/solid";
 import {useState} from "react";
 import {AnimatePresence, motion} from "framer-motion";
+import { API_URL } from "../../config";
 
 type PassRules = {
     length: boolean;
@@ -38,7 +39,7 @@ function Rule({ok, text}: { ok: boolean, text: string }) {
 }
 
 async function handleResetPassword(token: string, password: string) {
-    const res = await fetch("https://api.alessandro-bezerra.me/accounts/password/reset", {
+    const res = await fetch(`${API_URL}/accounts/password/reset`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({

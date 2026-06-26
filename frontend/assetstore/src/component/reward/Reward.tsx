@@ -5,6 +5,7 @@ import {useCallback, useEffect, useState} from "react";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { API_URL } from "../../config";
 
 /* ===================== TYPES ===================== */
 
@@ -27,7 +28,7 @@ interface Asset {
 async function getBundles(page: number, size: number): Promise<Bundle[]> {
 
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/assets/bundles?page=${page}&size=${size}`
+        `${API_URL}/assets/bundles?page=${page}&size=${size}`
     );
 
     if (!res.ok) throw new Error("Failed to load bundles");
@@ -38,7 +39,7 @@ async function getBundles(page: number, size: number): Promise<Bundle[]> {
 async function getBundleAssets(id: string): Promise<Asset[]> {
 
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/assets/bundles/${id}/items?page=0&size=20`
+        `${API_URL}/assets/bundles/${id}/items?page=0&size=20`
     );
 
     if (!res.ok) throw new Error("Failed to load assets of bundle");
@@ -48,7 +49,7 @@ async function getBundleAssets(id: string): Promise<Asset[]> {
 
 async function claimAsset(assetId: number) {
 
-    const res = await fetch("https://api.alessandro-bezerra.me/assets/claim", {
+    const res = await fetch(`${API_URL}/assets/claim`, {
         method: "POST",
         credentials: "include",
         headers: {

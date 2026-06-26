@@ -4,6 +4,7 @@ import {useAccount} from "../auth/Auth";
 import PriceHistoryChart from "../market/PriceHistoryChart.tsx";
 import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
+import { API_URL } from "../../config";
 
 /* ===================== TYPES ===================== */
 
@@ -39,7 +40,7 @@ async function getAssetUnits(
 ): Promise<AssetPageView> {
 
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
+        `${API_URL}/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
         {credentials: "include"}
     );
 
@@ -49,7 +50,7 @@ async function getAssetUnits(
 
 async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/assets/${assetUnityId}/price-history`,
+        `${API_URL}/assets/${assetUnityId}/price-history`,
         {credentials: "include"}
     );
 
@@ -60,7 +61,7 @@ async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHis
 
 async function postAssetOffer(assetUnityId: number, price: number) {
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/asset-offers`,
+        `${API_URL}/asset-offers`,
         {
             method: "POST",
             credentials: "include",

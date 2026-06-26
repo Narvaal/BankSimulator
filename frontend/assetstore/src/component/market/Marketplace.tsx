@@ -4,6 +4,7 @@ import PriceHistoryChart from "../market/PriceHistoryChart";
 import {useAccount} from "../auth/Auth";
 import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
+import { API_URL } from "../../config";
 
 /* ===================== TYPES ===================== */
 
@@ -35,7 +36,7 @@ interface assetListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number) {
-    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`${API_URL}/asset-listings?page=${page}&pageSize=${pageSize}`, {
         credentials: "include"
     });
     if (!res.ok) throw new Error();
@@ -43,7 +44,7 @@ async function getListings(page: number, pageSize: number) {
 }
 
 async function getUserListings(page: number, pageSize: number) {
-    const res = await fetch(`https://api.alessandro-bezerra.me/asset-listings/me?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`${API_URL}/asset-listings/me?page=${page}&pageSize=${pageSize}`, {
         credentials: "include"
     });
     if (!res.ok) throw new Error();
@@ -51,7 +52,7 @@ async function getUserListings(page: number, pageSize: number) {
 }
 
 async function cancelOffer(assetListingId: number) {
-    const res = await fetch(`https://api.alessandro-bezerra.me/asset-offers/cancel`, {
+    const res = await fetch(`${API_URL}/asset-offers/cancel`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -67,7 +68,7 @@ async function cancelOffer(assetListingId: number) {
 
 async function getAssetPriceHistory(assetUnityId: number) {
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/assets/${assetUnityId}/price-history`
+        `${API_URL}/assets/${assetUnityId}/price-history`
     );
     if (!res.ok) throw new Error();
     return res.json();
@@ -75,7 +76,7 @@ async function getAssetPriceHistory(assetUnityId: number) {
 
 async function buyAssetUnity(assetListingId: number) {
     const res = await fetch(
-        `https://api.alessandro-bezerra.me/asset-listings/${assetListingId}/purchase`,
+        `${API_URL}/asset-listings/${assetListingId}/purchase`,
         {method: "POST", credentials: "include"}
     );
     if (!res.ok) throw new Error();

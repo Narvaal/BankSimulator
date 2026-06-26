@@ -2,6 +2,7 @@ import GoogleLoginButton from "../google/GoogleLoginButton.tsx";
 import AuthLayout from "./AuthLayout.tsx";
 import { useState } from "react";
 import {
+import { API_URL } from "../../config";
     EnvelopeIcon,
     EyeIcon,
     EyeSlashIcon,
@@ -11,7 +12,7 @@ import {
 /* ===================== API ===================== */
 
 async function handleLogin(email: string, password: string) {
-    const res = await fetch("https://api.alessandro-bezerra.me/auth/login", {
+    const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -52,7 +53,7 @@ function Login() {
 
         try {
             const res = await fetch(
-                "https://api.alessandro-bezerra.me/auth/resend-verification",
+                `${API_URL}/auth/resend-verification`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

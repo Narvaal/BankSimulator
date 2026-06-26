@@ -3,6 +3,7 @@ import {EnvelopeIcon, EyeIcon, EyeSlashIcon, LockClosedIcon, UserIcon} from "@he
 import {useState} from "react";
 import {AnimatePresence, motion} from "framer-motion";
 import GoogleLoginButton from "../google/GoogleLoginButton.tsx";
+import { API_URL } from "../../config";
 
 type PassRules = {
     length: boolean;
@@ -40,7 +41,7 @@ function checkName(name: string): string | null {
 }
 
 async function handleAccountCreation(name: string, email: string, password: string) {
-    const res = await fetch("https://api.alessandro-bezerra.me/accounts", {
+    const res = await fetch(`${API_URL}/accounts`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},

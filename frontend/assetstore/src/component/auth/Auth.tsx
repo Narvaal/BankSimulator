@@ -1,4 +1,5 @@
 import {useQuery} from "@tanstack/react-query";
+import { API_URL } from "../../config";
 
 export interface Account {
     id: number;
@@ -17,7 +18,7 @@ export interface Account {
 }
 
 export async function fetchAccount(): Promise<Account> {
-    const res = await fetch("https://api.alessandro-bezerra.me/accounts/me", {
+    const res = await fetch(`${API_URL}/accounts/me`, {
         credentials: "include",
     });
 
