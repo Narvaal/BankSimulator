@@ -1,6 +1,7 @@
 /// <reference types="@types/google.accounts" />
 import { useEffect, useRef } from "react";
 import { API_URL } from "../../config";
+import { setToken } from "../../auth";
 
 type GoogleCredentialResponse = {
   credential: string;
@@ -22,6 +23,9 @@ async function handleGoogleLogin(response: GoogleCredentialResponse) {
   if (!res.ok) {
     throw new Error("Google email error");
   }
+
+  const data = await res.json();
+  if (data.token) setToken(data.token);
 
   window.location.href = "/inventory";
 }

@@ -1,5 +1,6 @@
 import {useQuery} from "@tanstack/react-query";
 import { API_URL } from "../../config";
+import { authHeader } from "../../auth";
 
 export interface Account {
     id: number;
@@ -20,6 +21,7 @@ export interface Account {
 export async function fetchAccount(): Promise<Account> {
     const res = await fetch(`${API_URL}/accounts/me`, {
         credentials: "include",
+        headers: authHeader(),
     });
 
     if (!res.ok) throw new Error("Not authenticated");

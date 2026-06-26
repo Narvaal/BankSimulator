@@ -14,6 +14,7 @@ import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.dto.CreateGoogleAuthenticationRequest;
 import br.com.ale.dto.ResendVerificationRequest;
 import br.com.ale.infrastructure.auth.AuthCookieService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,16 @@ public class AuthController {
         response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
     }
 
+    @GetMapping("/session")
+    public ResponseEntity<?> session(HttpServletRequest request) {
+        try {
+            String token = authCookieService.extractToken(request);
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
     @PostMapping("/resend-verification")
     public void resend(@RequestBody ResendVerificationRequest request) {
         resendVerificationUseCase.execute(
@@ -86,7 +97,7 @@ public class AuthController {
             authCookieService.addAuthCookie(response, authToken.getToken());
 
             return ResponseEntity.ok(
-                    new AuthResponse(authToken.getClientId(), "Authenticated")
+                    new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken())
             );
 
         } catch (IllegalArgumentException e) {
@@ -121,6 +132,6 @@ public class AuthController {
 
         authCookieService.addAuthCookie(response, authToken.getToken());
 
-        return new AuthResponse(authToken.getClientId(), "Authenticated");
+        return new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken());
     }
 }

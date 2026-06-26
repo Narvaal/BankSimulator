@@ -341,23 +341,38 @@ public class AccountDAO {
 
     public Optional<Instant> tryClaimAssetUnity(Connection conn, String accountNumber) {
 
-        String sql = """
+        String updateSql = """
                 UPDATE account
-                SET next_free_asset_at = now() + interval '2 minutes'
+                SET next_free_asset_at = now() + INTERVAL '2' MINUTE
                 WHERE account_number = ?
                 AND next_free_asset_at <= now()
-                RETURNING next_free_asset_at;
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String selectSql = """
+                SELECT next_free_asset_at
+                  FROM account
+                 WHERE account_number = ?
+                """;
 
-            stmt.setString(1, accountNumber);
+        try {
+            int rows;
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setString(1, accountNumber);
+                rows = stmt.executeUpdate();
+            }
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(rs.getTimestamp("next_free_asset_at").toInstant());
-                }
+            if (rows == 0) {
                 return Optional.empty();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setString(1, accountNumber);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(rs.getTimestamp("next_free_asset_at").toInstant());
+                    }
+                    return Optional.empty();
+                }
             }
 
         } catch (SQLException e) {

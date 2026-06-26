@@ -6,6 +6,7 @@ import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_URL } from "../../config";
+import { authHeader } from "../../auth";
 
 /* ===================== TYPES ===================== */
 
@@ -53,7 +54,8 @@ async function claimAsset(assetId: number) {
         method: "POST",
         credentials: "include",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...authHeader()
         },
         body: JSON.stringify({assetId})
     });
