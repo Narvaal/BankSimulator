@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import CountdownTimer from "../util/CountdownTimer.tsx";
 import {ArrowRightOnRectangleIcon, ChevronDownIcon} from "@heroicons/react/24/outline";
 import {AnimatePresence, motion} from "framer-motion";
-import {clearToken} from "../../auth.ts";
+import {clearToken} from "../../auth";
 import {useNavigate} from "react-router-dom";
 
 export interface Account {
@@ -43,16 +43,16 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
     return (
         <>
             <header className="fixed top-0 left-0 w-full z-50 border-b border-zinc-100 bg-white">
-                <div className="w-full px-6 h-16 flex items-center gap-4">
+                <div className="w-full px-5 h-12 flex items-center gap-3">
 
                     {/* Logo */}
-                    <div className="flex items-center gap-2.5 min-w-0 flex-shrink-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                         <img
                             src="/icons/RareLines.png"
                             alt="Rare Lines"
-                            className="h-8 w-auto object-contain"
+                            className="h-6 w-auto object-contain"
                         />
-                        <span className="font-semibold text-zinc-900 tracking-tight text-[15px]">
+                        <span className="font-semibold text-zinc-900 tracking-tight text-[13px]">
                             Rare Lines
                         </span>
                     </div>
@@ -68,47 +68,47 @@ export default function Navbar({balance, nextFreeAssetAt, name, imageUrl}: Accou
                     </div>
 
                     {/* Right side */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
 
                         {/* Balance — opens Ko-fi modal */}
                         <button
                             onClick={() => setWarningOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-md border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
                         >
-                            <span className="text-zinc-400 text-xs">$</span>
+                            <span className="text-zinc-400">$</span>
                             <span className="tabular-nums">{balance.toFixed(2)}</span>
                         </button>
 
                         {/* Divider */}
-                        <div className="w-px h-5 bg-zinc-100"/>
+                        <div className="w-px h-4 bg-zinc-100"/>
 
                         {/* User dropdown */}
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(v => !v)}
-                                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-zinc-100 transition-colors"
                             >
                                 {imageUrl ? (
                                     <img
                                         src={imageUrl}
                                         alt={name}
-                                        className="w-7 h-7 rounded-full object-cover ring-1 ring-zinc-200"
+                                        className="w-6 h-6 rounded-full object-cover ring-1 ring-zinc-200"
                                     />
                                 ) : (
-                                    <div className="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center">
-                                        <span className="text-xs font-semibold text-zinc-600">
+                                    <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
+                                        <span className="text-[10px] font-semibold text-zinc-600">
                                             {name.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 )}
-                                <span className="text-sm font-medium text-zinc-800 max-w-[120px] truncate">
+                                <span className="text-xs font-medium text-zinc-800 max-w-[100px] truncate">
                                     {name}
                                 </span>
                                 <motion.div
                                     animate={{rotate: dropdownOpen ? 180 : 0}}
                                     transition={{duration: 0.15}}
                                 >
-                                    <ChevronDownIcon className="w-3.5 h-3.5 text-zinc-400"/>
+                                    <ChevronDownIcon className="w-3 h-3 text-zinc-400"/>
                                 </motion.div>
                             </button>
 

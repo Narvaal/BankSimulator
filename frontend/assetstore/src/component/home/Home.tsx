@@ -251,8 +251,8 @@ export default function Home() {
                       imageUrl={account.picture}></UserMenu>
 
             <main
-                className="pt-22 transition-all duration-300 p-6 min-h-screen flex flex-col"
-                style={{marginLeft: collapsed ? 80 : 256}}
+                className="pt-16 transition-all duration-300 p-6 min-h-screen flex flex-col"
+                style={{marginLeft: collapsed ? 56 : 200}}
             >
 
                 {loading && (

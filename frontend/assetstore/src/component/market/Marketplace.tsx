@@ -239,8 +239,8 @@ function Marketplace() {
             />
 
             <main
-                className="pt-22 p-6 transition-all duration-300"
-                style={{ marginLeft: collapsed ? 80 : 256 }}
+                className="pt-16 p-6 transition-all duration-300"
+                style={{ marginLeft: collapsed ? 56 : 200 }}
             >
 
                 {/* ===================== SWITCH ===================== */}
