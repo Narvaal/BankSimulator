@@ -41,12 +41,16 @@ chmod +x /opt/banksimulator/fetch-env.py
 python3 /opt/banksimulator/fetch-env.py ${aws_region}
 
 # ── Systemd service ───────────────────────────────────────────────────────────
+mkdir -p /opt/banksimulator/keys
+chown banksimulator:banksimulator /opt/banksimulator/keys
+
 cat > /etc/systemd/system/banksimulator.service << SVCEOF
 [Unit]
 Description=Bank Simulator API
 After=network.target
 
 [Service]
+WorkingDirectory=/opt/banksimulator
 User=banksimulator
 EnvironmentFile=/etc/app.env
 ExecStartPre=+/usr/bin/python3 /opt/banksimulator/fetch-env.py ${aws_region}
