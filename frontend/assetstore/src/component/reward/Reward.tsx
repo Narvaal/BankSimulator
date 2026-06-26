@@ -4,9 +4,10 @@ import NavBar from "../navBar/NavBar";
 import {useCallback, useEffect, useState} from "react";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
-import { useQueryClient } from "@tanstack/react-query";
-import { API_URL } from "../../config";
-import { authHeader } from "../../auth";
+import {useQueryClient} from "@tanstack/react-query";
+import {API_URL} from "../../config";
+import {authHeader} from "../../auth";
+import {Link, useNavigate} from "react-router-dom";
 
 /* ===================== TYPES ===================== */
 
@@ -27,41 +28,25 @@ interface Asset {
 /* ===================== API ===================== */
 
 async function getBundles(page: number, size: number): Promise<Bundle[]> {
-
-    const res = await fetch(
-        `${API_URL}/assets/bundles?page=${page}&size=${size}`
-    );
-
+    const res = await fetch(`${API_URL}/assets/bundles?page=${page}&size=${size}`);
     if (!res.ok) throw new Error("Failed to load bundles");
-
     return res.json();
 }
 
 async function getBundleAssets(id: string): Promise<Asset[]> {
-
-    const res = await fetch(
-        `${API_URL}/assets/bundles/${id}/items?page=0&size=20`
-    );
-
+    const res = await fetch(`${API_URL}/assets/bundles/${id}/items?page=0&size=20`);
     if (!res.ok) throw new Error("Failed to load assets of bundle");
-
     return res.json();
 }
 
 async function claimAsset(assetId: number) {
-
     const res = await fetch(`${API_URL}/assets/claim`, {
         method: "POST",
         credentials: "include",
-        headers: {
-            "Content-Type": "application/json",
-            ...authHeader()
-        },
+        headers: {"Content-Type": "application/json", ...authHeader()},
         body: JSON.stringify({assetId})
     });
-
     if (!res.ok) throw new Error("Failed to claim asset");
-
     return res.json();
 }
 
@@ -70,8 +55,9 @@ async function claimAsset(assetId: number) {
 
 function Reward() {
 
-    const {data: account, isLoading: authLoading, error: authError} = useAccount();
+    const {data: account} = useAccount();
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     /* ===================== UI STATE ===================== */
 
@@ -139,10 +125,8 @@ function Reward() {
             }
 
             setBundles(prev => {
-
                 const existingIds = new Set(prev.map(b => b.id));
                 const filtered = bundleData.filter(b => !existingIds.has(b.id));
-
                 return [...prev, ...filtered];
             });
 
@@ -170,8 +154,6 @@ function Reward() {
 
     useEffect(() => {
 
-        if (!account) return;
-
         let ticking = false;
 
         function handleScroll() {
@@ -182,10 +164,7 @@ function Reward() {
 
             requestAnimationFrame(() => {
 
-                if (
-                    window.innerHeight + window.scrollY >=
-                    document.body.offsetHeight - 300
-                ) {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
                     loadBundles();
                 }
 
@@ -240,31 +219,15 @@ function Reward() {
         const isOpen = openBundles[bundleId];
         const newState = forceOpen ? true : !isOpen;
 
-        setOpenBundles(prev => ({
-            ...prev,
-            [bundleId]: newState
-        }));
+        setOpenBundles(prev => ({...prev, [bundleId]: newState}));
 
         if (newState && !bundleAssets[bundleId]) {
-
             try {
-
                 const assets = await getBundleAssets(bundleId);
-
-                setBundleAssets(prev => ({
-                    ...prev,
-                    [bundleId]: assets
-                }));
-
+                setBundleAssets(prev => ({...prev, [bundleId]: assets}));
             } catch {
-
-                setBundleAssets(prev => ({
-                    ...prev,
-                    [bundleId]: []
-                }));
-
+                setBundleAssets(prev => ({...prev, [bundleId]: []}));
             }
-
         }
 
     }
@@ -283,14 +246,11 @@ function Reward() {
 
     function getNextBundleDateUTC() {
         const now = new Date();
-
         const next = new Date();
         next.setUTCHours(8, 0, 0, 0);
-
         if (now.getTime() >= next.getTime()) {
             next.setUTCDate(next.getUTCDate() + 1);
         }
-
         return next;
     }
 
@@ -300,62 +260,43 @@ function Reward() {
 
         if (!selectedAsset) return;
 
+        if (!account) {
+            navigate("/login");
+            return;
+        }
+
         try {
 
             setLoadingClaim(true);
 
             await claimAsset(selectedAsset.id);
 
-            queryClient.invalidateQueries({ queryKey: ["account"] });
+            queryClient.invalidateQueries({queryKey: ["account"]});
 
             setBundleAssets(prev => {
-                const updated = { ...prev };
-
+                const updated = {...prev};
                 for (const bundleId in updated) {
                     updated[bundleId] = updated[bundleId].map(asset => {
                         if (asset.id === selectedAsset.id) {
-                            return {
-                                ...asset,
-                                totalSupply: Math.max(0, asset.totalSupply - 1)
-                            };
+                            return {...asset, totalSupply: Math.max(0, asset.totalSupply - 1)};
                         }
                         return asset;
                     });
                 }
-
                 return updated;
             });
 
-            setMessage({
-                type: "success",
-                text: "Asset claimed successfully!"
-            });
+            setMessage({type: "success", text: "Asset claimed successfully!"});
 
-            setTimeout(() => {
-                closeModal();
-            }, 1500);
+            setTimeout(() => closeModal(), 1500);
 
         } catch {
 
-            setMessage({
-                type: "error",
-                text: "Failed to claim asset."
-            });
+            setMessage({type: "error", text: "Failed to claim asset."});
 
         } finally {
             setLoadingClaim(false);
         }
-    }
-
-
-    /* ===================== AUTH STATES ===================== */
-
-    if (authLoading) {
-        return <div className="p-10 text-center">Checking session...</div>;
-    }
-
-    if (authError || !account) {
-        return <div className="p-10 text-center text-red-500">Not authenticated</div>;
     }
 
 
@@ -367,12 +308,30 @@ function Reward() {
 
             <NavBar collapsed={collapsed} setCollapsed={setCollapsed}/>
 
-            <UserMenu
-                balance={account.balance}
-                nextFreeAssetAt={account.nextFreeAssetAt}
-                name={account.name}
-                imageUrl={account.picture}
-            />
+            {account ? (
+                <UserMenu
+                    balance={account.balance}
+                    nextFreeAssetAt={account.nextFreeAssetAt}
+                    name={account.name}
+                    imageUrl={account.picture}
+                />
+            ) : (
+                <header className="fixed top-0 left-0 w-full z-50 border-b border-zinc-100 bg-white">
+                    <div className="w-full px-5 h-14 flex items-center gap-4">
+                        <div className="flex items-center gap-2.5">
+                            <img src="/icons/RareLines.png" alt="Rare Lines" className="h-7 w-auto object-contain"/>
+                            <span className="font-semibold text-zinc-900 tracking-tight text-[14px]">Rare Lines</span>
+                        </div>
+                        <div className="flex-1"/>
+                        <Link
+                            to="/login"
+                            className="px-3 py-1.5 rounded-md bg-zinc-900 text-white text-[13px] font-medium hover:bg-zinc-700 transition-colors"
+                        >
+                            Sign in
+                        </Link>
+                    </div>
+                </header>
+            )}
 
             {/* ===================== MAIN CONTENT ===================== */}
 
@@ -384,15 +343,11 @@ function Reward() {
                 {/* ===================== LOADING / ERROR ===================== */}
 
                 {loading && (
-                    <p className="text-center text-slate-500">
-                        Loading...
-                    </p>
+                    <p className="text-center text-slate-500">Loading...</p>
                 )}
 
                 {error && (
-                    <p className="text-center text-red-500">
-                        {error}
-                    </p>
+                    <p className="text-center text-red-500">{error}</p>
                 )}
 
                 {/* ===================== INFO ===================== */}
@@ -402,34 +357,22 @@ function Reward() {
                     <div className="flex items-start gap-3">
 
                         <div className="text-yellow-600 mt-0.5">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
                             </svg>
                         </div>
 
                         <div>
-
                             <p className="text-sm text-yellow-800 font-medium mb-1">
                                 Each asset bundle is automatically generated at a predefined time.
                                 Once available, assets can be claimed until the supply runs out.
                             </p>
-
                             <p className="text-xs text-yellow-700">
                                 Disclaimer: Generated phrases may contain inconsistencies or inaccuracies.
                                 We are not responsible for any unintended meanings.
                             </p>
-
                         </div>
 
                     </div>
@@ -445,27 +388,13 @@ function Reward() {
                         <div className="flex justify-between items-center">
 
                             <div>
-
-                                <h2 className="text-xl font-semibold mb-1">
-                                    🔒 Upcoming Bundle
-                                </h2>
-
-                                <p className="text-sm text-slate-300">
-                                    This bundle is locked and will be available soon
-                                </p>
-
+                                <h2 className="text-xl font-semibold mb-1">🔒 Upcoming Bundle</h2>
+                                <p className="text-sm text-slate-300">This bundle is locked and will be available soon</p>
                             </div>
 
                             <div className="text-right">
-
-                                <p className="text-xs text-slate-400 mb-1">
-                                    Releases in
-                                </p>
-
-                                <div className="text-lg font-bold text-emerald-400">
-                                    {timeLeft}
-                                </div>
-
+                                <p className="text-xs text-slate-400 mb-1">Releases in</p>
+                                <div className="text-lg font-bold text-emerald-400">{timeLeft}</div>
                             </div>
 
                         </div>
@@ -488,10 +417,7 @@ function Reward() {
 
                         return (
 
-                            <div
-                                key={bundle.id}
-                                className="bg-white rounded-xl shadow-md border border-slate-200"
-                            >
+                            <div key={bundle.id} className="bg-white rounded-xl shadow-md border border-slate-200">
 
                                 {/* BUNDLE HEADER */}
 
@@ -499,23 +425,13 @@ function Reward() {
                                     onClick={() => toggleBundle(bundle.id)}
                                     className="p-6 cursor-pointer flex justify-between items-center hover:bg-slate-50 rounded-xl"
                                 >
-
                                     <div>
-
-                                        <h2 className="text-xl font-semibold">
-                                            {bundle.identifier}
-                                        </h2>
-
+                                        <h2 className="text-xl font-semibold">{bundle.identifier}</h2>
                                         <p className="text-sm text-gray-500">
                                             Created at: {new Date(bundle.createdAt).toLocaleDateString()}
                                         </p>
-
                                     </div>
-
-                                    <span className="text-gray-400">
-                                        {isOpen ? "▲" : "▼"}
-                                    </span>
-
+                                    <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
                                 </div>
 
                                 {/* ===================== ASSET GRID ===================== */}
@@ -525,9 +441,7 @@ function Reward() {
                                     <div className="p-6 pt-0">
 
                                         {!bundleAssets[bundle.id] && (
-                                            <p className="text-gray-500 text-sm">
-                                                Loading assets...
-                                            </p>
+                                            <p className="text-gray-500 text-sm">Loading assets...</p>
                                         )}
 
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -541,23 +455,16 @@ function Reward() {
                                                     <div
                                                         key={`${bundle.id}-${asset.id}-${index}`}
                                                         onClick={() => !disabled && openAsset(asset)}
-                                                        className={`
-                                                        border rounded-lg p-3 transition
+                                                        className={`border rounded-lg p-3 transition
                                                         ${disabled
                                                             ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
                                                             : "cursor-pointer bg-slate-50 border-slate-200 hover:bg-slate-100"
-                                                        }
-                                                        `}
+                                                        }`}
                                                     >
-
-                                                        <p className="font-medium">
-                                                            {asset.text}
-                                                        </p>
-
+                                                        <p className="font-medium">{asset.text}</p>
                                                         <p className="text-xs">
                                                             {disabled ? "Sold Out" : `Supply: ${asset.totalSupply}`}
                                                         </p>
-
                                                     </div>
 
                                                 );
@@ -581,9 +488,7 @@ function Reward() {
                 {/* ===================== INFINITE SCROLL ===================== */}
 
                 {loadingBundles && (
-                    <p className="text-center mt-6 text-gray-500">
-                        Loading more bundles...
-                    </p>
+                    <p className="text-center mt-6 text-gray-500">Loading more bundles...</p>
                 )}
 
             </main>
@@ -597,9 +502,7 @@ function Reward() {
 
                     <div className="bg-white rounded-2xl p-7 w-96 shadow-2xl border border-slate-200">
 
-                        <h2 className="text-2xl font-bold mb-5 text-slate-800">
-                            Claim Asset
-                        </h2>
+                        <h2 className="text-2xl font-bold mb-5 text-slate-800">Claim Asset</h2>
 
                         {/* ASSET INFO */}
 
@@ -610,15 +513,10 @@ function Reward() {
                             </p>
 
                             <div className="grid grid-cols-2 gap-4">
-
-                                <p className="text-sm text-slate-500">
-                                    Supply: {selectedAsset.totalSupply}
-                                </p>
-
+                                <p className="text-sm text-slate-500">Supply: {selectedAsset.totalSupply}</p>
                                 <p className="text-sm text-slate-500">
                                     Created At: {new Date(selectedAsset.createdAt).toLocaleDateString()}
                                 </p>
-
                             </div>
 
                         </div>
@@ -639,7 +537,7 @@ function Reward() {
                                 disabled={loadingClaim}
                                 className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
                             >
-                                {loadingClaim ? "Claiming..." : "Confirm Claim"}
+                                {loadingClaim ? "Claiming..." : account ? "Confirm Claim" : "Sign in to claim"}
                             </button>
 
                         </div>
@@ -647,9 +545,7 @@ function Reward() {
                         {/* MODAL MESSAGE */}
 
                         {message && (
-
-                            <div
-                                className={`mt-4 p-3 rounded-lg text-sm text-center font-medium
+                            <div className={`mt-4 p-3 rounded-lg text-sm text-center font-medium
                                 ${message.type === "success"
                                     ? "bg-green-100 text-green-700 border border-green-300"
                                     : "bg-red-100 text-red-700 border border-red-300"
@@ -657,7 +553,6 @@ function Reward() {
                             >
                                 {message.text}
                             </div>
-
                         )}
 
                     </div>
