@@ -1,7 +1,23 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.domain.asset.Asset;
+import br.com.ale.dto.AssetBundleItemResponse;
+import br.com.ale.dto.AssetBundleResponse;
+import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.infrastructure.json.JsonUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class AssetBundleServiceTest {
-    /*
+
     private TestConnectionProvider provider;
     private AssetBundleService service;
 
@@ -43,7 +59,7 @@ class AssetBundleServiceTest {
         assertEquals(1, bundles.size());
 
         List<AssetBundleItemResponse> items =
-                service.listBundleItems(bundles.get(0).id(), 10, 20);
+                service.listBundleItems(bundles.get(0).id(), 0, 10);
 
         assertEquals(assets.size(), items.size());
 
@@ -105,6 +121,4 @@ class AssetBundleServiceTest {
             throw new RuntimeException(e);
         }
     }
-
-     */
 }

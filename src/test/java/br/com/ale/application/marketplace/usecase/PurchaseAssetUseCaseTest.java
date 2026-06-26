@@ -5,31 +5,28 @@ import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.asset.*;
-import br.com.ale.domain.auth.AuthToken;
-import br.com.ale.domain.auth.PasswordHasher;
 import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
-import br.com.ale.domain.exception.InvalidAssetListingStateException;
-import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
 import br.com.ale.dto.*;
-import br.com.ale.infrastructure.auth.SimpleTokenGenerator;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.asset.AssetListingService;
 import br.com.ale.service.asset.AssetService;
 import br.com.ale.service.asset.AssetUnityService;
-import br.com.ale.service.auth.AuthService;
+import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
-import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.marketplace.AssetPriceHistoryService;
 import br.com.ale.service.marketplace.AssetPurchaseService;
 import br.com.ale.service.webhook.AssetWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,16 +36,13 @@ class PurchaseAssetUseCaseTest {
 
     private ClientService clientService;
     private AccountService accountService;
-
     private AssetService assetService;
     private AssetUnityService assetUnityService;
     private AssetListingService assetListingService;
     private AssetWebhookNotifier webhookNotifier;
-
     private AssetPurchaseService assetPurchaseService;
     private AssetPriceHistoryService assetPriceHistoryService;
-
-    private AuthService authService;
+    private JwtService jwtService;
     private PurchaseAssetUseCase useCase;
 
     @BeforeEach
@@ -56,6 +50,7 @@ class PurchaseAssetUseCaseTest {
 
         provider = new TestConnectionProvider();
         webhookNotifier = new AssetWebhookNotifier("", false);
+        jwtService = createTestJwtService();
 
         clientService = new ClientService(provider);
         accountService = new AccountService(provider, new InMemoryPrivateKeyStorage());
@@ -67,9 +62,24 @@ class PurchaseAssetUseCaseTest {
         assetPurchaseService = new AssetPurchaseService(provider, webhookNotifier);
         assetPriceHistoryService = new AssetPriceHistoryService(provider);
 
-        authService = new AuthService(provider);
+        useCase = new PurchaseAssetUseCase(
+                accountService,
+                assetListingService,
+                assetPurchaseService,
+                assetPriceHistoryService,
+                jwtService
+        );
 
         cleanDatabase();
+    }
+
+    private JwtService createTestJwtService() {
+        JwtService service = new JwtService();
+        String secret = Base64.getEncoder().encodeToString(
+                "test-secret-key-for-unit-tests!!".getBytes(StandardCharsets.UTF_8));
+        ReflectionTestUtils.setField(service, "secretKey", secret);
+        ReflectionTestUtils.setField(service, "jwtExpiration", 3600000L);
+        return service;
     }
 
     private void cleanDatabase() {
@@ -90,69 +100,28 @@ class PurchaseAssetUseCaseTest {
             throw new RuntimeException(e);
         }
     }
-    /*
+
     @Test
     void shouldPurchaseAssetSuccessfully() {
 
         Client sellerClient = createClient();
         Client buyerClient = createClient();
 
-        Account seller = createAccountWithCredential(sellerClient);
-        Account buyer = createAccountWithCredential(buyerClient);
+        Account seller = createAccount(sellerClient);
+        Account buyer = createAccount(buyerClient);
         accountService.credit(buyer.getAccountNumber(), new BigDecimal("100.00"));
 
-        var keyPair = new KeyPairService().generate();
-
-        InMemoryPrivateKeyStorage privateKeyStorage = new InMemoryPrivateKeyStorage();
-        privateKeyStorage.save(buyer.getId(), keyPair.getPrivate().getEncoded());
-
-        authService = new AuthService(
-                provider,
-                new SimpleTokenGenerator(keyPair.getPrivate(), keyPair.getPublic())
-        );
-
-        useCase = new PurchaseAssetUseCase(
-                accountService,
-                assetListingService,
-                assetPurchaseService,
-                assetPriceHistoryService,
-                authService
-        );
-
         AssetUnity unity = createAssetUnity(seller);
+        AssetListing listing = createActiveListing(unity, seller);
 
-        AssetListing listing =
-                assetListingService.createAssetListing(
-                        new CreateAssetListingRequest(
-                                unity.getId(),         
-                                seller.getId(),
-                                new BigDecimal("100.00"),
-                                AssetListingStatus.ACTIVE
-                        )
-                );
-
-        AuthToken buyerToken =
-                authService.authenticate(
-                        new CreateAuthenticationRequest(
-                                buyerClient.getEmail(),
-                                "password"
-                        )
-                );
+        String buyerToken = jwtService.generateToken(buyerClient.getId());
 
         AssetPurchase purchase =
-                useCase.execute(
-                        new PurchaseAssetCommand(
-                                buyer.getId(),
-                                listing.getId(),
-                                buyerToken.getToken()
-                        )
-                );
+                useCase.execute(new PurchaseAssetCommand(listing.getId(), buyerToken));
 
         assertNotNull(purchase);
 
-        AssetListing updatedListing =
-                assetListingService.selectById(listing.getId());
-
+        AssetListing updatedListing = assetListingService.selectById(listing.getId());
         assertEquals(AssetListingStatus.SOLD, updatedListing.getStatus());
     }
 
@@ -160,214 +129,40 @@ class PurchaseAssetUseCaseTest {
     void shouldFailWhenTokenIsInvalid() {
 
         Client sellerClient = createClient();
-        Client buyerClient = createClient();
-
-        Account seller = createAccountWithCredential(sellerClient);
-        createAccountWithCredential(buyerClient);
-
-        var keyPair = new KeyPairService().generate();
-
-        authService = new AuthService(
-                provider,
-                new SimpleTokenGenerator(keyPair.getPrivate(), keyPair.getPublic())
-        );
-
-        useCase = new PurchaseAssetUseCase(
-                accountService,
-                assetListingService,
-                assetPurchaseService,
-                assetPriceHistoryService,
-                authService
-        );
+        Account seller = createAccount(sellerClient);
 
         AssetUnity unity = createAssetUnity(seller);
-
-        AssetListing listing =
-                assetListingService.createAssetListing(
-                        new CreateAssetListingRequest(
-                                unity.getId(),
-                                seller.getId(),
-                                new BigDecimal("100.00"),
-                                AssetListingStatus.ACTIVE
-                        )
-                );
-
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> useCase.execute(
-                        new PurchaseAssetCommand(
-                                999L,
-                                listing.getId(),
-                                "token.invalido"
-                        )
-                )
-        );
-    }
-
-    @Test
-    void shouldFailWhenAuthenticatedClientIsNotBuyer() {
-
-        Client sellerClient = createClient();
-        Client buyerClient = createClient();
-        Client attackerClient = createClient();
-
-        Account seller = createAccountWithCredential(sellerClient);
-        Account buyer = createAccountWithCredential(buyerClient);
-        Account attacker = createAccountWithCredential(attackerClient);
-
-        var keyPair = new KeyPairService().generate();
-
-        InMemoryPrivateKeyStorage privateKeyStorage = new InMemoryPrivateKeyStorage();
-        privateKeyStorage.save(attacker.getId(), keyPair.getPrivate().getEncoded());
-
-        authService = new AuthService(
-                provider,
-                new SimpleTokenGenerator(keyPair.getPrivate(), keyPair.getPublic())
-        );
-
-        useCase = new PurchaseAssetUseCase(
-                accountService,
-                assetListingService,
-                assetPurchaseService,
-                assetPriceHistoryService,
-                authService
-        );
-
-        AssetUnity unity = createAssetUnity(seller);
-
-        AssetListing listing =
-                assetListingService.createAssetListing(
-                        new CreateAssetListingRequest(
-                                unity.getId(),
-                                seller.getId(),
-                                new BigDecimal("100.00"),
-                                AssetListingStatus.ACTIVE
-                        )
-                );
-
-        AuthToken attackerToken =
-                authService.authenticate(
-                        new CreateAuthenticationRequest(
-                                attackerClient.getEmail(),
-                                "password"
-                        )
-                );
+        AssetListing listing = createActiveListing(unity, seller);
 
         assertThrows(
                 UnauthorizedOperationException.class,
-                () -> useCase.execute(
-                        new PurchaseAssetCommand(
-                                buyer.getId(),
-                                listing.getId(),
-                                attackerToken.getToken()
-                        )
-                )
+                () -> useCase.execute(new PurchaseAssetCommand(listing.getId(), "token.invalido"))
         );
     }
 
     @Test
-    void shouldFailWhenListingIsNotActive() {
+    void shouldFailWhenSellerTriesToBuyOwnListing() {
 
         Client sellerClient = createClient();
-        Client buyerClient = createClient();
-
-        Account seller = createAccountWithCredential(sellerClient);
-        Account buyer = createAccountWithCredential(buyerClient);
-
-        var keyPair = new KeyPairService().generate();
-
-        InMemoryPrivateKeyStorage privateKeyStorage = new InMemoryPrivateKeyStorage();
-        privateKeyStorage.save(buyer.getId(), keyPair.getPrivate().getEncoded());
-
-        authService = new AuthService(
-                provider,
-                new SimpleTokenGenerator(keyPair.getPrivate(), keyPair.getPublic())
-        );
-
-        useCase = new PurchaseAssetUseCase(
-                accountService,
-                assetListingService,
-                assetPurchaseService,
-                assetPriceHistoryService,
-                authService
-        );
+        Account seller = createAccount(sellerClient);
 
         AssetUnity unity = createAssetUnity(seller);
+        AssetListing listing = createActiveListing(unity, seller);
 
-        AssetListing listing =
-                assetListingService.createAssetListing(
-                        new CreateAssetListingRequest(
-                                unity.getId(),
-                                seller.getId(),
-                                new BigDecimal("100.00"),
-                                AssetListingStatus.CANCELED
-                        )
-                );
-
-        AuthToken buyerToken =
-                authService.authenticate(
-                        new CreateAuthenticationRequest(
-                                buyerClient.getEmail(),
-                                "password"
-                        )
-                );
+        String sellerToken = jwtService.generateToken(sellerClient.getId());
 
         assertThrows(
-                InvalidAssetListingStateException.class,
-                () -> useCase.execute(
-                        new PurchaseAssetCommand(
-                                buyer.getId(),
-                                listing.getId(),
-                                buyerToken.getToken()
-                        )
-                )
-        );
-    }
-
-    // ---------- helpers ----------
-
-    private Account createAccountWithCredential(Client client) {
-
-        Account account =
-                accountService.createAccount(
-                        new CreateAccountRequest(
-                                client.getId(),
-                                "ACC-" + System.nanoTime(),
-                                AccountType.DEFAULT,
-                                AccountStatus.ACTIVE
-                        )
-                );
-
-        return account;
-    }
-
-    private AssetUnity createAssetUnity(Account owner) {
-
-        Asset asset =
-                assetService.createAsset(
-                        new CreateAssetRequest(
-                                "Asset " + System.nanoTime(),
-                                1
-                        )
-                );
-
-        return assetUnityService.createAssetUnity(
-                new CreateAssetUnityRequest(
-                        asset.getId(),
-                        owner.getId()
-                )
+                UnauthorizedOperationException.class,
+                () -> useCase.execute(new PurchaseAssetCommand(listing.getId(), sellerToken))
         );
     }
 
     private Client createClient() {
-
-        String hashed = PasswordHasher.hash("password");
-
         return clientService.createClient(
                 new CreateClientRequest(
                         "Client " + System.nanoTime(),
-                        String.valueOf(System.nanoTime()),
-                        hashed,
+                        "email-" + System.nanoTime() + "@test.com",
+                        "pass",
                         Provider.LOCAL,
                         null,
                         false,
@@ -376,5 +171,36 @@ class PurchaseAssetUseCaseTest {
         );
     }
 
-     */
+    private Account createAccount(Client client) {
+        return accountService.createAccount(
+                new CreateAccountRequest(
+                        client.getId(),
+                        "ACC-" + System.nanoTime(),
+                        AccountType.DEFAULT,
+                        AccountStatus.ACTIVE
+                )
+        );
+    }
+
+    private AssetUnity createAssetUnity(Account owner) {
+
+        Asset asset = assetService.createAsset(
+                new CreateAssetRequest("Asset " + System.nanoTime(), 1)
+        );
+
+        return assetUnityService.createAssetUnity(
+                new CreateAssetUnityRequest(asset.getId(), owner.getId())
+        );
+    }
+
+    private AssetListing createActiveListing(AssetUnity unity, Account owner) {
+        return assetListingService.createAssetOffer(
+                new CreateAssetListingRequest(
+                        unity.getId(),
+                        owner.getId(),
+                        new BigDecimal("100.00"),
+                        AssetListingStatus.ACTIVE
+                )
+        );
+    }
 }

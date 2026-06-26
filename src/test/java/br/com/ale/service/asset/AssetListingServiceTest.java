@@ -1,7 +1,30 @@
 package br.com.ale.service.asset;
 
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.asset.Asset;
+import br.com.ale.domain.asset.AssetListing;
+import br.com.ale.domain.asset.AssetListingStatus;
+import br.com.ale.domain.asset.AssetUnity;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
+import br.com.ale.dto.*;
+import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.ClientService;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class AssetListingServiceTest {
-    /*
+
     private TestConnectionProvider provider;
 
     private AccountService accountService;
@@ -78,12 +101,12 @@ class AssetListingServiceTest {
     }
 
     @Test
-    void shouldCreateAssetListing() {
+    void shouldCreateAssetOffer() {
 
         Asset asset = createAsset();
         AssetUnity unity = createAssetUnity(asset.getId());
 
-        AssetListing listing = assetListingService.createAssetListing(
+        AssetListing listing = assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         unity.getId(),
                         sellerAccountId,
@@ -96,7 +119,7 @@ class AssetListingServiceTest {
         assertTrue(listing.getId() > 0);
         assertEquals(unity.getId(), listing.getAssetUnityId());
         assertEquals(sellerAccountId, listing.getSellerAccountId());
-        assertEquals(new BigDecimal("100.00"), listing.getPrice());
+        assertEquals(0, listing.getPrice().compareTo(new BigDecimal("100.00")));
         assertEquals(AssetListingStatus.ACTIVE, listing.getStatus());
         assertNotNull(listing.getCreatedAt());
     }
@@ -107,7 +130,7 @@ class AssetListingServiceTest {
         Asset asset = createAsset();
         AssetUnity unity = createAssetUnity(asset.getId());
 
-        AssetListing created = assetListingService.createAssetListing(
+        AssetListing created = assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         unity.getId(),
                         sellerAccountId,
@@ -149,7 +172,7 @@ class AssetListingServiceTest {
         AssetUnity unity1 = createAssetUnity(asset.getId());
         AssetUnity unity2 = createAssetUnity(asset.getId());
 
-        assetListingService.createAssetListing(
+        assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         unity1.getId(),
                         sellerAccountId,
@@ -158,7 +181,7 @@ class AssetListingServiceTest {
                 )
         );
 
-        assetListingService.createAssetListing(
+        assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         unity2.getId(),
                         sellerAccountId,
@@ -177,11 +200,11 @@ class AssetListingServiceTest {
     }
 
     @Test
-    void shouldRollbackWhenInsertFails() {
+    void shouldFailWhenAssetUnityNotOwnedBySeller() {
 
         assertThrows(
                 RuntimeException.class,
-                () -> assetListingService.createAssetListing(
+                () -> assetListingService.createAssetOffer(
                         new CreateAssetListingRequest(
                                 9999L,
                                 sellerAccountId,
@@ -196,6 +219,4 @@ class AssetListingServiceTest {
 
         assertTrue(listings.isEmpty());
     }
-
-     */
 }

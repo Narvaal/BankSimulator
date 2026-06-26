@@ -1,7 +1,29 @@
 package br.com.ale.service.marketplace;
 
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.asset.*;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
+import br.com.ale.dto.*;
+import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.ClientService;
+import br.com.ale.service.asset.AssetListingService;
+import br.com.ale.service.asset.AssetService;
+import br.com.ale.service.asset.AssetUnityService;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.webhook.AssetWebhookNotifier;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class AssetPurchaseServiceTest {
-    /*
+
     private TestConnectionProvider provider;
 
     private ClientService clientService;
@@ -101,13 +123,13 @@ class AssetPurchaseServiceTest {
         );
     }
 
-    private AssetListing createListing(AssetUnity unity, AssetListingStatus status) {
-        return assetListingService.createAssetListing(
+    private AssetListing createActiveListing(AssetUnity unity) {
+        return assetListingService.createAssetOffer(
                 new CreateAssetListingRequest(
                         unity.getId(),
                         seller.getId(),
                         new BigDecimal("100.00"),
-                        status
+                        AssetListingStatus.ACTIVE
                 )
         );
     }
@@ -117,7 +139,7 @@ class AssetPurchaseServiceTest {
 
         Asset asset = createAsset();
         AssetUnity unity = createUnity(asset, seller);
-        AssetListing listing = createListing(unity, AssetListingStatus.ACTIVE);
+        AssetListing listing = createActiveListing(unity);
 
         AssetPurchase purchase =
                 assetPurchaseService.purchase(
@@ -132,7 +154,7 @@ class AssetPurchaseServiceTest {
         assertEquals(unity.getId(), purchase.getAssetUnityId());
         assertEquals(seller.getId(), purchase.getSellerAccountId());
         assertEquals(buyer.getId(), purchase.getBuyerAccountId());
-        assertEquals(new BigDecimal("100.00"), purchase.getPrice());
+        assertEquals(0, purchase.getPrice().compareTo(new BigDecimal("100.00")));
 
         AssetListing reloaded =
                 assetListingService.selectById(listing.getId());
@@ -163,7 +185,8 @@ class AssetPurchaseServiceTest {
 
         Asset asset = createAsset();
         AssetUnity unity = createUnity(asset, seller);
-        AssetListing listing = createListing(unity, AssetListingStatus.SOLD);
+        AssetListing listing = createActiveListing(unity);
+        assetListingService.updateStatus(listing.getId(), AssetListingStatus.SOLD);
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
@@ -176,7 +199,7 @@ class AssetPurchaseServiceTest {
         );
 
         assertTrue(
-                ex.getCause().getMessage().contains("Listing not active")
+                ex.getCause().getMessage().contains("Listing already sold")
         );
     }
 
@@ -185,7 +208,7 @@ class AssetPurchaseServiceTest {
 
         Asset asset = createAsset();
         AssetUnity unity = createUnity(asset, seller);
-        AssetListing listing = createListing(unity, AssetListingStatus.ACTIVE);
+        AssetListing listing = createActiveListing(unity);
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
@@ -207,7 +230,7 @@ class AssetPurchaseServiceTest {
 
         Asset asset = createAsset();
         AssetUnity unity = createUnity(asset, seller);
-        AssetListing listing = createListing(unity, AssetListingStatus.ACTIVE);
+        AssetListing listing = createActiveListing(unity);
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
@@ -229,6 +252,4 @@ class AssetPurchaseServiceTest {
                 reloaded.getStatus()
         );
     }
-
-     */
 }
