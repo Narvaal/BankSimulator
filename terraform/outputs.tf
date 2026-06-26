@@ -13,3 +13,15 @@ output "ssh_command" {
 output "api_url" {
   value = "https://${var.api_domain}"
 }
+
+output "frontend_bucket" {
+  value = aws_s3_bucket.frontend.bucket
+}
+
+output "cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.frontend.id
+}
+
+output "github_frontend_role_arn" {
+  value = aws_iam_role.github_frontend.arn
+}

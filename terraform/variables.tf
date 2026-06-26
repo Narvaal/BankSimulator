@@ -6,6 +6,14 @@ variable "api_domain" {
   default = "api.alessandro-bezerra.me"
 }
 
+variable "app_domain" {
+  default = "app.alessandro-bezerra.me"
+}
+
+variable "acm_certificate_arn" {
+  default = "arn:aws:acm:us-east-1:356892335394:certificate/c5f8b2ca-08e8-4eca-bb17-7ae5e3b20276"
+}
+
 variable "cert_email" {
   default = "alessandrobezerra100@gmail.com"
 }
