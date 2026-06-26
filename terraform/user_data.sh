@@ -41,7 +41,7 @@ chmod +x /opt/banksimulator/fetch-env.py
 python3 /opt/banksimulator/fetch-env.py ${aws_region}
 
 # ── Systemd service ───────────────────────────────────────────────────────────
-cat > /etc/systemd/system/banksimulator.service << 'SVCEOF'
+cat > /etc/systemd/system/banksimulator.service << SVCEOF
 [Unit]
 Description=Bank Simulator API
 After=network.target
@@ -49,7 +49,7 @@ After=network.target
 [Service]
 User=banksimulator
 EnvironmentFile=/etc/app.env
-ExecStartPre=/usr/bin/python3 /opt/banksimulator/fetch-env.py REGION_PLACEHOLDER
+ExecStartPre=+/usr/bin/python3 /opt/banksimulator/fetch-env.py ${aws_region}
 ExecStart=/usr/bin/java -jar /opt/banksimulator/app.jar
 Restart=always
 RestartSec=10
@@ -60,9 +60,6 @@ SyslogIdentifier=banksimulator
 [Install]
 WantedBy=multi-user.target
 SVCEOF
-
-# Patch the region placeholder in the service file
-sed -i "s/REGION_PLACEHOLDER/${aws_region}/g" /etc/systemd/system/banksimulator.service
 
 systemctl daemon-reload
 systemctl enable banksimulator
