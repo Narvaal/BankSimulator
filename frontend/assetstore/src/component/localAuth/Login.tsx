@@ -1,8 +1,8 @@
 import GoogleLoginButton from "../google/GoogleLoginButton.tsx";
 import AuthLayout from "./AuthLayout.tsx";
 import { useState } from "react";
-import {
 import { API_URL } from "../../config";
+import {
     EnvelopeIcon,
     EyeIcon,
     EyeSlashIcon,
