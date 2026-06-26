@@ -19,6 +19,7 @@ Simulador bancário full-stack de portfólio/aprendizado. Backend em Java/Spring
 - JWT via `jjwt 0.12.5` (HMAC-SHA)
 - AWS SDK 2.25.28 (SES para email)
 - BCrypt para hash de senha
+- **Spring Boot DevTools** — hot reload em desenvolvimento (recompila ao salvar no IntelliJ)
 
 ### Frontend (`frontend/assetstore/`)
 - React 19 + TypeScript 5.9
@@ -134,6 +135,18 @@ Em produção, o script `fetch-env.py` busca todos esses parâmetros do SSM no s
 
 **Porta do servidor:** 5000 (não 8080)
 
+### Propriedades de cookie (configuráveis por profile)
+
+As flags do cookie de autenticação são configuráveis via `application.properties`:
+
+| Propriedade | Produção | Local |
+|---|---|---|
+| `auth.cookie.domain` | `.alessandro-bezerra.me` | `` (vazio) |
+| `auth.cookie.secure` | `true` | `false` |
+| `auth.cookie.same-site` | `None` | `Lax` |
+
+Isso é necessário porque cookies com `Secure=true` e `SameSite=None` não funcionam em HTTP `localhost`.
+
 ---
 
 ## Autenticação
@@ -143,14 +156,33 @@ Dois fluxos de autenticação:
 1. **Local** — email + senha. Requer verificação de email antes do primeiro login.
 2. **Google OAuth** — token ID do Google validado via `GoogleTokenVerifier` (chamada HTTP para `https://oauth2.googleapis.com/tokeninfo`).
 
-O JWT é armazenado em **cookie HttpOnly** (via `AuthCookieService`), não no body.
+O JWT é armazenado em **cookie HttpOnly** (via `AuthCookieService`) **e** retornado no body da resposta de login (campo `token` do `AuthResponse`).
+
+O frontend armazena o JWT em **sessionStorage** (isolado por aba), permitindo múltiplas sessões simultâneas no mesmo navegador. Ver `frontend/assetstore/src/auth.ts`.
 
 Endpoints protegidos aceitam token via:
-- Header `Authorization: Bearer <token>`
+- Header `Authorization: Bearer <token>` ← verificado primeiro em `AuthCookieService.extractToken()`
 - Query param `?token=<token>`
-- Cookie (implicitamente)
+- Cookie `AUTH_TOKEN` (fallback)
 
 Endpoints admin usam header `X-Admin-Token` separado.
+
+### Endpoint de sessão
+
+`GET /auth/session` — lê o cookie HttpOnly no servidor e retorna `{ "token": "<jwt>" }` no body. Usado pelo frontend ao montar o `Router` para migrar a sessão do cookie para sessionStorage sem expor o JWT na URL. Cada aba do navegador chama esse endpoint ao iniciar se sessionStorage estiver vazio.
+
+---
+
+## Multi-Sessão (múltiplos usuários no mesmo navegador)
+
+A arquitetura de sessão usa **sessionStorage por aba** para isolar usuários:
+
+1. Após login (local ou Google), o backend seta cookie HttpOnly **e** retorna o JWT no campo `token` do body.
+2. O frontend salva o JWT em `sessionStorage` via `setToken()` em `src/auth.ts`.
+3. Todas as requisições autenticadas enviam `Authorization: Bearer <token>` via `authHeader()`.
+4. O backend verifica o header antes do cookie em `AuthCookieService.extractToken()`.
+5. Como `sessionStorage` é isolado por aba, duas abas com usuários diferentes funcionam independentemente.
+6. Ao abrir uma nova aba (ex: verificação de email via link), `Router.tsx` chama `initSession()` que consulta `GET /auth/session` para recuperar o JWT do cookie existente.
 
 ---
 
@@ -207,6 +239,18 @@ export const API_URL = import.meta.env.VITE_API_URL ?? "https://api.alessandro-b
 | `frontend/assetstore/.env` | `VITE_API_URL=https://api.alessandro-bezerra.me` (produção, commitado) |
 | `frontend/assetstore/.env.local` | `VITE_API_URL=http://localhost:5000` (local, gitignored) |
 
+### Helpers de autenticação frontend
+
+`frontend/assetstore/src/auth.ts` — funções de sessão:
+
+```typescript
+getToken()       // lê JWT do sessionStorage
+setToken(token)  // salva JWT no sessionStorage
+clearToken()     // remove JWT do sessionStorage
+authHeader()     // retorna { Authorization: "Bearer <token>" } ou {}
+initSession()    // se sessionStorage vazio, chama GET /auth/session e salva o JWT
+```
+
 ---
 
 ## Como Rodar Localmente
@@ -223,6 +267,14 @@ O profile `local` (`src/main/resources/application-local.properties`) configura:
 - `InMemoryPrivateKeyStorage` em vez de arquivos
 - CORS libera `http://localhost:5173` e `http://localhost:3000`
 - Tokens dummy — sem precisar de nenhuma env var
+- Cookie sem `Secure` e sem `Domain` (necessário para HTTP localhost)
+
+### Hot Reload com DevTools
+
+Spring Boot DevTools está configurado (`pom.xml`). No IntelliJ:
+1. Habilite **Build → Make Project Automatically**
+2. Em **Advanced Settings**, habilite **Allow auto-make to start even if developed application is currently running**
+3. A cada save, o IntelliJ recompila e o DevTools reinicia o contexto Spring em ~2s sem matar o JVM
 
 ### Frontend
 
@@ -251,6 +303,8 @@ http://localhost
 http://localhost:5173
 ```
 
+O `google.client-id` em `application-local.properties` já está configurado com o ID real do OAuth app.
+
 ---
 
 ## Testes
@@ -262,6 +316,15 @@ mvn test
 ```
 
 Cobertura atual: serviços de conta, asset, auth, marketplace e use cases do marketplace.
+
+### Testes Quebrados — Prioridade para Próxima Sessão
+
+As seguintes mudanças quebraram os testes existentes e precisam ser corrigidas:
+
+1. **`AuthResponse`** agora tem 3 campos (`clientId`, `name`, `token`) — testes que constroem `AuthResponse` com 2 campos falham na compilação.
+2. **`AccountOperationsController`** agora recebe `JwtService` no construtor — testes que fazem `new AccountOperationsController(depositUseCase, accountService)` precisam adicionar o 3º argumento.
+3. **`AuthCookieService`** agora usa `@Value` para `auth.cookie.*` — testes que instanciam diretamente precisam de um `ApplicationContext` ou passar as propriedades.
+4. **`AuthController`** tem o novo endpoint `GET /auth/session` — pode precisar de ajuste nos testes de controller.
 
 ---
 
@@ -365,6 +428,28 @@ Pontos importantes:
 | JWT expirado aceito como válido | `JwtService.java:59` | `isTokenExpired(token)` estava sem negação; corrigido para `!isTokenExpired(token)` |
 | `AccessDeniedException: /keys` | `FilePrivateKeyStorage.java` | Path relativo `keys/` resolvia para `/keys` (raiz); corrigido adicionando `WorkingDirectory=/opt/banksimulator` no systemd |
 | AWS SES trava startup local | `EmailService.java` | `SesClient.create()` no construtor falha sem credenciais AWS; resolvido extraindo interface `EmailService` e criando `LogEmailService` para profile `local` |
+| Google login 500 localmente | `application-local.properties` | `google.client-id` estava com valor dummy; corrigido para o ID real do OAuth app |
+| 401 em `/accounts/me` após login local | `AuthCookieService.java` | Cookie setado com `Secure=true` e `Domain=.alessandro-bezerra.me` não é enviado em HTTP localhost; corrigido tornando essas flags configuráveis por profile via `auth.cookie.*` |
+| Claim 500 — syntax H2 | `AccountDAO.java` | H2 não suporta `INTERVAL '2 minutes'`; corrigido para `INTERVAL '2' MINUTE` |
+| Claim 500 — RETURNING não suportado | `AccountDAO.java` | H2 2.2.224 não suporta `UPDATE ... RETURNING`; reescrito como UPDATE separado + SELECT |
+
+---
+
+## Endpoints Admin
+
+### POST /admin/accounts/deposit
+
+Adiciona saldo a uma conta. Requer header `X-Admin-Token`.
+
+```json
+{ "clientId": 1, "amount": "1000.00" }
+```
+
+ou usando JWT do próprio usuário (extrai o `clientId` via JwtService):
+
+```json
+{ "token": "<jwt>", "amount": "1000.00" }
+```
 
 ---
 
@@ -375,3 +460,4 @@ Pontos importantes:
 - Sem rate limiting implementado.
 - Sem logs estruturados / observabilidade.
 - Chaves privadas RSA em produção ficam em memória do processo + disco em `/opt/banksimulator/keys/`. Se o EC2 for recriado, as chaves existentes são perdidas e usuários não conseguem assinar transações.
+- **Testes unitários estão quebrados** — ver seção "Testes Quebrados" acima.

@@ -5,6 +5,7 @@ import PriceHistoryChart from "../market/PriceHistoryChart.tsx";
 import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import { API_URL } from "../../config";
+import { authHeader } from "../../auth";
 
 /* ===================== TYPES ===================== */
 
@@ -41,7 +42,7 @@ async function getAssetUnits(
 
     const res = await fetch(
         `${API_URL}/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
-        {credentials: "include"}
+        {credentials: "include", headers: authHeader()}
     );
 
     if (!res.ok) throw new Error("Assets not found");
@@ -66,7 +67,8 @@ async function postAssetOffer(assetUnityId: number, price: number) {
             method: "POST",
             credentials: "include",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                ...authHeader()
             },
             body: JSON.stringify({assetUnityId, price})
         }

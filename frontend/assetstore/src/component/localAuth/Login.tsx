@@ -2,6 +2,7 @@ import GoogleLoginButton from "../google/GoogleLoginButton.tsx";
 import AuthLayout from "./AuthLayout.tsx";
 import { useState } from "react";
 import { API_URL } from "../../config";
+import { setToken } from "../../auth";
 import {
     EnvelopeIcon,
     EyeIcon,
@@ -28,6 +29,9 @@ async function handleLogin(email: string, password: string) {
 
         throw new Error("INVALID_CREDENTIALS");
     }
+
+    const data = await res.json();
+    if (data.token) setToken(data.token);
 }
 
 /* ===================== COMPONENT ===================== */

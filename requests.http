@@ -1,138 +1,260 @@
-### Health check
-GET http://localhost:8080/health
+### === VARIÁVEIS ===
+### Defina @token com o valor do cookie AUTH_TOKEN após fazer login
+### Para o perfil local: rode com -Dspring.profiles.active=local
 
-### Claim Asset
-POST http://localhost:8080/assets/claim
+@baseUrl = http://localhost:5000
+@adminToken = local-admin-token
+@token = COLE_O_JWT_AQUI
+
+
+### ====================================================================
+###  HEALTH
+### ====================================================================
+
+### Health check
+GET {{baseUrl}}/health
+
+
+### ====================================================================
+###  AUTH — Fluxo de registro e login local
+### ====================================================================
+
+### [1/4] Criar conta (envia email de verificação)
+POST {{baseUrl}}/accounts
 Content-Type: application/json
-Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcyNzY0ODkxLCJleHAiOjE3NzI4NTEyOTF9.CFuBgH5b5SjAydFKJznGoeuxmyz2Rtw46S1UH4IxCPw
+
+{
+  "name": "João Teste",
+  "email": "joao@teste.com",
+  "password": "senha123"
+}
+
+### [2/4] Reenviar email de verificação (caso não tenha recebido)
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "joao@teste.com"
+}
+
+### [3/4] Verificar email (copie o token do link recebido no email)
+### No perfil local o LogEmailService imprime o link no console do Spring
+GET {{baseUrl}}/auth/verify?token=TOKEN_DO_EMAIL
+
+### [4/4] Login local
+### Após o login o cookie AUTH_TOKEN é setado — copie-o para @token acima
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@teste.com",
+  "password": "senha123"
+}
+
+
+### ====================================================================
+###  AUTH — Google OAuth
+### ====================================================================
+
+### Login com Google (token ID vindo do GSI)
+POST {{baseUrl}}/auth/google
+Content-Type: application/json
+
+{
+  "token": "ID_TOKEN_DO_GOOGLE"
+}
+
+
+### ====================================================================
+###  AUTH — Reset de senha
+### ====================================================================
+
+### [1/2] Solicitar reset de senha (envia email com token)
+POST {{baseUrl}}/accounts/password/reset-request
+Content-Type: application/json
+
+{
+  "email": "joao@teste.com"
+}
+
+### [2/2] Redefinir senha com o token do email
+POST {{baseUrl}}/accounts/password/reset
+Content-Type: application/json
+
+{
+  "password": "novaSenha456",
+  "token": "TOKEN_DO_EMAIL_DE_RESET"
+}
+
+
+### ====================================================================
+###  ACCOUNTS
+### ====================================================================
+
+### Dados da conta autenticada
+GET {{baseUrl}}/accounts/me
+Cookie: AUTH_TOKEN={{token}}
+
+### Histórico de transferências da conta 1
+GET {{baseUrl}}/accounts/1/transfers
+Authorization: Bearer {{token}}
+
+
+### ====================================================================
+###  CLIENTS
+### ====================================================================
+
+### Perfil do cliente autenticado
+GET {{baseUrl}}/clients/me
+Authorization: Bearer {{token}}
+
+
+### ====================================================================
+###  ASSETS — Consultas públicas
+### ====================================================================
+
+### Listar todos os assets (com preço médio e supply)
+GET {{baseUrl}}/assets
+
+### Buscar asset por ID
+GET {{baseUrl}}/assets/1
+
+### Histórico de preços de um asset (todas as listings)
+GET {{baseUrl}}/assets/6/price-history
+
+### Listar bundles (paginado)
+GET {{baseUrl}}/assets/bundles?page=0&size=10
+
+### Itens de um bundle
+GET {{baseUrl}}/assets/bundles/1/items?page=0&size=20
+
+
+### ====================================================================
+###  ASSET UNITS — Units por dono
+### ====================================================================
+
+### Listar units da conta 1 (ownerId = accountId)
+GET {{baseUrl}}/asset-units?ownerId=1&page=0&pageSize=10
+
+
+### ====================================================================
+###  ASSETS — Claim gratuito
+### ====================================================================
+
+### Verificar quando o próximo claim estará disponível
+GET {{baseUrl}}/assets/claim
+Cookie: AUTH_TOKEN={{token}}
+
+### Resgatar um asset gratuito (assetId = ID do asset disponível)
+POST {{baseUrl}}/assets/claim
+Content-Type: application/json
+Cookie: AUTH_TOKEN={{token}}
 
 {
   "assetId": 1
 }
 
-### Login
-POST http://localhost:8080/auth/login
+
+### ====================================================================
+###  ASSET LISTINGS — Mercado
+### ====================================================================
+
+### Listar listings ativos (paginado)
+GET {{baseUrl}}/asset-listings?page=0&pageSize=10
+Cookie: AUTH_TOKEN={{token}}
+
+### Meus listings ativos
+GET {{baseUrl}}/asset-listings/me?page=0&pageSize=10
+Cookie: AUTH_TOKEN={{token}}
+
+### Buscar listing por ID
+GET {{baseUrl}}/asset-listings/1
+
+### Histórico de preços de um listing
+GET {{baseUrl}}/asset-listings/1/price-history
+
+### Comprar um listing (ID do listing = 1)
+POST {{baseUrl}}/asset-listings/1/purchase
+Cookie: AUTH_TOKEN={{token}}
+
+
+### ====================================================================
+###  ASSET OFFERS — Criar e cancelar ofertas de venda
+### ====================================================================
+
+### Colocar asset à venda (assetUnityId = ID da unit que você possui)
+POST {{baseUrl}}/asset-offers
 Content-Type: application/json
-
-{
-  "email": "a@a.com",
-  "password": "pass"
-}
-
-### Create Account
-POST http://localhost:8080/accounts
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "a@a.com",
-  "password": "pass"
-}
-
-### Purchase asset
-POST http://localhost:8080/asset-listings/1/purchase
-Content-Type: application/json
-Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzcyODMyNzQzLCJleHAiOjE3NzI5MTkxNDN9.LaddkqGFcO1Q2JkVxQHGsnOP_IJRn2SZzsL1wJQsipg
-
-### Post assetOffer
-POST http://localhost:8080/asset-offers
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcwOTU1MDczLCJleHAiOjE3NzEwNDE0NzN9.cZEkBYO2lemqQz5lGFGcHlRMpQVWewleF6qOY9iMN78
+Cookie: AUTH_TOKEN={{token}}
 
 {
   "assetUnityId": 1,
   "price": 200.00
 }
 
-### Cancel assetOffer
-POST http://localhost:8080/asset-offers/5/cancel
+### Cancelar oferta de venda (assetListingId = ID do listing criado acima)
+POST {{baseUrl}}/asset-offers/cancel
 Content-Type: application/json
+Cookie: AUTH_TOKEN={{token}}
 
 {
-  "accountId": 5,
-  "token": "MTA6MTc2OTgyODIyMTM3ODoxNzY5ODMxODIxMzc4OjkyYjA1YTFlLWVlODgtNDQ3NS1hYzg1LWNjOGNmNzBhMDQwNA==.hkQ5c9jaw7BH5/Diunrv3YIDPcGq//tHV6CZ3fd/aaP1Io+GNJHRnA5S0R3WXHowtNLQE6WxcY/dxu5j202zBrnso2sKN8LEAbdQkMoZith0k9l7XXVaaIgflETX+37rqONeQ+d4yINVSeOLJ1h2C7TBIbMeiwUwBMQbyunYjwUo5wYX2yWlXtgnV7d/ccOVOCTwj9S0FDQP7wtRTyEsjQyyEweiLPXsMUR8uzsspiqh8PeLzltAYi5hHyBE4suCrV5LBoAjLufITBxqjoewZBWYIFKo5S11G4ZzP4EWomP3OVjtTt4xUAd2MRgFL13gc3boM8h79e7gXEGqladkIQ=="
+  "assetListingId": 1
 }
 
-### Account Deposit
-POST http://localhost:8080/accounts/2/deposit
+
+### ====================================================================
+###  ADMIN — Operações administrativas
+### ====================================================================
+
+### Dar balance usando clientId (obtido via /accounts/me → campo "clientId")
+POST {{baseUrl}}/admin/accounts/deposit
 Content-Type: application/json
+X-Admin-Token: {{adminToken}}
 
 {
-  "amount": 1000.00,
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzcyODM5NjMxLCJleHAiOjE3NzI5MjYwMzF9.wXPKhXMWqZePSgWN8E4azHbsjxWhAWnaAM36qspHZAg"
+  "clientId": 1,
+  "amount": "1000.00"
 }
 
-### Give assetUnity
-POST http://localhost:8080/assets/4/units
+### Dar balance usando o próprio JWT do usuário (sem precisar do clientId)
+POST {{baseUrl}}/admin/accounts/deposit
 Content-Type: application/json
+X-Admin-Token: {{adminToken}}
 
 {
-  "ownerAccountId": 2,
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcyOTQwNTE3LCJleHAiOjE3NzMwMjY5MTd9.OCjP4noHOam3Uy_LbXym-u4hEGx3aWSTJ7sFUGzZk7A"
+  "token": "{{token}}",
+  "amount": "1000.00"
 }
 
-### Create Asset bundle
-POST http://localhost:8080/assets/bundles
+### Gerar assets semanais
+POST {{baseUrl}}/admin/assets/generate
+X-Admin-Token: {{adminToken}}
+
+### Criar bundle de assets manualmente
+POST {{baseUrl}}/assets/bundles
 Content-Type: application/json
-X-Admin-Token: root
+X-Admin-Token: {{adminToken}}
 
 {
-  "identifier": "weekly",
+  "identifier": "weekly-2026-W26",
   "assets": [
     {
-      "text": "X: Rares",
+      "text": "Rare Lines #001",
       "totalSupply": 1
     },
     {
-      "text": "E: Epics",
+      "text": "Epic Lines #001",
       "totalSupply": 1
     }
   ]
 }
 
-### Get Asset bundle
-GET http://localhost:8080/assets/bundles?page=0&size=10
+### Criar unit de asset para uma conta (distribuição manual)
+POST {{baseUrl}}/assets/1/units
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
-### Get Asset bundle itemns
-GET http://localhost:8080/assets/bundles/1/items?page=0&size=20
-
-### Generate Assets
-POST http://localhost:8080/admin/assets/generate
-X-Admin-Token: root
-
-### Account Details
-GET http://localhost:8080/accounts/me
-Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzcxMDE5OTAxLCJleHAiOjE3NzExMDYzMDF9.dyGIklwrkeri6khTPt-x89PsMMWnTUymBKPtOJlLjHk
-
-### Client details
-GET http://localhost:8080/clients/me
-Authorization: Bearer NzoxNzY5ODMzOTUwMTkyOjE3Njk4Mzc1NTAxOTI6ZDg2OGJjNWUtYmJjZC00NTVhLWI1ZmMtMGIwNDhlODA1Zjk0.uDdonalFG3quAc5fejdRV7kX1ZvL296nAkBxjEVQPnZaa9DM+RTFpkBmJrhIhtfGKQowRZ7e4L2ScmjHuD4MfdRoIvrjTFMiRgcpC4JufQtcsciw6bGNhOaCHXC+EBXHu5Nwto3TrwqaXZ1QJ5MJtKnz2hVxitiHX4530g3bX5GT9tQ1bizEn4ZcItQ770A9MHN9qlVcjB2BzIUcNCsyJ6JrJpaMBs6acmRXOdpJbcaA09NFTc1sfsNBR1Wo4XLCgl4sHND4BXSqBiMAD5ymbsVnDsERNxrBvfpEBgoempCiLwSU261DhGNhQ/86RoiZZrO9E42d0nrrP47D8Dxg1g==
-
-### Get transactions by user
-GET http://localhost:8080/accounts/5/transfers
-Authorization: Bearer NzoxNzY5ODMzMjM1NDEwOjE3Njk4MzY4MzU0MTA6NjIwMGQ1YzItNTQ5Ny00MzdhLTg2NDQtZTdlMzcyY2Q1NGRl.r1Baund2/WSU4D95pt6lC2yV3GVG7qfVqSfWlyzBpygPgdXB1UOwUmkamRIf2HZvwqu00/vJ4bDDgEunh8S6VRqKCcdjpUfOQYZvFpxzXcnzU0ppHUrJyTJSgw1f6nelGdanY3o2VWObBMqZcBj6fP9fPeJ4yq2AXkAd6yPYDTh1IK9Xm5Wz4llEFiyrAziY7BKX0WfZpEHvy3i05PblSJkgbaTX3AJZYDRO/rqggBjilkW7FySpAeZQc8BvrWsXsbVV1fEy8yBODneM48LxpZHWutzyiXiXudAdIDMf7FuMYo7HpyTXKSjfiYqltk7M1j3nh7Kpz5EizxFSG5dj9w==
-
-### GET asset Price History
-GET http://localhost:8080/assets/6/price-history
-
-### Get asset price history
-GET localhost:8080/asset-listings/7/price-history
-
-### Get asset by id
-GET localhost:8080/assets/1
-
-### Get asset listing by id
-GET localhost:8080/asset-listings/1
-
-### Get active asset listings active
-GET localhost:8080/asset-listings?page=0&pageSize=10
-Cookie: AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzcyODMyNzQzLCJleHAiOjE3NzI5MTkxNDN9.LaddkqGFcO1Q2JkVxQHGsnOP_IJRn2SZzsL1wJQsipg
-
-### Get asset listing by owner
-GET localhost:8080/asset-listings?ownerId=2
-
-### Get assets
-GET localhost:8080/assets
-
-### Get asset-units by owner
-GET localhost:8080/asset-units?ownerId=1&page=0&pageSize=10
+{
+  "ownerAccountId": 1,
+  "token": "{{token}}"
+}

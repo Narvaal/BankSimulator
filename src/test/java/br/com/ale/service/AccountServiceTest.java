@@ -1,7 +1,26 @@
 package br.com.ale.service;
 
+import br.com.ale.domain.account.Account;
+import br.com.ale.domain.account.AccountStatus;
+import br.com.ale.domain.account.AccountType;
+import br.com.ale.domain.client.Client;
+import br.com.ale.domain.client.Provider;
+import br.com.ale.dto.CreateAccountRequest;
+import br.com.ale.dto.CreateClientRequest;
+import br.com.ale.dto.UpdateAccountRequest;
+import br.com.ale.infrastructure.db.TestConnectionProvider;
+import br.com.ale.service.account.AccountService;
+import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
+import br.com.ale.service.crypto.SpyPrivateKeyStorage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class AccountServiceTest {
-    /*
+
     private static final String VALID_NAME = "John Doe";
     private static final String VALID_DOCUMENT = "123456789";
 
@@ -12,12 +31,13 @@ class AccountServiceTest {
     private static final AccountStatus STATUS = AccountStatus.ACTIVE;
     private static final AccountStatus UPDATED_STATUS = AccountStatus.INACTIVE;
 
+    private TestConnectionProvider provider;
     private ClientService clientService;
     private AccountService accountService;
 
     @BeforeEach
     void setup() {
-        TestConnectionProvider provider = new TestConnectionProvider();
+        provider = new TestConnectionProvider();
 
         clientService = new ClientService(provider);
         accountService = new AccountService(
@@ -25,10 +45,10 @@ class AccountServiceTest {
                 new InMemoryPrivateKeyStorage()
         );
 
-        cleanDatabase(provider);
+        cleanDatabase();
     }
 
-    private void cleanDatabase(TestConnectionProvider provider) {
+    private void cleanDatabase() {
         try (var conn = provider.getConnection();
              var stmt = conn.createStatement()) {
 
@@ -110,13 +130,12 @@ class AccountServiceTest {
     @Test
     void shouldGenerateAndStorePrivateKey() {
 
-        TestConnectionProvider provider = new TestConnectionProvider();
         SpyPrivateKeyStorage spyStorage = new SpyPrivateKeyStorage();
 
         clientService = new ClientService(provider);
         accountService = new AccountService(provider, spyStorage);
 
-        cleanDatabase(provider);
+        cleanDatabase();
 
         clientService.createClient(
                 new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
@@ -150,7 +169,7 @@ class AccountServiceTest {
 
         Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-        Account account = accountService.createAccount(
+        accountService.createAccount(
                 new CreateAccountRequest(
                         client.getId(),
                         ACCOUNT_NUMBER,
@@ -170,7 +189,6 @@ class AccountServiceTest {
     @Test
     void shouldTransferAmountBetweenAccounts() {
 
-        // given
         Account from = accountService.createAccount(validAccount());
         Account to = accountService.createAccount(
                 new CreateAccountRequest(
@@ -183,19 +201,17 @@ class AccountServiceTest {
 
         accountService.credit(from.getAccountNumber(), new BigDecimal("100.00"));
 
-        // when
         accountService.transfer(
                 from.getId(),
                 to.getId(),
                 new BigDecimal("40.00")
         );
 
-        // then
         Account updatedFrom = accountService.getAccountByNumber(from.getAccountNumber());
         Account updatedTo = accountService.getAccountByNumber(to.getAccountNumber());
 
-        assertEquals(new BigDecimal("60.00"), updatedFrom.getBalance());
-        assertEquals(new BigDecimal("40.00"), updatedTo.getBalance());
+        assertEquals(0, updatedFrom.getBalance().compareTo(new BigDecimal("60.00")));
+        assertEquals(0, updatedTo.getBalance().compareTo(new BigDecimal("40.00")));
     }
 
     @Test
@@ -253,7 +269,7 @@ class AccountServiceTest {
 
         Account updated = accountService.getAccountByNumber(account.getAccountNumber());
 
-        assertEquals(new BigDecimal("100.00"), updated.getBalance());
+        assertEquals(0, updated.getBalance().compareTo(new BigDecimal("100.00")));
     }
 
     @Test
@@ -262,13 +278,11 @@ class AccountServiceTest {
         Account account = accountService.createAccount(validAccount());
         accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
 
-        // when
         accountService.debit(account.getAccountNumber(), new BigDecimal("30.00"));
 
-        // then
         Account updated = accountService.getAccountByNumber(account.getAccountNumber());
 
-        assertEquals(new BigDecimal("70.00"), updated.getBalance());
+        assertEquals(0, updated.getBalance().compareTo(new BigDecimal("70.00")));
     }
 
     @Test
@@ -286,14 +300,14 @@ class AccountServiceTest {
 
         assertNotNull(exception.getCause());
         assertTrue(
-                exception.getCause().getMessage().contains("Insufficient balance "),
+                exception.getCause().getMessage().contains("Insufficient balance"),
                 "Expected insufficient balance exception"
         );
     }
 
     private CreateAccountRequest validAccount() {
         clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL ,
+                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
                         null, false, null)
         );
 
@@ -315,6 +329,4 @@ class AccountServiceTest {
                 UPDATED_STATUS
         );
     }
-
-     */
 }

@@ -42,7 +42,7 @@ class AssetGenerationServiceTest {
     }
 
     @Test
-    void allAssetsShouldHaveNonEmptyText() {
+    void shouldHaveNonEmptyTextForAllGeneratedAssets() {
         List<Asset> assets = assetGenerationService.generateWeeklyAssets();
 
         for (Asset asset : assets) {

@@ -124,7 +124,9 @@ public class GoogleLoginUseCase {
 
         String aud = (String) payload.get("aud");
         if (!googleClientId.equals(aud)) {
-            throw new SecurityException("Invalid Google token audience");
+            throw new SecurityException(
+                "Invalid Google token audience. expected=" + googleClientId + " got=" + aud
+            );
         }
 
         Client client = findOrCreateGoogleClient(name, email, googleId, emailVerified, picture);

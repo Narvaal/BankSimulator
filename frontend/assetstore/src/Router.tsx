@@ -1,4 +1,5 @@
 import {BrowserRouter, Routes, Route} from "react-router-dom";
+import {useEffect} from "react";
 import CreateAccount from "./component/localAuth/CreateAccount";
 import Login from "./component/localAuth/Login";
 import Home from "./component/home/Home"
@@ -7,8 +8,11 @@ import Reward from "./component/reward/Reward.tsx";
 import RareLines from "./component/landpage/RareLines.tsx"
 import EmailVerification from "./component/localAuth/EmailVerification.tsx"
 import ResetPassword from  "./component/localAuth/ResetPassword.tsx"
+import {initSession} from "./auth.ts";
 
 export default function Router() {
+    useEffect(() => { initSession(); }, []);
+
     return (
         <BrowserRouter>
             <Routes>

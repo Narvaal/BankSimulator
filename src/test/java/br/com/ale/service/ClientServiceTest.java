@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClientServiceTest {
 
     private static final String VALID_NAME = "John Doe";
-    private static final String UPDATED_NAME = "John";
     private static final String VALID_DOCUMENT = "123456789";
 
     private ClientService clientService;
@@ -51,32 +50,27 @@ class ClientServiceTest {
         assertEquals(VALID_DOCUMENT, client.getEmail());
     }
 
-    /*
-        @Test
-        void shouldSelectClientByEmail() {
-            clientService.createClient(validClient());
-
-            Client client =
-                    clientService.getClientByEmail(VALID_DOCUMENT);
-
-            assertEquals(VALID_NAME, client.getName());
-            assertEquals(VALID_DOCUMENT, client.getEmail());
-        }
-    */
-    /*
     @Test
-    void shouldUpdateClient() {
-        Client client = clientService.createClient(validClient());
+    void shouldSelectClientByEmail() {
+        clientService.createClient(validClient());
 
-        clientService.updateClient(validUpdate(client));
+        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-        Client updatedClient =
-                clientService.getClientByEmail(VALID_DOCUMENT);
-
-        assertEquals(UPDATED_NAME, updatedClient.getName());
-        assertEquals(VALID_DOCUMENT, updatedClient.getEmail());
+        assertEquals(VALID_NAME, client.getName());
+        assertEquals(VALID_DOCUMENT, client.getEmail());
     }
-    */
+
+    @Test
+    void shouldUpdateClientPassword() {
+        Client client = clientService.createClient(validClient());
+        String newPassword = "updated-password";
+
+        clientService.updateClient(new UpdateClientRequest(client.getId(), newPassword));
+
+        Client updated = clientService.getClientByEmail(VALID_DOCUMENT);
+        assertEquals(newPassword, updated.getPassword());
+    }
+
     @Test
     void shouldDeleteClient() {
         Client client = clientService.createClient(validClient());
@@ -114,7 +108,6 @@ class ClientServiceTest {
         assertEquals(VALID_DOCUMENT, client.getEmail());
     }
 
-
     private CreateClientRequest validClient() {
         return new CreateClientRequest(
                 VALID_NAME,
@@ -124,13 +117,6 @@ class ClientServiceTest {
                 null,
                 false,
                 null
-        );
-    }
-
-    private UpdateClientRequest validUpdate(Client client) {
-        return new UpdateClientRequest(
-                client.getId(),
-                UPDATED_NAME
         );
     }
 }

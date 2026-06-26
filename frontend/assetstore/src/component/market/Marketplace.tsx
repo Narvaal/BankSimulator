@@ -5,6 +5,7 @@ import {useAccount} from "../auth/Auth";
 import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import { API_URL } from "../../config";
+import { authHeader } from "../../auth";
 
 /* ===================== TYPES ===================== */
 
@@ -37,7 +38,8 @@ interface assetListingPageView {
 
 async function getListings(page: number, pageSize: number) {
     const res = await fetch(`${API_URL}/asset-listings?page=${page}&pageSize=${pageSize}`, {
-        credentials: "include"
+        credentials: "include",
+        headers: authHeader()
     });
     if (!res.ok) throw new Error();
     return res.json();
@@ -45,7 +47,8 @@ async function getListings(page: number, pageSize: number) {
 
 async function getUserListings(page: number, pageSize: number) {
     const res = await fetch(`${API_URL}/asset-listings/me?page=${page}&pageSize=${pageSize}`, {
-        credentials: "include"
+        credentials: "include",
+        headers: authHeader()
     });
     if (!res.ok) throw new Error();
     return res.json();
@@ -56,7 +59,8 @@ async function cancelOffer(assetListingId: number) {
         method: "POST",
         credentials: "include",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...authHeader()
         },
         body: JSON.stringify({
             assetListingId
@@ -77,7 +81,7 @@ async function getAssetPriceHistory(assetUnityId: number) {
 async function buyAssetUnity(assetListingId: number) {
     const res = await fetch(
         `${API_URL}/asset-listings/${assetListingId}/purchase`,
-        {method: "POST", credentials: "include"}
+        {method: "POST", credentials: "include", headers: authHeader()}
     );
     if (!res.ok) throw new Error();
     return res.json();
