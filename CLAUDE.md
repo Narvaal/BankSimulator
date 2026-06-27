@@ -53,58 +53,187 @@ O produto final não deve parecer um projeto de portfólio. Deve parecer uma pla
 
 ### Princípio
 
-Em vez de colunas individuais para cada atributo, o campo `metadata` da tabela `asset` armazena um documento JSONB. Isso elimina migrações futuras, torna o modelo extensível e facilita a geração por IA.
+Em vez de colunas individuais para cada atributo, o campo `metadata` da tabela `artifact` armazena um documento JSONB. Isso elimina migrações futuras, torna o modelo extensível e facilita a geração por IA.
 
-### Estrutura do JSON
+Todos os campos são **obrigatórios**. A pipeline de IA deve sempre preencher o schema completo para garantir padronização no layout e consistência entre cartas.
+
+### Estrutura completa
 
 ```json
 {
-  "name": "AI Titan",
-  "subtitle": "NVIDIA reaches 6 trillion dollars",
+  "name":     "Apple Vision Pro",
+  "subtitle": "Apple enters the spatial computing era",
   "category": "Technology",
-  "rarity": "Legendary",
-  "effect": "Rainbow Foil",
-  "attack": 98,
-  "defense": 84,
-  "health": 100,
-  "energy": 5,
-  "ability": {
-    "name": "CUDA Dominion",
-    "description": "Gain influence whenever AI expands."
+  "rarity":   "Legendary",
+
+  "effects": {
+    "foil":        true,
+    "glow":        "#ffd700",
+    "shimmer":     true,
+    "particles":   "heavy",
+    "borderLight": true
   },
-  "stats": {
-    "historicalImpact": 98,
-    "innovation": 99,
-    "risk": 34,
-    "economicImpact": 100
+
+  "illustration": "https://cdn.rarelines.io/cards/apple-vision-pro.png",
+  "background":   "https://cdn.rarelines.io/backgrounds/tech-blue.png",
+
+  "attributes": {
+    "influence":   91,
+    "innovation":  95,
+    "controversy": 48,
+    "longevity":   72,
+    "reach":       88
   },
-  "traits": [
-    { "name": "Faction", "value": "Technology" }
+
+  "abilities": [
+    {
+      "name":        "Closed Ecosystem",
+      "description": "Commands loyalty through exclusivity — impossible to replicate."
+    }
   ],
+
+  "passive": {
+    "name":        "Silicon Monopoly",
+    "description": "Arguments backed by revenue above $1T gain extra weight."
+  },
+
+  "weakness": "Premium pricing limits global adoption",
+
+  "flavorText": "The future arrived. Apple priced it so you'd know your place in it.",
+
+  "lore": "When Apple unveiled its spatial computing headset in 2024, it marked the beginning of a new computing paradigm — expensive, polarizing, and impossible to ignore.",
+
+  "traits": [
+    { "name": "Era",    "value": "AI Age" },
+    { "name": "Origin", "value": "United States" }
+  ],
+
+  "timeline": [
+    { "date": "2023-06-05", "event": "Announced at WWDC" },
+    { "date": "2024-02-02", "event": "Released in the United States" }
+  ],
+
+  "references": [
+    "https://www.apple.com/apple-vision-pro/"
+  ],
+
+  "collection":  "Tech Giants 2024",
+  "cardNumber":  "042",
+  "releaseDate": "2024-06-03",
+
   "artist": "RareLines AI",
-  "illustration": "",
-  "background": "",
-  "prompt": "",
-  "seed": "",
-  "releaseDate": "",
-  "timeline": [],
-  "references": [],
-  "flavorText": "The silicon giant that reshaped an era."
+  "model":  "dall-e-3",
+  "prompt": "Futuristic spatial computing headset, cinematic lighting, dark background...",
+  "seed":   "4829301"
 }
 ```
 
-### Sistema de Raridades
+### Limits por campo
 
-| Raridade | Probabilidade | Frame | Shader | Partículas | Audio |
-|---|---|---|---|---|---|
-| Common | 55% | Básico | Nenhum | Nenhuma | Simples |
-| Rare | 25% | Prata | Brilho sutil | Mínimas | Suave |
-| Epic | 12% | Roxo | Glow roxo | Médias | Dramático |
-| Legendary | 6% | Dourado | Holo | Intensas | Épico |
-| Mythic | 1.8% | Cristal | Rainbow Foil | Máximas | Cinematográfico |
-| Ultimate | 0.2% | Único | Shader exclusivo | Cinematográficas | Único |
+| Campo | Tipo | Limit |
+|---|---|---|
+| `name` | string | máx 30 chars |
+| `subtitle` | string | máx 60 chars |
+| `category` | enum | Technology · Finance · Science · Culture · Sports · Politics |
+| `rarity` | enum | Common · Rare · Epic · Legendary · Mythic · Ultimate |
+| `abilities` | array | **1 a 2 itens** |
+| `abilities[].name` | string | máx 25 chars |
+| `abilities[].description` | string | máx 120 chars |
+| `passive.name` | string | máx 25 chars |
+| `passive.description` | string | máx 120 chars |
+| `weakness` | string | máx 80 chars |
+| `flavorText` | string | máx 15 palavras |
+| `lore` | string | máx 300 chars |
+| `traits` | array | **2 a 4 itens** |
+| `traits[].name` | string | máx 15 chars |
+| `traits[].value` | string | máx 20 chars |
+| `timeline` | array | **2 a 5 itens** |
+| `timeline[].event` | string | máx 60 chars |
+| `references` | array | mín 1 · máx 5 |
 
-A raridade controla: frame, glow, shader, animação, partículas, audio, pack reveal, cor no marketplace e borda no inventário.
+### `abilities` vs `passive`
+
+- **passive** — sempre ativo, representa uma característica permanente da carta. Nunca muda durante a batalha.
+- **abilities** (1-2) — representam o que a carta "faz" no argumento de batalha. São a base da estratégia do jogador.
+
+### Sistema de Effects (camadas independentes)
+
+Cada efeito visual é controlado individualmente e podem ser combinados livremente:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `foil` | boolean | Overlay holográfico rainbow |
+| `glow` | string \| null | Cor hex do brilho de borda, ex: `"#ffd700"` |
+| `shimmer` | boolean | Reflexo sutil que segue o mouse |
+| `particles` | string \| null | `"minimal"` · `"medium"` · `"heavy"` · `"cinematic"` |
+| `borderLight` | boolean | Borda animada com luz pulsante |
+
+Defaults por raridade (podem ser sobrescritos por carta):
+
+| Raridade | Prob. | foil | glow | shimmer | particles | borderLight |
+|---|---|---|---|---|---|---|
+| Common | 55% | false | null | false | null | false |
+| Rare | 25% | false | `"#c0c0c0"` | true | `"minimal"` | false |
+| Epic | 12% | false | `"#9b30ff"` | true | `"medium"` | true |
+| Legendary | 6% | true | `"#ffd700"` | true | `"heavy"` | true |
+| Mythic | 1.8% | true | `"#00ffff"` | true | `"cinematic"` | true |
+| Ultimate | 0.2% | true | exclusivo | true | `"cinematic"` | true |
+
+A raridade controla: frame, effects, animação, audio, pack reveal, cor no marketplace e borda no inventário.
+
+---
+
+## Tom da IA — Humor Ácido
+
+A IA deve escrever como um comentarista inteligente e levemente cínico: respeita os fatos, mas não resiste a apontar o absurdo das situações. O humor é no *como*, nunca no *o quê* — a importância real do evento é sempre preservada.
+
+### Onde o humor aparece
+
+**`flavorText`** — é onde mais brilha. Deve ter ironia, duplo sentido ou uma verdade desconfortável dita com elegância:
+> *"The future arrived. Apple priced it so you'd know your place in it."*
+> *"A financial revolution, mostly used to make the already-rich slightly richer."*
+> *"Democracy found its voice. It was louder than anyone expected and made less sense than anyone hoped."*
+
+**`weakness`** — pode ser particularmente afiada:
+> *"Depends on people continuing to care, which history suggests is optimistic."*
+
+**`passive.description`** e **`abilities[].description`** — fio de ironia sem quebrar a coerência:
+> *"Thrives in environments where disruption is celebrated more than it is understood."*
+
+**`lore`** — mais contido, mas pode terminar com uma observação cortante:
+> *"...and so the company that once sold computers to rebels became the establishment it promised to destroy."*
+
+### O que evitar
+- Humor que ridicularize pessoas específicas pelo nome
+- Sarcasmo sobre tragédias (ver filtro abaixo)
+- Ironia que invalide a importância real do evento
+
+---
+
+## Filtro de Notícias — O que não vira carta
+
+A plataforma celebra o mundo, não o lamenta. A pipeline rejeita automaticamente notícias das seguintes categorias:
+
+| Rejeitar | Exemplos |
+|---|---|
+| Mortes e desastres | Tragédias, acidentes com vítimas, assassinatos |
+| Guerras e conflitos armados | Batalhas, bombardeios, ataques terroristas |
+| Epidemias com mortalidade | Surtos com número significativo de mortes |
+| Crimes violentos | Chacinas, sequestros, atrocidades |
+| Catástrofes naturais com vítimas | Terremotos, furacões com mortos |
+| Saúde mental e suicídio | Qualquer cobertura com esse viés |
+
+| Aceitar | Exemplos |
+|---|---|
+| Tecnologia | Lançamentos, breakthroughs, aquisições, IPOs |
+| Ciência | Descobertas, missões espaciais, pesquisas |
+| Cultura | Filmes, música, arte, fenômenos culturais |
+| Esportes | Recordes, conquistas, momentos históricos |
+| Economia | Fusões, tendências de mercado, novos players |
+| Política | Eleições, acordos, mudanças de poder sem tragédia associada |
+| Meio ambiente | Iniciativas positivas, recordes — com cuidado no framing |
+
+**Critério prático:** *"Essa notícia pode virar uma carta que alguém ficaria feliz de colecionar?"* Se não, rejeita.
 
 ---
 
