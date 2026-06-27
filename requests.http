@@ -109,95 +109,91 @@ Authorization: Bearer {{token}}
 
 
 ### ====================================================================
-###  ASSETS — Consultas públicas
+###  ARTIFACTS — Consultas públicas
 ### ====================================================================
 
-### Listar todos os assets (com preço médio e supply)
-GET {{baseUrl}}/assets
+### Listar todos os artifacts (com preço médio e supply)
+GET {{baseUrl}}/artifacts
 
-### Buscar asset por ID
-GET {{baseUrl}}/assets/1
+### Buscar artifact por ID
+GET {{baseUrl}}/artifacts/1
 
-### Histórico de preços de um asset (todas as listings)
-GET {{baseUrl}}/assets/6/price-history
+### Histórico de preços de um artifact (todas as listings)
+GET {{baseUrl}}/artifacts/6/price-history
 
 ### Listar bundles (paginado)
-GET {{baseUrl}}/assets/bundles?page=0&size=10
+GET {{baseUrl}}/artifacts/bundles?page=0&size=10
 
 ### Itens de um bundle
-GET {{baseUrl}}/assets/bundles/1/items?page=0&size=20
+GET {{baseUrl}}/artifacts/bundles/1/items?page=0&size=20
 
 
 ### ====================================================================
-###  ASSET UNITS — Units por dono
+###  ARTIFACT UNITS — Units por dono
 ### ====================================================================
 
-### Listar units da conta 1 (ownerId = accountId)
-GET {{baseUrl}}/asset-units?ownerId=1&page=0&pageSize=10
+### Listar units da conta autenticada
+GET {{baseUrl}}/artifact-units/me?page=0&pageSize=10
+Authorization: Bearer {{token}}
 
 
 ### ====================================================================
-###  ASSETS — Claim gratuito
+###  ARTIFACTS — Claim gratuito
 ### ====================================================================
 
-### Verificar quando o próximo claim estará disponível
-GET {{baseUrl}}/assets/claim
-Cookie: AUTH_TOKEN={{token}}
-
-### Resgatar um asset gratuito (assetId = ID do asset disponível)
-POST {{baseUrl}}/assets/claim
+### Resgatar um artifact gratuito (artifactId = ID do artifact disponível)
+POST {{baseUrl}}/artifacts/claim
 Content-Type: application/json
 Cookie: AUTH_TOKEN={{token}}
 
 {
-  "assetId": 1
+  "artifactId": 1
 }
 
 
 ### ====================================================================
-###  ASSET LISTINGS — Mercado
+###  ARTIFACT LISTINGS — Mercado
 ### ====================================================================
 
 ### Listar listings ativos (paginado)
-GET {{baseUrl}}/asset-listings?page=0&pageSize=10
-Cookie: AUTH_TOKEN={{token}}
+GET {{baseUrl}}/artifact-listings?page=0&pageSize=10
 
 ### Meus listings ativos
-GET {{baseUrl}}/asset-listings/me?page=0&pageSize=10
-Cookie: AUTH_TOKEN={{token}}
+GET {{baseUrl}}/artifact-listings/me?page=0&pageSize=10
+Authorization: Bearer {{token}}
 
 ### Buscar listing por ID
-GET {{baseUrl}}/asset-listings/1
+GET {{baseUrl}}/artifact-listings/1
 
 ### Histórico de preços de um listing
-GET {{baseUrl}}/asset-listings/1/price-history
+GET {{baseUrl}}/artifact-listings/1/price-history
 
 ### Comprar um listing (ID do listing = 1)
-POST {{baseUrl}}/asset-listings/1/purchase
-Cookie: AUTH_TOKEN={{token}}
+POST {{baseUrl}}/artifact-listings/1/purchase
+Authorization: Bearer {{token}}
 
 
 ### ====================================================================
-###  ASSET OFFERS — Criar e cancelar ofertas de venda
+###  ARTIFACT OFFERS — Criar e cancelar ofertas de venda
 ### ====================================================================
 
-### Colocar asset à venda (assetUnityId = ID da unit que você possui)
-POST {{baseUrl}}/asset-offers
+### Colocar artifact à venda (artifactUnitId = ID da unit que você possui)
+POST {{baseUrl}}/artifact-offers
 Content-Type: application/json
-Cookie: AUTH_TOKEN={{token}}
+Authorization: Bearer {{token}}
 
 {
-  "assetUnityId": 1,
+  "artifactUnitId": 1,
   "price": 200.00
 }
 
-### Cancelar oferta de venda (assetListingId = ID do listing criado acima)
-POST {{baseUrl}}/asset-offers/cancel
+### Cancelar oferta de venda (artifactListingId = ID do listing criado acima)
+POST {{baseUrl}}/artifact-offers/cancel
 Content-Type: application/json
-Cookie: AUTH_TOKEN={{token}}
+Authorization: Bearer {{token}}
 
 {
-  "assetListingId": 1
+  "artifactListingId": 1
 }
 
 
@@ -225,12 +221,12 @@ X-Admin-Token: {{adminToken}}
   "amount": "1000.00"
 }
 
-### Gerar assets semanais
-POST {{baseUrl}}/admin/assets/generate
+### Gerar artifacts semanais (pipeline automática)
+POST {{baseUrl}}/admin/artifacts/generate
 X-Admin-Token: {{adminToken}}
 
-### Criar bundle de assets manualmente
-POST {{baseUrl}}/assets/bundles
+### Criar bundle de artifacts manualmente
+POST {{baseUrl}}/artifacts/bundles
 Content-Type: application/json
 X-Admin-Token: {{adminToken}}
 
@@ -248,12 +244,11 @@ X-Admin-Token: {{adminToken}}
   ]
 }
 
-### Criar unit de asset para uma conta (distribuição manual)
-POST {{baseUrl}}/assets/1/units
+### Criar unit de artifact para uma conta (distribuição manual)
+POST {{baseUrl}}/artifacts/1/units
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "ownerAccountId": 1,
-  "token": "{{token}}"
+  "ownerAccountId": 1
 }

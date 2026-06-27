@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/admin/assets")
+@RequestMapping("/admin/artifacts")
 public class AdminArtifactGenerationController {
 
     private final ArtifactGenerationManager assetGenerationManager;
