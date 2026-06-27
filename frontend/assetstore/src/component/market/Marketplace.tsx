@@ -39,7 +39,10 @@ interface artifactListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number) {
-    const res = await fetch(`${API_URL}/artifact-listings?page=${page}&pageSize=${pageSize}`);
+    const res = await fetch(`${API_URL}/artifact-listings?page=${page}&pageSize=${pageSize}`, {
+        credentials: "include",
+        headers: authHeader()
+    });
     if (!res.ok) throw new Error();
     return res.json();
 }
