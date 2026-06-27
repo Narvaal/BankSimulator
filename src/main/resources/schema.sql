@@ -23,7 +23,7 @@ CREATE TABLE account
     public_key         TEXT           NOT NULL,
     created_at         TIMESTAMP      NOT NULL DEFAULT now(),
     updated_at         TIMESTAMP      NOT NULL DEFAULT now(),
-    next_free_asset_at TIMESTAMP      NOT NULL DEFAULT now(),
+    next_free_artifact_at TIMESTAMP      NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_account_client
         FOREIGN KEY (client_id)
@@ -65,7 +65,7 @@ CREATE TABLE transactions
     created_at          TIMESTAMP      NOT NULL DEFAULT now()
 );
 
-CREATE TABLE asset
+CREATE TABLE artifact
 (
     id           BIGSERIAL PRIMARY KEY,
     text         TEXT      NOT NULL UNIQUE,
@@ -73,102 +73,102 @@ CREATE TABLE asset
     created_at   TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE TABLE asset_bundle
+CREATE TABLE artifact_bundle
 (
     id         BIGSERIAL PRIMARY KEY,
     identifier VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP    NOT NULL DEFAULT now()
 );
 
-CREATE TABLE asset_bundle_item
+CREATE TABLE artifact_bundle_item
 (
     id        BIGSERIAL PRIMARY KEY,
     bundle_id BIGINT NOT NULL,
-    asset_id  BIGINT NOT NULL UNIQUE,
+    artifact_id  BIGINT NOT NULL UNIQUE,
 
     CONSTRAINT fk_bundle_item_bundle
         FOREIGN KEY (bundle_id)
-            REFERENCES asset_bundle (id)
+            REFERENCES artifact_bundle (id)
             ON DELETE CASCADE,
 
     CONSTRAINT fk_bundle_item_asset
-        FOREIGN KEY (asset_id)
-            REFERENCES asset (id)
+        FOREIGN KEY (artifact_id)
+            REFERENCES artifact (id)
             ON DELETE CASCADE
 );
 
-CREATE TYPE asset_unit_status AS ENUM (
+CREATE TYPE artifact_unit_status AS ENUM (
     'AVAILABLE',
     'IN_MARKET',
     'RESERVED',
     'TRANSFERRING'
     );
 
-CREATE TABLE asset_unit
+CREATE TABLE artifact_unit
 (
     id               BIGSERIAL PRIMARY KEY,
-    asset_id         BIGINT            NOT NULL,
+    artifact_id         BIGINT            NOT NULL,
     owner_account_id BIGINT            NOT NULL,
-    status           asset_unit_status NOT NULL DEFAULT 'AVAILABLE',
+    status           artifact_unit_status NOT NULL DEFAULT 'AVAILABLE',
     locked_at        TIMESTAMP         NULL,
     created_at       TIMESTAMP         NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_asset_unit_asset
-        FOREIGN KEY (asset_id)
-            REFERENCES asset (id),
+    CONSTRAINT fk_artifact_unit_asset
+        FOREIGN KEY (artifact_id)
+            REFERENCES artifact (id),
 
-    CONSTRAINT fk_asset_unit_owner
+    CONSTRAINT fk_artifact_unit_owner
         FOREIGN KEY (owner_account_id)
             REFERENCES account (id)
 );
 
-CREATE TABLE asset_transfer
+CREATE TABLE artifact_transfer
 (
     id              BIGSERIAL PRIMARY KEY,
-    asset_unit_id   BIGINT    NOT NULL,
+    artifact_unit_id   BIGINT    NOT NULL,
     from_account_id BIGINT    NOT NULL,
     to_account_id   BIGINT    NOT NULL,
     created_at      TIMESTAMP NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_asset_transfer_unit
-        FOREIGN KEY (asset_unit_id)
-            REFERENCES asset_unit (id),
+    CONSTRAINT fk_artifact_transfer_unit
+        FOREIGN KEY (artifact_unit_id)
+            REFERENCES artifact_unit (id),
 
-    CONSTRAINT fk_asset_transfer_from
+    CONSTRAINT fk_artifact_transfer_from
         FOREIGN KEY (from_account_id)
             REFERENCES account (id),
 
-    CONSTRAINT fk_asset_transfer_to
+    CONSTRAINT fk_artifact_transfer_to
         FOREIGN KEY (to_account_id)
             REFERENCES account (id)
 );
 
-CREATE TABLE asset_listing
+CREATE TABLE artifact_listing
 (
     id                BIGSERIAL PRIMARY KEY,
-    asset_unit_id     BIGINT         NOT NULL,
+    artifact_unit_id     BIGINT         NOT NULL,
     seller_account_id BIGINT         NOT NULL,
     price             NUMERIC(19, 2) NOT NULL CHECK (price > 0),
     status            VARCHAR(50)    NOT NULL,
     created_at        TIMESTAMP      NOT NULL DEFAULT now(),
     updated_at        TIMESTAMP      NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_asset_listing_unit
-        FOREIGN KEY (asset_unit_id)
-            REFERENCES asset_unit (id)
+    CONSTRAINT fk_artifact_listing_unit
+        FOREIGN KEY (artifact_unit_id)
+            REFERENCES artifact_unit (id)
             ON DELETE RESTRICT,
 
-    CONSTRAINT fk_asset_listing_seller
+    CONSTRAINT fk_artifact_listing_seller
         FOREIGN KEY (seller_account_id)
             REFERENCES account (id)
             ON DELETE RESTRICT
 );
 
-CREATE TABLE asset_price_history
+CREATE TABLE artifact_price_history
 (
     id                    BIGSERIAL PRIMARY KEY,
-    asset_listing_id      BIGINT         NOT NULL,
-    asset_unity_id        BIGINT         NOT NULL,
+    artifact_listing_id      BIGINT         NOT NULL,
+    artifact_unit_id        BIGINT         NOT NULL,
     old_price             DECIMAL(19, 2),
     new_price             DECIMAL(19, 2) NOT NULL,
     changed_by_account_id BIGINT         NOT NULL,
@@ -176,29 +176,29 @@ CREATE TABLE asset_price_history
     created_at            TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_price_history_listing
-        FOREIGN KEY (asset_listing_id)
-            REFERENCES asset_listing (id),
+        FOREIGN KEY (artifact_listing_id)
+            REFERENCES artifact_listing (id),
 
     CONSTRAINT fk_price_history_unity
-        FOREIGN KEY (asset_unity_id)
-            REFERENCES asset_unit (id),
+        FOREIGN KEY (artifact_unit_id)
+            REFERENCES artifact_unit (id),
 
     CONSTRAINT fk_price_history_account
         FOREIGN KEY (changed_by_account_id)
             REFERENCES account (id)
 );
 
-CREATE INDEX idx_asset_unit_owner
-    ON asset_unit (owner_account_id);
+CREATE INDEX idx_artifact_unit_owner
+    ON artifact_unit (owner_account_id);
 
-CREATE INDEX idx_asset_listing_status
-    ON asset_listing (status);
+CREATE INDEX idx_artifact_listing_status
+    ON artifact_listing (status);
 
-CREATE INDEX idx_asset_listing_unit
-    ON asset_listing (asset_unit_id);
+CREATE INDEX idx_artifact_listing_unit
+    ON artifact_listing (artifact_unit_id);
 
-CREATE INDEX idx_asset_transfer_unit
-    ON asset_transfer (asset_unit_id);
+CREATE INDEX idx_artifact_transfer_unit
+    ON artifact_transfer (artifact_unit_id);
 
 CREATE TABLE credential
 (

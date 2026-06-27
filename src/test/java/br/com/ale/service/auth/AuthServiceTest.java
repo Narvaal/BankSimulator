@@ -43,11 +43,11 @@ class AuthServiceTest {
         try (var conn = provider.getConnection();
              var stmt = conn.createStatement()) {
 
-            stmt.execute("DELETE FROM asset_price_history");
-            stmt.execute("DELETE FROM asset_transfer");
-            stmt.execute("DELETE FROM asset_listing");
-            stmt.execute("DELETE FROM asset_unit");
-            stmt.execute("DELETE FROM asset");
+            stmt.execute("DELETE FROM artifact_price_history");
+            stmt.execute("DELETE FROM artifact_transfer");
+            stmt.execute("DELETE FROM artifact_listing");
+            stmt.execute("DELETE FROM artifact_unit");
+            stmt.execute("DELETE FROM artifact");
             stmt.execute("DELETE FROM transactions");
             stmt.execute("DELETE FROM account");
             stmt.execute("DELETE FROM credential");

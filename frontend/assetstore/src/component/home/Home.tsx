@@ -6,26 +6,28 @@ import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import { API_URL } from "../../config";
 import { authHeader } from "../../auth";
+import {useNavigate} from "react-router-dom";
+import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
 
 /* ===================== TYPES ===================== */
 
-interface AssetView {
-    assetUnityId: number;
-    assetId: number;
-    assetText: string;
+interface ArtifactView {
+    artifactUnitId: number;
+    artifactId: number;
+    artifactText: string;
     createdAt: string;
 }
 
-interface AssetPriceHistory {
-    assetId: number;
-    assetUnityId: number;
+interface ArtifactPriceHistory {
+    artifactId: number;
+    artifactUnitId: number;
     oldPrice: number;
     newPrice: number;
     createdAt: string;
 }
 
-interface AssetPageView {
-    items: AssetView[];
+interface ArtifactPageView {
+    items: ArtifactView[];
     page: number,
     pageSize: number,
     totalPages: number,
@@ -38,10 +40,10 @@ async function getAssetUnits(
     ownerId: number,
     page: number,
     pageSize: number
-): Promise<AssetPageView> {
+): Promise<ArtifactPageView> {
 
     const res = await fetch(
-        `${API_URL}/asset-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
+        `${API_URL}/artifact-units?ownerId=${ownerId}&page=${page}&pageSize=${pageSize}`,
         {credentials: "include", headers: authHeader()}
     );
 
@@ -49,20 +51,20 @@ async function getAssetUnits(
     return res.json();
 }
 
-async function getAssetPriceHistory(assetUnityId: number): Promise<AssetPriceHistory[]> {
+async function getArtifactPriceHistory(artifactUnitId: number): Promise<ArtifactPriceHistory[]> {
     const res = await fetch(
-        `${API_URL}/assets/${assetUnityId}/price-history`,
+        `${API_URL}/artifacts/${artifactUnitId}/price-history`,
         {credentials: "include"}
     );
 
-    if (!res.ok) throw new Error("Asset price history not found");
+    if (!res.ok) throw new Error("Artifact price history not found");
 
     return res.json();
 }
 
-async function postAssetOffer(assetUnityId: number, price: number) {
+async function postAssetOffer(artifactUnitId: number, price: number) {
     const res = await fetch(
-        `${API_URL}/asset-offers`,
+        `${API_URL}/artifact-offers`,
         {
             method: "POST",
             credentials: "include",
@@ -70,11 +72,11 @@ async function postAssetOffer(assetUnityId: number, price: number) {
                 "Content-Type": "application/json",
                 ...authHeader()
             },
-            body: JSON.stringify({assetUnityId, price})
+            body: JSON.stringify({artifactUnitId, price})
         }
     );
 
-    if (!res.ok) throw new Error("Asset offer not valid");
+    if (!res.ok) throw new Error("Artifact offer not valid");
     return res.json();
 }
 
@@ -83,18 +85,18 @@ async function postAssetOffer(assetUnityId: number, price: number) {
 export default function Home() {
 
     const {data: account, isLoading: authLoading, error: authError} = useAccount();
-
+    const navigate = useNavigate();
     const [collapsed, setCollapsed] = useState(() => {
         const saved = localStorage.getItem("sidebar-collapsed");
         return saved ? JSON.parse(saved) : false;
     });
 
-    const [assets, setAssets] = useState<AssetPageView | null>(null);
+    const [assets, setAssets] = useState<ArtifactPageView | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [selectedAsset, setSelectedAsset] = useState<AssetView | null>(null);
-    const [priceHistory, setPriceHistory] = useState<AssetPriceHistory[]>([]);
+    const [selectedAsset, setSelectedAsset] = useState<ArtifactView | null>(null);
+    const [priceHistory, setPriceHistory] = useState<ArtifactPriceHistory[]>([]);
     const [price, setPrice] = useState("");
     const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -119,7 +121,7 @@ export default function Home() {
                 setLoading(true);
                 setError(null);
 
-                const units: AssetPageView = await getAssetUnits(accountId, page, pageSize);
+                const units: ArtifactPageView = await getAssetUnits(accountId, page, pageSize);
 
                 if (!cancelled) setAssets(units);
 
@@ -144,16 +146,16 @@ export default function Home() {
 
     /* ===================== OPEN ASSET ===================== */
 
-    async function openAsset(asset: AssetView) {
+    async function openAsset(artifact: ArtifactView) {
 
         try {
 
-            setSelectedAsset(asset);
+            setSelectedAsset(artifact);
             setLoadingHistory(true);
             setMessage(null);
             setPrice("");
 
-            const history = await getAssetPriceHistory(asset.assetUnityId);
+            const history = await getArtifactPriceHistory(artifact.artifactUnitId);
 
             setPriceHistory(history);
 
@@ -194,7 +196,7 @@ export default function Home() {
 
         try {
 
-            await postAssetOffer(selectedAsset.assetUnityId, numericPrice);
+            await postAssetOffer(selectedAsset.artifactUnitId, numericPrice);
 
             setAssets((prev) => {
 
@@ -203,7 +205,7 @@ export default function Home() {
                 return {
                     ...prev,
                     items: prev.items.filter(
-                        (a) => a.assetUnityId !== selectedAsset.assetUnityId
+                        (a) => a.artifactUnitId !== selectedAsset.artifactUnitId
                     )
                 };
 
@@ -211,7 +213,7 @@ export default function Home() {
 
             setMessage({
                 type: "success",
-                text: "Asset listed successfully"
+                text: "Artifact listed successfully"
             });
 
             setPrice("");
@@ -225,7 +227,7 @@ export default function Home() {
 
             setMessage({
                 type: "error",
-                text: e.message || "Failed to list asset"
+                text: e.message || "Failed to list artifact"
             });
 
         }
@@ -237,8 +239,10 @@ export default function Home() {
         return <div className="p-10 text-center">Checking session...</div>;
     }
 
-    if (authError || !account) {
-        return <div className="p-10 text-center text-red-500">Not authenticated</div>;
+    if (authError || (!authLoading && !account)) {
+        return (
+            <AuthRequiredModal onClose={() => navigate(-1)}/>
+        );
     }
 
     /* ===================== UI ===================== */
@@ -273,23 +277,23 @@ export default function Home() {
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
-                            {assets.items.map((asset) => (
+                            {assets.items.map((artifact) => (
 
                                 <div
-                                    key={asset.assetUnityId}
-                                    onClick={() => openAsset(asset)}
+                                    key={artifact.artifactUnitId}
+                                    onClick={() => openAsset(artifact)}
                                     className="rounded-xl border border-slate-200 bg-white shadow-sm
                         hover:shadow-md hover:scale-[1.02] transition
                         p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
                                 >
 
                         <span className="text-slate-800 font-semibold">
-                            {asset.assetText}
+                            {artifact.artifactText}
                         </span>
 
                                     <div className="mt-1 text-xs text-slate-500">
-                                        Asset #{asset.assetId} • Unity
-                                        #{asset.assetUnityId} • {new Date(asset.createdAt).toLocaleDateString()}
+                                        Artifact #{artifact.artifactId} • Unity
+                                        #{artifact.artifactUnitId} • {new Date(artifact.createdAt).toLocaleDateString()}
                                     </div>
 
                                 </div>
@@ -321,16 +325,16 @@ export default function Home() {
                     <div className="bg-white rounded-2xl w-105 p-6 shadow-xl">
 
                         <h2 className="text-xl font-bold mb-2">
-                            Sell Asset
+                            Sell Artifact
                         </h2>
 
                         <div className="text-left mb-4">
                             <div className="text-slate-800 font-semibold">
-                                {selectedAsset.assetText}
+                                {selectedAsset.artifactText}
                             </div>
                             <div className="text-xs text-slate-500">
-                                Asset #{selectedAsset.assetId} • Unity
-                                #{selectedAsset.assetUnityId} • {new Date(selectedAsset.createdAt).toLocaleDateString()}
+                                Artifact #{selectedAsset.artifactId} • Unity
+                                #{selectedAsset.artifactUnitId} • {new Date(selectedAsset.createdAt).toLocaleDateString()}
                             </div>
                         </div>
 

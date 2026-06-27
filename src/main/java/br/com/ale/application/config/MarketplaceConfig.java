@@ -4,11 +4,11 @@ import br.com.ale.application.marketplace.query.*;
 import br.com.ale.application.marketplace.usecase.*;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.account.AccountService;
-import br.com.ale.service.asset.*;
+import br.com.ale.service.artifact.*;
 import br.com.ale.service.auth.JwtService;
-import br.com.ale.service.marketplace.AssetPriceHistoryService;
-import br.com.ale.service.marketplace.AssetPurchaseService;
-import br.com.ale.service.webhook.AssetWebhookNotifier;
+import br.com.ale.service.marketplace.ArtifactPriceHistoryService;
+import br.com.ale.service.marketplace.ArtifactPurchaseService;
+import br.com.ale.service.webhook.ArtifactWebhookNotifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,187 +17,187 @@ import org.springframework.context.annotation.Configuration;
 public class MarketplaceConfig {
 
     @Bean
-    public AssetListingService assetListingService(ConnectionProvider connectionProvider) {
-        return new AssetListingService(connectionProvider);
+    public ArtifactListingService artifactListingService(ConnectionProvider connectionProvider) {
+        return new ArtifactListingService(connectionProvider);
     }
 
     @Bean
-    public AssetService assetService(ConnectionProvider connectionProvider) {
-        return new AssetService(connectionProvider);
+    public ArtifactService assetService(ConnectionProvider connectionProvider) {
+        return new ArtifactService(connectionProvider);
     }
 
     @Bean
-    public AssetGenerationService assetGenerationService() {
-        return new AssetGenerationService();
+    public ArtifactGenerationService assetGenerationService() {
+        return new ArtifactGenerationService();
     }
 
     @Bean
-    public AssetBundleService assetBundleService(ConnectionProvider connectionProvider) {
-        return new AssetBundleService(connectionProvider);
+    public ArtifactBundleService artifactBundleService(ConnectionProvider connectionProvider) {
+        return new ArtifactBundleService(connectionProvider);
     }
 
     @Bean
-    public AssetWebhookNotifier assetWebhookNotifier(
-            @Value("${webhook.asset.url:}") String webhookUrl,
-            @Value("${webhook.asset.enabled:false}") boolean enabled
+    public ArtifactWebhookNotifier artifactWebhookNotifier(
+            @Value("${webhook.artifact.url:}") String webhookUrl,
+            @Value("${webhook.artifact.enabled:false}") boolean enabled
     ) {
-        return new AssetWebhookNotifier(webhookUrl, enabled);
+        return new ArtifactWebhookNotifier(webhookUrl, enabled);
     }
 
     @Bean
-    public AssetGenerationManager assetGenerationManager(
-            AssetGenerationService assetGenerationService,
-            AssetBundleService assetBundleService
+    public ArtifactGenerationManager assetGenerationManager(
+            ArtifactGenerationService assetGenerationService,
+            ArtifactBundleService artifactBundleService
     ) {
-        return new AssetGenerationManager(assetGenerationService, assetBundleService);
+        return new ArtifactGenerationManager(assetGenerationService, artifactBundleService);
     }
 
     @Bean
-    public AssetUnityService assetUnityService(
+    public ArtifactUnitService artifactUnitService(
             ConnectionProvider connectionProvider,
-            AssetWebhookNotifier webhookNotifier
+            ArtifactWebhookNotifier webhookNotifier
     ) {
-        return new AssetUnityService(connectionProvider, webhookNotifier);
+        return new ArtifactUnitService(connectionProvider, webhookNotifier);
     }
 
     @Bean
-    public GetAssetListingByIdUseCase getAssetListingByIdUseCase(
-            AssetListingService assetListingService
+    public GetArtifactListingByIdUseCase getArtifactListingByIdUseCase(
+            ArtifactListingService artifactListingService
     ) {
-        return new GetAssetListingByIdUseCase(assetListingService);
+        return new GetArtifactListingByIdUseCase(artifactListingService);
     }
 
     @Bean
-    public GetAssetByIdUseCase getAssetByIdUseCase(AssetService assetService) {
-        return new GetAssetByIdUseCase(assetService);
+    public GetArtifactByIdUseCase getArtifactByIdUseCase(ArtifactService assetService) {
+        return new GetArtifactByIdUseCase(assetService);
     }
 
     @Bean
-    public ListAssetsUseCase listAssetsUseCase(AssetService assetService) {
-        return new ListAssetsUseCase(assetService);
+    public ListArtifactsUseCase listArtifactsUseCase(ArtifactService assetService) {
+        return new ListArtifactsUseCase(assetService);
     }
 
     @Bean
-    public ListAssetBundlesUseCase listAssetBundlesUseCase(AssetBundleService assetBundleService) {
-        return new ListAssetBundlesUseCase(assetBundleService);
+    public ListArtifactBundlesUseCase listArtifactBundlesUseCase(ArtifactBundleService artifactBundleService) {
+        return new ListArtifactBundlesUseCase(artifactBundleService);
     }
 
     @Bean
-    public ListAssetBundleItemsUseCase listAssetBundleItemsUseCase(
-            AssetBundleService assetBundleService
+    public ListArtifactBundleItemsUseCase listArtifactBundleItemsUseCase(
+            ArtifactBundleService artifactBundleService
     ) {
-        return new ListAssetBundleItemsUseCase(assetBundleService);
+        return new ListArtifactBundleItemsUseCase(artifactBundleService);
     }
 
     @Bean
-    public CreateAssetBundleUseCase createAssetBundleUseCase(
-            AssetBundleService assetBundleService
+    public CreateArtifactBundleUseCase createArtifactBundleUseCase(
+            ArtifactBundleService artifactBundleService
     ) {
-        return new CreateAssetBundleUseCase(assetBundleService);
+        return new CreateArtifactBundleUseCase(artifactBundleService);
     }
 
     @Bean
-    public ListActiveAssetListingsUseCase listActiveAssetListingsUseCase(
+    public ListActiveArtifactListingsUseCase listActiveArtifactListingsUseCase(
             AccountService accountService,
-            AssetListingService assetListingService,
+            ArtifactListingService artifactListingService,
             JwtService jwtService
     ) {
-        return new ListActiveAssetListingsUseCase(accountService, assetListingService, jwtService);
+        return new ListActiveArtifactListingsUseCase(accountService, artifactListingService, jwtService);
     }
 
     @Bean
-    public ListAssetListingsByOwnerUseCase listAssetListingsByOwnerUseCase(
+    public ListArtifactListingsByOwnerUseCase listArtifactListingsByOwnerUseCase(
             AccountService accountService,
-            AssetListingService assetListingService,
+            ArtifactListingService artifactListingService,
             JwtService jwtService
     ) {
-        return new ListAssetListingsByOwnerUseCase(accountService,
-                assetListingService, jwtService);
+        return new ListArtifactListingsByOwnerUseCase(accountService,
+                artifactListingService, jwtService);
     }
 
     @Bean
-    public ListAssetUnitsByOwnerUseCase listAssetUnitsByOwnerUseCase(
-            AssetUnityService assetUnityService
+    public ListArtifactUnitsByOwnerUseCase listArtifactUnitsByOwnerUseCase(
+            ArtifactUnitService artifactUnitService
     ) {
-        return new ListAssetUnitsByOwnerUseCase(assetUnityService);
+        return new ListArtifactUnitsByOwnerUseCase(artifactUnitService);
     }
 
     @Bean
-    public AssetPurchaseService assetPurchaseService(
+    public ArtifactPurchaseService artifactPurchaseService(
             ConnectionProvider connectionProvider,
-            AssetWebhookNotifier webhookNotifier
+            ArtifactWebhookNotifier webhookNotifier
     ) {
-        return new AssetPurchaseService(connectionProvider, webhookNotifier);
+        return new ArtifactPurchaseService(connectionProvider, webhookNotifier);
     }
 
     @Bean
-    public AssetPriceHistoryService assetPriceHistoryService(
+    public ArtifactPriceHistoryService artifactPriceHistoryService(
             ConnectionProvider connectionProvider
     ) {
-        return new AssetPriceHistoryService(connectionProvider);
+        return new ArtifactPriceHistoryService(connectionProvider);
     }
 
     @Bean
-    public PurchaseAssetUseCase purchaseAssetUseCase(
+    public PurchaseArtifactUseCase purchaseArtifactUseCase(
             AccountService accountService,
-            AssetListingService assetListingService,
-            AssetPurchaseService assetPurchaseService,
-            AssetPriceHistoryService assetPriceHistoryService,
+            ArtifactListingService artifactListingService,
+            ArtifactPurchaseService artifactPurchaseService,
+            ArtifactPriceHistoryService artifactPriceHistoryService,
             JwtService jwtService
     ) {
-        return new PurchaseAssetUseCase(
+        return new PurchaseArtifactUseCase(
                 accountService,
-                assetListingService,
-                assetPurchaseService,
-                assetPriceHistoryService,
+                artifactListingService,
+                artifactPurchaseService,
+                artifactPriceHistoryService,
                 jwtService
         );
     }
 
     @Bean
-    public ListAssetPriceHistoryByListingUseCase listAssetPriceHistoryByListingUseCase(
-            AssetPriceHistoryService assetPriceHistoryService
+    public ListArtifactPriceHistoryByListingUseCase listArtifactPriceHistoryByListingUseCase(
+            ArtifactPriceHistoryService artifactPriceHistoryService
     ) {
-        return new ListAssetPriceHistoryByListingUseCase(assetPriceHistoryService);
+        return new ListArtifactPriceHistoryByListingUseCase(artifactPriceHistoryService);
     }
 
     @Bean
-    public ListAssetPriceHistoryByAssetIdUseCase listAssetPriceHistoryByAssetIdUseCase(
-            AssetPriceHistoryService assetPriceHistoryService
+    public ListArtifactPriceHistoryByArtifactIdUseCase listArtifactPriceHistoryByArtifactIdUseCase(
+            ArtifactPriceHistoryService artifactPriceHistoryService
     ) {
-        return new ListAssetPriceHistoryByAssetIdUseCase(assetPriceHistoryService);
+        return new ListArtifactPriceHistoryByArtifactIdUseCase(artifactPriceHistoryService);
     }
 
     @Bean
-    public CreateAssetOfferUseCase createAssetOfferUseCase(
-            AssetListingService assetListingService,
+    public CreateArtifactOfferUseCase createArtifactOfferUseCase(
+            ArtifactListingService artifactListingService,
             AccountService accountService,
             JwtService jwtService
     ) {
-        return new CreateAssetOfferUseCase(
-                assetListingService,
+        return new CreateArtifactOfferUseCase(
+                artifactListingService,
                 accountService,
                 jwtService
         );
     }
 
     @Bean
-    public CreateAssetUnityForAccountUseCase createAssetUnityForAccountUseCase(
-            AssetUnityService assetUnityService,
+    public CreateArtifactUnitForAccountUseCase createArtifactUnitForAccountUseCase(
+            ArtifactUnitService artifactUnitService,
             JwtService jwtService) {
-        return new CreateAssetUnityForAccountUseCase(
-                assetUnityService,
+        return new CreateArtifactUnitForAccountUseCase(
+                artifactUnitService,
                 jwtService
         );
     }
 
     @Bean
-    public CancelAssetOfferUseCase cancelAssetOfferUseCase(
-            AssetListingService assetListingService,
+    public CancelArtifactOfferUseCase cancelArtifactOfferUseCase(
+            ArtifactListingService artifactListingService,
             JwtService jwtService
     ) {
-        return new CancelAssetOfferUseCase(
-                assetListingService,
+        return new CancelArtifactOfferUseCase(
+                artifactListingService,
                 jwtService
         );
     }

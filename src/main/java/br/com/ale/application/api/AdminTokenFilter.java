@@ -59,6 +59,6 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         }
 
         return "POST".equalsIgnoreCase(request.getMethod())
-                && "/assets/bundles".equals(path);
+                && "/artifacts/bundles".equals(path);
     }
 }

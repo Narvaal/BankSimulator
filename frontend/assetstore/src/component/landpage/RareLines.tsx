@@ -195,7 +195,7 @@ const RareLines: React.FC = () => {
                 {"\n\n"}
                 {"  "}
                 <span className="text-blue-400">public</span>{" "}
-                <span className="text-white">Asset</span>{" "}
+                <span className="text-white">Artifact</span>{" "}
                 <span className="text-green-400">processOwnership</span>
                 (User u) {"{"}
                 {"\n    "}
@@ -207,7 +207,7 @@ const RareLines: React.FC = () => {
                 {"\n    }"}
                 {"\n    "}
                 <span className="text-blue-400">return</span>{" "}
-                <span className="text-gray-300">repo.save(new Asset(u));</span>
+                <span className="text-gray-300">repo.save(new Artifact(u));</span>
                 {"\n  }"}
                 {"\n"}
                 {"}"}
@@ -227,11 +227,11 @@ const RareLines: React.FC = () => {
             </span>
 
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
-              A Secure and Distributed Asset Marketplace
+              A Secure and Distributed Artifact Marketplace
             </h2>
 
             <p className="text-gray-400 text-lg leading-relaxed">
-              Rare Lines is a distributed asset management and trading system engineered
+              Rare Lines is a distributed artifact management and trading system engineered
               to enforce strict ownership integrity and transactional reliability.
             </p>
           </div>
@@ -240,7 +240,7 @@ const RareLines: React.FC = () => {
             {[
               {
                 title: "Ownership & Consistency",
-                desc: "Each asset is modeled as an individual unit, ensuring atomic and traceable operations."
+                desc: "Each artifact is modeled as an individual unit, ensuring atomic and traceable operations."
               },
               {
                 title: "Marketplace Engine",

@@ -7,7 +7,8 @@ import {useAccount} from "../auth/Auth";
 import {useQueryClient} from "@tanstack/react-query";
 import {API_URL} from "../../config";
 import {authHeader} from "../../auth";
-import {Link, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
+import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -17,7 +18,7 @@ interface Bundle {
     createdAt: string
 }
 
-interface Asset {
+interface Artifact {
     id: number
     text: string
     totalSupply: number
@@ -28,25 +29,25 @@ interface Asset {
 /* ===================== API ===================== */
 
 async function getBundles(page: number, size: number): Promise<Bundle[]> {
-    const res = await fetch(`${API_URL}/assets/bundles?page=${page}&size=${size}`);
+    const res = await fetch(`${API_URL}/artifacts/bundles?page=${page}&size=${size}`);
     if (!res.ok) throw new Error("Failed to load bundles");
     return res.json();
 }
 
-async function getBundleAssets(id: string): Promise<Asset[]> {
-    const res = await fetch(`${API_URL}/assets/bundles/${id}/items?page=0&size=20`);
+async function getBundleAssets(id: string): Promise<Artifact[]> {
+    const res = await fetch(`${API_URL}/artifacts/bundles/${id}/items?page=0&size=20`);
     if (!res.ok) throw new Error("Failed to load assets of bundle");
     return res.json();
 }
 
-async function claimAsset(assetId: number) {
-    const res = await fetch(`${API_URL}/assets/claim`, {
+async function claimAsset(artifactId: number) {
+    const res = await fetch(`${API_URL}/artifacts/claim`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json", ...authHeader()},
-        body: JSON.stringify({assetId})
+        body: JSON.stringify({artifactId})
     });
-    if (!res.ok) throw new Error("Failed to claim asset");
+    if (!res.ok) throw new Error("Failed to claim artifact");
     return res.json();
 }
 
@@ -57,7 +58,6 @@ function Reward() {
 
     const {data: account} = useAccount();
     const queryClient = useQueryClient();
-    const navigate = useNavigate();
 
     /* ===================== UI STATE ===================== */
 
@@ -76,7 +76,7 @@ function Reward() {
     /* ===================== DATA STATE ===================== */
 
     const [bundles, setBundles] = useState<Bundle[]>([]);
-    const [bundleAssets, setBundleAssets] = useState<Record<string, Asset[]>>({});
+    const [bundleAssets, setBundleAssets] = useState<Record<string, Artifact[]>>({});
     const [openBundles, setOpenBundles] = useState<Record<string, boolean>>({});
 
 
@@ -91,9 +91,10 @@ function Reward() {
 
     /* ===================== MODAL STATE ===================== */
 
-    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+    const [selectedAsset, setSelectedAsset] = useState<Artifact | null>(null);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [loadingClaim, setLoadingClaim] = useState(false);
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
 
     /* ===================== MODAL TIME ===================== */
@@ -234,9 +235,9 @@ function Reward() {
 
     /* ===================== MODAL CONTROLS ===================== */
 
-    function openAsset(asset: Asset) {
+    function openAsset(artifact: Artifact) {
         setMessage(null);
-        setSelectedAsset(asset);
+        setSelectedAsset(artifact);
     }
 
     function closeModal() {
@@ -261,7 +262,7 @@ function Reward() {
         if (!selectedAsset) return;
 
         if (!account) {
-            navigate("/login");
+            setAuthModalOpen(true);
             return;
         }
 
@@ -276,23 +277,23 @@ function Reward() {
             setBundleAssets(prev => {
                 const updated = {...prev};
                 for (const bundleId in updated) {
-                    updated[bundleId] = updated[bundleId].map(asset => {
-                        if (asset.id === selectedAsset.id) {
-                            return {...asset, totalSupply: Math.max(0, asset.totalSupply - 1)};
+                    updated[bundleId] = updated[bundleId].map(artifact => {
+                        if (artifact.id === selectedAsset.id) {
+                            return {...artifact, totalSupply: Math.max(0, artifact.totalSupply - 1)};
                         }
-                        return asset;
+                        return artifact;
                     });
                 }
                 return updated;
             });
 
-            setMessage({type: "success", text: "Asset claimed successfully!"});
+            setMessage({type: "success", text: "Artifact claimed successfully!"});
 
             setTimeout(() => closeModal(), 1500);
 
         } catch {
 
-            setMessage({type: "error", text: "Failed to claim asset."});
+            setMessage({type: "error", text: "Failed to claim artifact."});
 
         } finally {
             setLoadingClaim(false);
@@ -366,7 +367,7 @@ function Reward() {
 
                         <div>
                             <p className="text-sm text-yellow-800 font-medium mb-1">
-                                Each asset bundle is automatically generated at a predefined time.
+                                Each artifact bundle is automatically generated at a predefined time.
                                 Once available, assets can be claimed until the supply runs out.
                             </p>
                             <p className="text-xs text-yellow-700">
@@ -446,24 +447,24 @@ function Reward() {
 
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
 
-                                            {bundleAssets[bundle.id]?.map((asset, index) => {
+                                            {bundleAssets[bundle.id]?.map((artifact, index) => {
 
-                                                const disabled = asset.totalSupply === 0;
+                                                const disabled = artifact.totalSupply === 0;
 
                                                 return (
 
                                                     <div
-                                                        key={`${bundle.id}-${asset.id}-${index}`}
-                                                        onClick={() => !disabled && openAsset(asset)}
+                                                        key={`${bundle.id}-${artifact.id}-${index}`}
+                                                        onClick={() => !disabled && openAsset(artifact)}
                                                         className={`border rounded-lg p-3 transition
                                                         ${disabled
                                                             ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
                                                             : "cursor-pointer bg-slate-50 border-slate-200 hover:bg-slate-100"
                                                         }`}
                                                     >
-                                                        <p className="font-medium">{asset.text}</p>
+                                                        <p className="font-medium">{artifact.text}</p>
                                                         <p className="text-xs">
-                                                            {disabled ? "Sold Out" : `Supply: ${asset.totalSupply}`}
+                                                            {disabled ? "Sold Out" : `Supply: ${artifact.totalSupply}`}
                                                         </p>
                                                     </div>
 
@@ -494,6 +495,8 @@ function Reward() {
             </main>
 
 
+            {authModalOpen && <AuthRequiredModal onClose={() => setAuthModalOpen(false)}/>}
+
             {/* ===================== MODAL ===================== */}
 
             {selectedAsset && (
@@ -502,7 +505,7 @@ function Reward() {
 
                     <div className="bg-white rounded-2xl p-7 w-96 shadow-2xl border border-slate-200">
 
-                        <h2 className="text-2xl font-bold mb-5 text-slate-800">Claim Asset</h2>
+                        <h2 className="text-2xl font-bold mb-5 text-slate-800">Claim Artifact</h2>
 
                         {/* ASSET INFO */}
 

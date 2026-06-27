@@ -43,27 +43,28 @@ public class AuthCookieService {
     }
 
     public String extractToken(HttpServletRequest request) {
+        String token = extractTokenOrNull(request);
+        if (token == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        return token;
+    }
+
+    public String extractTokenOrNull(HttpServletRequest request) {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization != null && authorization.startsWith("Bearer ")) {
             return authorization.substring(7).trim();
         }
 
         Cookie[] cookies = request.getCookies();
-
-        if (cookies == null)
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        if (cookies == null) return null;
 
         for (Cookie cookie : cookies) {
             if (AUTH_COOKIE_NAME.equals(cookie.getName())) {
                 String token = cookie.getValue();
-
-                if (token == null || token.isBlank())
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-
-                return token;
+                return (token == null || token.isBlank()) ? null : token;
             }
         }
 
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        return null;
     }
 }

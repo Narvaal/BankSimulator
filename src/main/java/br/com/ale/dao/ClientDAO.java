@@ -299,7 +299,7 @@ public class ClientDAO {
                        balance,
                        status,
                        public_key,
-                        next_free_asset_at
+                        next_free_artifact_at
                   FROM account
                  WHERE client_id = ?
                 """;
@@ -322,7 +322,7 @@ public class ClientDAO {
                                     rs.getBigDecimal("balance"),
                                     AccountStatus.valueOf(rs.getString("status")),
                                     rs.getString("public_key"),
-                                    rs.getTimestamp("next_free_asset_at").toInstant()
+                                    rs.getTimestamp("next_free_artifact_at").toInstant()
                             )
                     );
                 }

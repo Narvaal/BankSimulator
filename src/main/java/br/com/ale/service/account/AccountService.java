@@ -139,12 +139,12 @@ public class AccountService {
         }
     }
 
-    public Optional<Instant> tryClaimAssetUnity(String accountNumber) {
+    public Optional<Instant> tryClaimArtifactUnit(String accountNumber) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return accountDAO.tryClaimAssetUnity(conn, accountNumber);
+            return accountDAO.tryClaimArtifactUnit(conn, accountNumber);
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while selecting account to check free asset" +
+                    "Service error while selecting account to check free artifact" +
                             "[accountNumber=" + accountNumber + "]",
                     e
             );
@@ -156,7 +156,7 @@ public class AccountService {
             return accountDAO.selectNextClaimById(conn, accountNumber);
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while selecting account to check free asset" +
+                    "Service error while selecting account to check free artifact" +
                             "[accountNumber=" + accountNumber + "]",
                     e
             );

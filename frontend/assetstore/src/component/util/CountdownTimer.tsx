@@ -37,7 +37,7 @@ export default function CountdownTimer({targetDate}: CountdownTimerProps) {
         <div
             className="flex flex-col items-center justify-center w-full max-w-sm mx-auto">
             <span className="text-slate-800 text-sm">
-                Next Free Asset
+                Next Free Artifact
             </span>
 
             {state.finished ? (

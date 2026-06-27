@@ -1,16 +1,16 @@
 import {Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {useMemo} from "react";
 
-interface AssetPriceHistory {
-    assetId: number;
-    assetUnityId: number;
+interface ArtifactPriceHistory {
+    artifactId: number;
+    artifactUnitId: number;
     oldPrice: number;
     newPrice: number;
     createdAt: string;
 }
 
 interface Props {
-    priceHistory?: AssetPriceHistory[];
+    priceHistory?: ArtifactPriceHistory[];
 }
 
 export default function PriceHistoryChart({priceHistory = []}: Props) {

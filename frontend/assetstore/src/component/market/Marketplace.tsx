@@ -6,13 +6,14 @@ import Pagination from "../util/Pagination.tsx";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {API_URL} from "../../config";
 import {authHeader} from "../../auth";
-import {Link, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
+import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
 
 /* ===================== TYPES ===================== */
 
-interface AssetPriceHistory {
-    assetId: number;
-    assetUnityId: number;
+interface ArtifactPriceHistory {
+    artifactId: number;
+    artifactUnitId: number;
     oldPrice: number;
     newPrice: number;
     createdAt: string;
@@ -20,14 +21,14 @@ interface AssetPriceHistory {
 
 interface ListingView {
     id: number;
-    assetUnityId: number;
-    assetId: number;
-    assetText: string;
+    artifactUnitId: number;
+    artifactId: number;
+    artifactText: string;
     price: number;
     createdAt: string;
 }
 
-interface assetListingPageView {
+interface artifactListingPageView {
     items: ListingView[]
     page: number;
     pageSize: number;
@@ -38,13 +39,13 @@ interface assetListingPageView {
 /* ===================== API ===================== */
 
 async function getListings(page: number, pageSize: number) {
-    const res = await fetch(`${API_URL}/asset-listings?page=${page}&pageSize=${pageSize}`);
+    const res = await fetch(`${API_URL}/artifact-listings?page=${page}&pageSize=${pageSize}`);
     if (!res.ok) throw new Error();
     return res.json();
 }
 
 async function getUserListings(page: number, pageSize: number) {
-    const res = await fetch(`${API_URL}/asset-listings/me?page=${page}&pageSize=${pageSize}`, {
+    const res = await fetch(`${API_URL}/artifact-listings/me?page=${page}&pageSize=${pageSize}`, {
         credentials: "include",
         headers: authHeader()
     });
@@ -52,25 +53,25 @@ async function getUserListings(page: number, pageSize: number) {
     return res.json();
 }
 
-async function cancelOffer(assetListingId: number) {
-    const res = await fetch(`${API_URL}/asset-offers/cancel`, {
+async function cancelOffer(artifactListingId: number) {
+    const res = await fetch(`${API_URL}/artifact-offers/cancel`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json", ...authHeader()},
-        body: JSON.stringify({assetListingId})
+        body: JSON.stringify({artifactListingId})
     });
     if (!res.ok) throw new Error();
 }
 
-async function getAssetPriceHistory(assetUnityId: number) {
-    const res = await fetch(`${API_URL}/assets/${assetUnityId}/price-history`);
+async function getArtifactPriceHistory(artifactUnitId: number) {
+    const res = await fetch(`${API_URL}/artifacts/${artifactUnitId}/price-history`);
     if (!res.ok) throw new Error();
     return res.json();
 }
 
-async function buyAssetUnity(assetListingId: number) {
+async function buyArtifactUnit(artifactListingId: number) {
     const res = await fetch(
-        `${API_URL}/asset-listings/${assetListingId}/purchase`,
+        `${API_URL}/artifact-listings/${artifactListingId}/purchase`,
         {method: "POST", credentials: "include", headers: authHeader()}
     );
     if (!res.ok) throw new Error();
@@ -82,14 +83,13 @@ async function buyAssetUnity(assetListingId: number) {
 function Marketplace() {
 
     const {data: account} = useAccount();
-    const navigate = useNavigate();
 
     const [mode, setMode] = useState<"market" | "user">("market");
 
-    const [listings, setListings] = useState<assetListingPageView | null>(null);
+    const [listings, setListings] = useState<artifactListingPageView | null>(null);
     const [selectedListing, setSelectedListing] = useState<ListingView | null>(null);
 
-    const [priceHistory, setPriceHistory] = useState<AssetPriceHistory[]>([]);
+    const [priceHistory, setPriceHistory] = useState<ArtifactPriceHistory[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [page, setPage] = useState(0);
@@ -107,6 +107,8 @@ function Marketplace() {
         type: "success" | "error";
         text: string;
     } | null>(null);
+
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
     /* ===================== LOAD ===================== */
 
@@ -162,7 +164,7 @@ function Marketplace() {
         setMessage(null);
 
         try {
-            const history = await getAssetPriceHistory(listing.assetUnityId);
+            const history = await getArtifactPriceHistory(listing.artifactUnitId);
             setPriceHistory(history);
         } finally {
             setLoadingHistory(false);
@@ -175,7 +177,7 @@ function Marketplace() {
         if (!selectedListing) return;
 
         if (!account) {
-            navigate("/login");
+            setAuthModalOpen(true);
             return;
         }
 
@@ -185,7 +187,7 @@ function Marketplace() {
         }
 
         try {
-            await buyAssetUnity(selectedListing.id);
+            await buyArtifactUnit(selectedListing.id);
             setMessage({type: "success", text: "Purchase successful"});
 
             setListings(prev => ({
@@ -258,7 +260,7 @@ function Marketplace() {
                         </button>
 
                         <button
-                            onClick={() => account ? handleSwitch("user") : navigate("/login")}
+                            onClick={() => account ? handleSwitch("user") : setAuthModalOpen(true)}
                             className={`relative z-10 flex-1 py-2 text-sm font-semibold transition ${
                                 mode === "user" ? "text-white" : "text-slate-500"
                             }`}
@@ -287,9 +289,9 @@ function Marketplace() {
                                 hover:shadow-md hover:scale-[1.02] transition
                                 p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
                             >
-                                <span className="text-slate-800 font-semibold">{item.assetText}</span>
+                                <span className="text-slate-800 font-semibold">{item.artifactText}</span>
                                 <div className="mt-1 text-xs text-slate-500">
-                                    Asset #{item.assetId} • Unity #{item.assetUnityId} •{" "}
+                                    Artifact #{item.artifactId} • Unity #{item.artifactUnitId} •{" "}
                                     {new Date(item.createdAt).toLocaleDateString()}
                                 </div>
                                 <span className="mt-2 text-emerald-500 font-bold text-sm">
@@ -313,19 +315,21 @@ function Marketplace() {
 
             {/* ===================== MODAL ===================== */}
 
+            {authModalOpen && <AuthRequiredModal onClose={() => setAuthModalOpen(false)}/>}
+
             {selectedListing && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
                     <div className="bg-white rounded-2xl w-[440px] p-6 shadow-xl">
 
                         <h2 className="text-xl font-bold mb-2">
-                            {mode === "market" ? "Buy Asset" : "Manage Listing"}
+                            {mode === "market" ? "Buy Artifact" : "Manage Listing"}
                         </h2>
 
                         <div className="text-left mb-4">
-                            <div className="text-slate-800 font-semibold">{selectedListing.assetText}</div>
+                            <div className="text-slate-800 font-semibold">{selectedListing.artifactText}</div>
                             <div className="text-xs text-slate-500 mb-1">
-                                Asset #{selectedListing.assetId} • Unity #{selectedListing.assetUnityId} •{" "}
+                                Artifact #{selectedListing.artifactId} • Unity #{selectedListing.artifactUnitId} •{" "}
                                 {new Date(selectedListing.createdAt).toLocaleDateString()}
                             </div>
                             <span className="text-emerald-500 font-bold text-lg">

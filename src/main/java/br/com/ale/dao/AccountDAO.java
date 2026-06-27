@@ -28,7 +28,7 @@ public class AccountDAO {
                 rs.getBigDecimal("balance"),
                 AccountStatus.valueOf(rs.getString("status")),
                 rs.getString("public_key"),
-                rs.getTimestamp("next_free_asset_at").toInstant()
+                rs.getTimestamp("next_free_artifact_at").toInstant()
         );
     }
 
@@ -117,7 +117,7 @@ public class AccountDAO {
                        balance,
                        status,
                        public_key,
-                       next_free_asset_at
+                       next_free_artifact_at
                   FROM account
                  WHERE id = ?
                 """;
@@ -156,7 +156,7 @@ public class AccountDAO {
                        balance,
                        status,
                        public_key,
-                       next_free_asset_at
+                       next_free_artifact_at
                   FROM account
                  WHERE client_id = ?
                 """;
@@ -196,7 +196,7 @@ public class AccountDAO {
                     a.public_key,
                     a.created_at,
                     a.updated_at,
-                    a.next_free_asset_at,
+                    a.next_free_artifact_at,
                 
                     c.name,
                     c.picture,
@@ -224,7 +224,7 @@ public class AccountDAO {
                                     rs.getString("public_key"),
                                     rs.getTimestamp("created_at").toInstant(),
                                     rs.getTimestamp("updated_at").toInstant(),
-                                    rs.getTimestamp("next_free_asset_at").toInstant(),
+                                    rs.getTimestamp("next_free_artifact_at").toInstant(),
 
                                     rs.getString("name"),
                                     rs.getString("picture"),
@@ -255,7 +255,7 @@ public class AccountDAO {
                        balance,
                        status,
                        public_key,
-                       next_free_asset_at
+                       next_free_artifact_at
                   FROM account
                  WHERE account_number = ?
                 """;
@@ -339,17 +339,17 @@ public class AccountDAO {
         }
     }
 
-    public Optional<Instant> tryClaimAssetUnity(Connection conn, String accountNumber) {
+    public Optional<Instant> tryClaimArtifactUnit(Connection conn, String accountNumber) {
 
         String updateSql = """
                 UPDATE account
-                SET next_free_asset_at = now() + INTERVAL '2' MINUTE
+                SET next_free_artifact_at = now() + INTERVAL '2' MINUTE
                 WHERE account_number = ?
-                AND next_free_asset_at <= now()
+                AND next_free_artifact_at <= now()
                 """;
 
         String selectSql = """
-                SELECT next_free_asset_at
+                SELECT next_free_artifact_at
                   FROM account
                  WHERE account_number = ?
                 """;
@@ -369,7 +369,7 @@ public class AccountDAO {
                 stmt.setString(1, accountNumber);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        return Optional.of(rs.getTimestamp("next_free_asset_at").toInstant());
+                        return Optional.of(rs.getTimestamp("next_free_artifact_at").toInstant());
                     }
                     return Optional.empty();
                 }
@@ -377,7 +377,7 @@ public class AccountDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while claiming free asset [accountId=" + accountNumber + "]",
+                    "Database error while claiming free artifact [accountId=" + accountNumber + "]",
                     e
             );
         }
@@ -386,7 +386,7 @@ public class AccountDAO {
     public Instant selectNextClaimById(Connection conn, String accountNumber) {
 
         String sql = """
-                SELECT next_free_asset_at
+                SELECT next_free_artifact_at
                   FROM account
                  WHERE account_number = ?
                 """;
@@ -399,7 +399,7 @@ public class AccountDAO {
 
                 if (rs.next()) {
 
-                    var timestamp = rs.getTimestamp("next_free_asset_at");
+                    var timestamp = rs.getTimestamp("next_free_artifact_at");
 
                     if (timestamp == null) {
                         return null;
