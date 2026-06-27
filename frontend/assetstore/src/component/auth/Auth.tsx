@@ -34,6 +34,8 @@ export function useAccount() {
         queryKey: ["account"],
         queryFn: fetchAccount,
         retry: false,
-        staleTime: 1000 * 60 * 5,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
+        refetchInterval: 30_000,
     });
 }

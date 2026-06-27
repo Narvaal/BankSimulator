@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {useQueryClient} from "@tanstack/react-query";
 import NavBar from "../navBar/NavBar";
 import PriceHistoryChart from "../market/PriceHistoryChart";
 import {useAccount} from "../auth/Auth";
@@ -86,6 +87,7 @@ async function buyArtifactUnit(artifactListingId: number) {
 function Marketplace() {
 
     const {data: account} = useAccount();
+    const queryClient = useQueryClient();
 
     const [mode, setMode] = useState<"market" | "user">("market");
 
@@ -192,6 +194,7 @@ function Marketplace() {
         try {
             await buyArtifactUnit(selectedListing.id);
             setMessage({type: "success", text: "Purchase successful"});
+            queryClient.invalidateQueries({queryKey: ["account"]});
 
             setListings(prev => ({
                 ...prev!,
