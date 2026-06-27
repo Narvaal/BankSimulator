@@ -160,13 +160,26 @@ Renderizar cartas visualmente com o metadata novo. Vale fazer antes da Fase 2 po
 
 ## Fase 2 — Quando tiver as API keys
 
+**Infraestrutura:** AWS Lambda + EventBridge Scheduler (toda segunda, 08:00 UTC)
+
+**Fontes de notícia (multi-source, sem X API — $100/mês):**
+| Fonte | Biblioteca | Custo | O que traz |
+|---|---|---|---|
+| Google Trends | `pytrends` | Gratuito | O que o mundo está buscando |
+| NewsAPI | `requests` | Gratuito (100 req/dia) | Artigos completos com contexto |
+| Reddit API | `praw` | Gratuito (100 req/min) | O que está sendo discutido |
+
+**Pré-requisitos:**
 | Item | Status |
 |---|---|
 | Conta na Anthropic (Claude API) | Verificar |
 | Conta na OpenAI (DALL-E 3) | Verificar |
 | Conta na NewsAPI | Gratuito para começar |
+| App no Reddit (para API key) | Criar em reddit.com/prefs/apps |
 | Bucket S3 para imagens | Já existe — usar pasta `/cards/` |
-| Secrets no SSM | Adicionar: `anthropic_api_key`, `openai_api_key`, `newsapi_key` |
+| Secrets no SSM | `anthropic_api_key`, `openai_api_key`, `newsapi_key`, `reddit_client_id`, `reddit_client_secret` |
+| Lambda function criada | `rarelines-pipeline` (Python 3.11, timeout 15 min, 512 MB) |
+| EventBridge Scheduler | `cron(0 8 ? * MON *)` → target: Lambda |
 
 ---
 
@@ -187,7 +200,8 @@ Renderizar cartas visualmente com o metadata novo. Vale fazer antes da Fase 2 po
 | Three.js | Isolado em hook dedicado, sem React Three Fiber |
 | Cartas no pack | Geradas na abertura, não pré-determinadas |
 | Achievements | Chamada síncrona no UseCase, sem event bus |
-| Pipeline | Script Python externo, não Spring Scheduler |
+| Pipeline | AWS Lambda + EventBridge (não cron no EC2, não n8n) |
+| Fontes de notícia | Google Trends + NewsAPI + Reddit (não X API — $100/mês) |
 
 ---
 

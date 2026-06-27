@@ -301,31 +301,33 @@ Bundle released
 ## Pipeline de IA Semanal
 
 ```
-Notícias da semana (NewsAPI / RSS / Tavily)
+Fontes de notícias (multi-source):
+  Google Trends (pytrends) — o que o mundo está buscando
+  NewsAPI           — artigos completos com contexto jornalístico
+  Reddit API        — o que está sendo discutido (r/technology, r/science, etc.)
 ↓
-LLM (Claude API) gera:
-  name, subtitle, flavorText
-  category, rarity, traits
-  attack, defense, health, energy
-  stats (historicalImpact, innovation, risk, economicImpact)
-  ability (name + description)
-  timeline, references
+Claude API seleciona os 10 eventos mais relevantes e únicos
 ↓
-Modelo de imagem (DALL-E 3) gera ilustração
+Claude API gera metadata JSON completo por evento
 ↓
-Backend recebe metadata + image_url
+DALL-E 3 gera ilustração por carta
 ↓
-Bundle criado via POST /admin/assets/bundles
+S3 armazena imagens permanentemente
 ↓
-Assets criados com campo metadata JSONB
+POST /artifacts/bundles → backend cria bundle + artifacts
 ↓
 Boosters gerados para distribuição
 ```
 
+**Execução:** AWS Lambda (Python 3.11) + EventBridge Scheduler (toda segunda, 08:00 UTC)
+
 **Custo estimado por semana (~10 cartas):** ~$0.41
-- Claude API (geração de metadata): ~$0.01
+- Claude API (seleção + geração de metadata): ~$0.01
 - DALL-E 3 (10 imagens 1024×1024): ~$0.40
+- Lambda + EventBridge: desprezível (free tier cobre amplamente)
 - S3 storage: desprezível
+
+**Por que não X (Twitter) API:** O endpoint de trending topics exige tier Basic ($100/mês) ou Pro ($5.000/mês). Google Trends + Reddit cobrem o mesmo caso de uso gratuitamente.
 
 ---
 
@@ -385,11 +387,11 @@ Refatorar o modelo de domínio para suportar o novo conceito de cartas colecion�
 
 ### Fase 2 — AI Pipeline
 Pipeline automatizada de geração de conteúdo semanal.
-- Integração com NewsAPI / RSS para busca de notícias
-- Integração com Claude API para geração de metadata JSON
-- Integração com DALL-E 3 para ilustrações
+- Ingestão de notícias multi-source: Google Trends + NewsAPI + Reddit API
+- Claude API para seleção dos eventos e geração de metadata JSON completo
+- DALL-E 3 para geração de ilustrações
 - Upload de imagens para S3
-- Script Python de automação com trigger semanal
+- AWS Lambda (Python 3.11) + EventBridge Scheduler como trigger semanal
 
 ### Fase 3 — Card Rendering Engine (2D)
 Renderizador 2D responsivo das cartas no frontend.
@@ -435,11 +437,11 @@ Camada de progressão e gamificação.
 
 ### Fase 8 — Automação
 Pipeline 100% sem intervenção manual.
-- Cron job semanal no EC2
-- Ingestão de notícias, geração de conteúdo, validação
-- Publicação automática de bundles e boosters
+- AWS Lambda + EventBridge Scheduler (trigger toda segunda 08:00 UTC)
+- Ingestão multi-source: Google Trends + NewsAPI + Reddit API
+- Geração de conteúdo, validação de schema, publicação automática
 - Notificações para usuários (email / in-app)
-- Logs e alertas de falha
+- Logs no CloudWatch + alerta via SES em caso de falha
 
 ---
 
@@ -731,21 +733,27 @@ Esta visão valida decisões já tomadas e adiciona restrições futuras:
 
 ---
 
-### ADR-008: Pipeline de Automação Como Script Python Externo ao Spring
+### ADR-008: Pipeline de Automação como AWS Lambda + EventBridge
 
 **Status:** Accepted
 **Fase:** 8
 
-**Contexto:** A pipeline semanal (notícias → IA → imagens → bundle) precisa ser agendada e executada. Alternativas: Spring Scheduler no backend existente vs. script Python externo.
+**Contexto:** A pipeline semanal (notícias → IA → imagens → bundle) precisa ser agendada e executada. Opções avaliadas: cron no EC2 (simples, mas acoplado ao servidor), n8n (visual, mas sem node nativo para Claude e cara para self-host), AWS Lambda + EventBridge (serverless, zero manutenção).
 
-**Decisão:** Script Python externo rodando via cron no EC2. O script usa `anthropic`, `openai` e `boto3` para gerar conteúdo e chama a API do BankSimulator como cliente externo via `X-Admin-Token`. O Spring Scheduler (`AssetGenerationScheduler` existente) é removido ou mantido apenas como fallback.
+**Decisão:** AWS Lambda (Python 3.11) disparado por EventBridge Scheduler toda segunda-feira às 08:00 UTC. O Lambda lê secrets do SSM, busca notícias de múltiplas fontes (Google Trends + NewsAPI + Reddit), gera metadata com Claude API, ilustrações com DALL-E 3, faz upload para S3 e chama `POST /artifacts/bundles` via `X-Admin-Token`. Logs vão para CloudWatch; falhas disparam alerta via SES.
+
+**Por que não n8n:** Não tem node nativo para Claude API, adiciona uma peça de infraestrutura para manter e o plano cloud tem custo mensal fixo. Para lógica de validação de schema e pity system, código Python é mais flexível.
+
+**Por que não X (Twitter) API para tendências:** Endpoint de trending topics exige tier Basic ($100/mês). Substituído por Google Trends (via `pytrends`, gratuito) + Reddit API (gratuito, 100 req/min) que cobrem o mesmo caso de uso sem custo.
 
 **Consequências:**
-- ✅ Pipeline pode ser desenvolvida, testada e deployada independentemente do backend
-- ✅ Python tem ecossistema rico para IA e HTTP
-- ✅ Falha na pipeline não derruba o backend
-- ⚠️ Mais uma peça de infraestrutura para monitorar
-- ⚠️ Segredos de API (Anthropic, OpenAI) precisam ser adicionados ao SSM
+- ✅ Serverless — zero processo rodando, zero manutenção de servidor
+- ✅ Custo quase zero (Lambda free tier cobre amplamente)
+- ✅ Logs automáticos no CloudWatch
+- ✅ Falha na pipeline não afeta o backend
+- ✅ Multi-source de notícias: Google Trends + NewsAPI + Reddit = cobertura mais rica
+- ⚠️ Lambda tem timeout de 15 min — suficiente para 10 cartas, monitorar se escalar
+- ⚠️ Secrets (Anthropic, OpenAI, NewsAPI, Reddit) precisam estar no SSM
 
 ---
 
@@ -840,14 +848,19 @@ POST /admin/assets/bundles
 
 **Proposta:**
 
-**Script:** `pipeline/generate_weekly.py`
+**Script:** `pipeline/generate_weekly.py` (empacotado como Lambda)
 
 **Fluxo:**
 ```python
-# 1. Buscar notícias
-news = fetch_top_news(week=current_week, categories=["technology","finance","science","culture"])
+# 1. Buscar notícias — múltiplas fontes
+google_trends = fetch_google_trends()          # pytrends, gratuito
+newsapi_articles = fetch_newsapi_headlines()   # artigos completos
+reddit_posts = fetch_reddit_top(subs=[         # praw, gratuito
+    "technology", "science", "worldnews", "sports"
+])
+news = google_trends + newsapi_articles + reddit_posts
 
-# 2. Selecionar eventos mais relevantes (Claude escolhe)
+# 2. Selecionar eventos mais relevantes (Claude escolhe, elimina duplicatas)
 events = claude.select_events(news, count=10)
 
 # 3. Para cada evento, gerar metadata
@@ -886,26 +899,32 @@ Rules:
 Return only valid JSON, no explanation.
 ```
 
-**Agendamento:**
-```bash
-# Cron no EC2 — toda segunda às 08:00 UTC
-0 8 * * 1 /opt/banksimulator/pipeline/venv/bin/python /opt/banksimulator/pipeline/generate_weekly.py >> /var/log/rarelines-pipeline.log 2>&1
+**Agendamento:** AWS EventBridge Scheduler
+```
+schedule: cron(0 8 ? * MON *)   # toda segunda, 08:00 UTC
+target: Lambda function rarelines-pipeline
 ```
 
 **Secrets no SSM:**
 - `/banksimulator/anthropic_api_key`
 - `/banksimulator/openai_api_key`
 - `/banksimulator/newsapi_key`
+- `/banksimulator/reddit_client_id`
+- `/banksimulator/reddit_client_secret`
+
+**Monitoramento:** CloudWatch Logs automático + SNS/SES alert em caso de erro na invocação do Lambda.
 
 **Trade-offs:**
+- ✅ Serverless — sem processo rodando, sem manutenção de cron
 - ✅ Totalmente desacoplado do backend
-- ✅ Fácil trocar modelos de IA sem tocar o backend
+- ✅ Multi-source de notícias dá mais variedade e cobertura
 - ⚠️ Retry logic necessário (APIs externas podem falhar)
 - ⚠️ Validar JSON gerado antes de enviar para a API
+- ⚠️ Lambda timeout 15 min — suficiente para 10 cartas, monitorar se escalar
 
 **Questões em aberto:**
-- NewsAPI free tier tem limite de 100 requests/dia — suficiente para o uso semanal?
 - Implementar validação de qualidade das imagens geradas (ex: rejeitar se NSFW)?
+- Quantas fontes por fonte? Sugestão: top 20 Google Trends + 10 NewsAPI + 10 Reddit = 40 candidatos → Claude seleciona 10.
 
 ---
 
@@ -1306,7 +1325,7 @@ GET /profile/{accountId}
 
 **Proposta:**
 
-**Script:** `pipeline/generate_weekly.py` (Python 3.11+)
+**Infraestrutura:** AWS Lambda (Python 3.11) + EventBridge Scheduler
 
 **Dependências:**
 ```
@@ -1314,25 +1333,59 @@ anthropic>=0.25
 openai>=1.30
 boto3>=1.34
 requests>=2.31
-python-dotenv>=1.0
+pytrends>=4.9       # Google Trends (sem API key, não oficial)
+praw>=7.7           # Reddit API
 ```
 
-**Estrutura do script:**
+**Estrutura do Lambda:**
 ```python
+def lambda_handler(event, context):
+    pipeline = WeeklyPipeline()
+    pipeline.run()
+
 class WeeklyPipeline:
     def run(self):
-        week_id = get_current_week_id()           # "2026-W27"
+        week_id = get_current_week_id()            # "2026-W27"
         if bundle_already_exists(week_id): return  # idempotência
 
-        news = self.fetch_news()                   # NewsAPI
-        events = self.select_events(news)          # Claude escolhe os mais relevantes
+        # 1. Ingestão multi-source
+        candidates = []
+        candidates += fetch_google_trends()        # trending searches do Google
+        candidates += fetch_newsapi_headlines()    # artigos completos
+        candidates += fetch_reddit_top_posts()     # discussões mais votadas da semana
+
+        # 2. Claude seleciona os 10 melhores (sem duplicatas, sem tragédias)
+        events = claude.select_events(candidates, count=10)
+
+        # 3. Geração de cards
         cards = self.generate_cards(events)        # Claude gera metadata JSON
-        cards = self.generate_illustrations(cards) # DALL-E gera imagens
+        cards = self.generate_illustrations(cards) # DALL-E 3 gera imagens
         cards = self.upload_images(cards)          # S3 URLs permanentes
-        self.validate_cards(cards)                 # schema validation
-        self.post_bundle(week_id, cards)           # POST /admin/assets/bundles
-        self.send_notification()                   # Email / webhook para usuários
+        self.validate_cards(cards)                 # validação de schema
+
+        # 4. Publicar
+        self.post_bundle(week_id, cards)           # POST /artifacts/bundles
         self.log_success(week_id, len(cards))
+```
+
+**Ingestão multi-source:**
+```python
+def fetch_google_trends():
+    pytrends = TrendReq(hl="en-US", tz=0)
+    return pytrends.trending_searches(pn="united_states").values.tolist()
+
+def fetch_newsapi_headlines():
+    r = requests.get("https://newsapi.org/v2/top-headlines",
+        params={"language": "en", "pageSize": 20, "apiKey": NEWSAPI_KEY})
+    return [a["title"] + " — " + a["description"] for a in r.json()["articles"]]
+
+def fetch_reddit_top_posts():
+    reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID, client_secret=REDDIT_SECRET,
+                         user_agent="rarelines-pipeline/1.0")
+    posts = []
+    for sub in ["technology", "science", "worldnews", "sports", "business"]:
+        posts += [p.title for p in reddit.subreddit(sub).top("week", limit=5)]
+    return posts
 ```
 
 **Retry e resiliência:**
@@ -1344,39 +1397,30 @@ def generate_card_metadata(event): ...
 def generate_illustration(prompt): ...
 ```
 
-**Idempotência:** Verificar se já existe um bundle com `identifier = "weekly-{week_id}"` antes de executar. Permite rerun seguro sem duplicatas.
+**Idempotência:** Verificar se já existe um bundle com `identifier = "weekly-{week_id}"` antes de executar. Permite re-invoke seguro sem duplicatas.
 
-**Monitoramento:**
-```bash
-# Enviar alerta se pipeline falhar
-if ! python generate_weekly.py; then
-    aws ses send-email --to alessandrobezerra100@gmail.com \
-        --subject "RareLines Pipeline FAILED week $WEEK" \
-        --body "Check /var/log/rarelines-pipeline.log on EC2"
-fi
-```
-
-**Cron no EC2:**
-```bash
-# /etc/cron.d/rarelines-pipeline
-0 8 * * 1 ec2-user /opt/banksimulator/pipeline/run.sh >> /var/log/rarelines-pipeline.log 2>&1
-```
+**Monitoramento:** CloudWatch Logs automático. EventBridge DLQ + SNS alert em caso de falha de invocação.
 
 **Novos secrets no SSM:**
 - `/banksimulator/anthropic_api_key`
 - `/banksimulator/openai_api_key`
 - `/banksimulator/newsapi_key`
+- `/banksimulator/reddit_client_id`
+- `/banksimulator/reddit_client_secret`
 
 **Trade-offs:**
-- ✅ Zero intervenção manual após setup
-- ✅ Idempotente — pode ser re-executado com segurança
-- ✅ Alerta automático em caso de falha
-- ⚠️ Se a pipeline falhar na semana, usuários não recebem novas cartas
-- ⚠️ Custo da pipeline depende do número de cartas geradas
+- ✅ Serverless — zero manutenção, zero processo rodando
+- ✅ Idempotente — pode ser re-invocado com segurança
+- ✅ Multi-source aumenta variedade e cobertura de eventos
+- ✅ Logs automáticos no CloudWatch
+- ✅ Google Trends e Reddit API são gratuitos
+- ⚠️ Lambda timeout 15 min — suficiente para 10 cartas, monitorar se escalar
+- ⚠️ `pytrends` não é API oficial — pode quebrar se o Google mudar o HTML
 
 **Questões em aberto:**
 - Validação humana das cartas antes de publicar? Sugestão: modo dry-run para review opcional.
 - Quantas cartas por semana? Sugestão: 10 (balanceia custo e frequência).
+- Candidatos para Claude avaliar: top 20 Google Trends + 20 NewsAPI + 25 Reddit = ~65 candidatos → Claude seleciona 10.
 
 ---
 
@@ -1744,9 +1788,11 @@ Variáveis necessárias em produção (armazenadas no SSM Parameter Store em `/b
 
 | Variável SSM | Uso |
 |---|---|
-| `/banksimulator/anthropic_api_key` | Claude API para geração de metadata |
+| `/banksimulator/anthropic_api_key` | Claude API para seleção de eventos e geração de metadata |
 | `/banksimulator/openai_api_key` | DALL-E 3 para geração de ilustrações |
-| `/banksimulator/newsapi_key` | NewsAPI para busca de notícias semanais |
+| `/banksimulator/newsapi_key` | NewsAPI para artigos completos |
+| `/banksimulator/reddit_client_id` | Reddit API para trending posts da semana |
+| `/banksimulator/reddit_client_secret` | Reddit API (par com client_id) |
 
 Em produção, o script `fetch-env.py` busca todos esses parâmetros do SSM no startup e grava em `/etc/app.env`, que o systemd carrega via `EnvironmentFile`.
 
