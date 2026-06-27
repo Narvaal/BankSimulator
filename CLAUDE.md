@@ -314,6 +314,167 @@ Pipeline 100% sem intervenção manual.
 
 ---
 
+## Visão de Longo Prazo — RareLines TCG Narrativo
+
+Esta seção documenta a visão de produto além das 8 fases do roadmap atual. Não deve ser implementada agora, mas deve informar decisões de arquitetura para garantir que o caminho esteja aberto.
+
+### Conceito Principal
+
+O RareLines não será um TCG tradicional baseado em ataque, defesa e dano numérico. As cartas são **artefatos narrativos** gerados por IA a partir de acontecimentos reais — notícias da semana, tendências, tecnologia, cultura, esportes, eventos históricos.
+
+A batalha não será:
+> "Minha carta tem 100 de ataque e a sua tem 80"
+
+Será:
+> "Minha carta representa uma ideia mais forte que a sua — e eu preciso convencer a IA juiz."
+
+O jogador vence por criatividade, interpretação e argumento. O "meta" muda constantemente porque as cartas nascem do mundo real. Uma carta criada hoje pode ter peso completamente diferente de uma criada daqui a 6 meses.
+
+---
+
+### Sistema de Cartas (TCG)
+
+Cada carta é um Artifact com atributos narrativos, não numéricos:
+
+```
+Artifact: Apple Vision Pro
+Categoria: Tecnologia
+
+Atributos:
+- Inovação
+- Influência
+- Popularidade
+- Impacto cultural
+- Evolução
+
+Habilidade: Ecossistema Fechado
+Fraqueza: Dependência de tendências
+
+Lore: Gerado pela IA a partir de notícias reais
+```
+
+Os atributos não servem como "dano" — servem como **contexto para a IA entender a carta** e julgar argumentos.
+
+---
+
+### Sistema de Batalha
+
+**Fluxo de uma partida:**
+
+```
+1. Cada jogador recebe 3 cartas do seu deck
+2. Cada jogador escolhe 1 carta para jogar
+3. Ambos escrevem um argumento: por que sua carta venceria?
+4. A IA juiz analisa os argumentos e decide o vencedor
+5. Melhor de 3 rounds vence a partida
+```
+
+**Exemplo — Apple vs Android:**
+
+Jogador A (Apple Vision Pro):
+> "A Apple vence porque criou um ecossistema extremamente desejado e mudou a forma como pessoas usam tecnologia."
+
+Jogador B (Android):
+> "O Android vence porque está presente em bilhões de dispositivos e representa liberdade e adaptação."
+
+**Critérios da IA juiz:**
+- Criatividade do argumento
+- Uso coerente dos atributos da carta
+- Alinhamento com a história e o lore da carta
+- Poder de persuasão
+
+---
+
+### Sistema de Abertura de Packs (Transparente)
+
+A experiência de abertura mantém a emoção do Pokémon TCG, mas **sem loot box opaco com dinheiro real**. O conteúdo possível é sempre visível antes de abrir.
+
+**Fontes de packs:**
+- Recompensas diárias
+- Missões e conquistas
+- Progressão de coleções
+- Eventos temáticos
+- Loot box transparente (conteúdo público antes de abrir)
+
+**Exemplo de loot box transparente:**
+```
+Bundle Semanal — Tech Week:
+  100 cartas comuns
+  20 cartas raras
+  5 cartas épicas
+  1 carta lendária
+```
+
+Nada fica escondido. O usuário sabe exatamente o que pode receber.
+
+---
+
+### Geração da Abertura (Backend Owned)
+
+O servidor é responsável por gerar a sequência de cartas. O frontend apenas consome e anima.
+
+```json
+{
+  "packId": "weekly_pack_001",
+  "cards": [
+    { "rarity": "common",    "artifactId": "123" },
+    { "rarity": "common",    "artifactId": "456" },
+    { "rarity": "rare",      "artifactId": "789" },
+    { "rarity": "legendary", "artifactId": "999" }
+  ]
+}
+```
+
+**Lógica de ordenação:** as cartas seguem ordem crescente de raridade para criar tensão:
+```
+Comuns → Raras → Épicas → Lendárias
+```
+
+Isso cria o momento: *"Será que a última carta é a lendária?"*
+
+---
+
+### Transparência de Supply
+
+Toda carta tem quantidade pública e o servidor controla o total disponível:
+
+```
+Apple Vision Pro
+Quantidade existente: 10.000 unidades
+```
+
+Cada vez que uma carta é obtida: `totalDisponivel -= 1`
+
+O usuário sempre sabe quantas cópias existem no mundo.
+
+---
+
+### Mistura de Gêneros
+
+O produto final é uma combinação única de:
+
+| Gênero | Como aparece |
+|---|---|
+| TCG | Decks, packs, raridades, coleções |
+| RPG Narrativo | Lore gerado por IA, história das cartas |
+| Debate | Argumentos vs IA juiz |
+| Colecionismo | Supply limitado, cartas únicas por evento |
+| IA Generativa | Conteúdo novo toda semana baseado no mundo real |
+
+---
+
+### Implicações Arquiteturais
+
+Esta visão valida decisões já tomadas e adiciona restrições futuras:
+
+- **JSONB metadata** — os campos `ability`, `traits`, `stats`, `flavorText` e `lore` já existem no schema e são suficientes para o sistema de batalha
+- **Backend owns game logic** — o engine de probabilidade de packs (Fase 5) será a base para o engine de batalha
+- **IA como serviço** — a integração com Claude API (Fase 2) será reutilizada para o juiz de batalha
+- **Frontend declarativo** — a separação render/logic permite adicionar a interface de batalha sem tocar no backend de cartas
+- **Nunca hardcodar regras de batalha no frontend** — toda lógica de julgamento vive no backend
+
+---
+
 ## ADRs — Architecture Decision Records
 
 ### ADR-001: JSONB para Metadata de Cartas
