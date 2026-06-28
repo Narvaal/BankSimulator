@@ -2,6 +2,7 @@ package br.com.ale.application.config;
 
 import br.com.ale.application.marketplace.query.*;
 import br.com.ale.application.marketplace.usecase.*;
+import br.com.ale.service.artifact.ArtifactTransferService;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.artifact.*;
@@ -200,5 +201,20 @@ public class MarketplaceConfig {
                 artifactListingService,
                 jwtService
         );
+    }
+
+    @Bean
+    public ArtifactTransferService artifactTransferService(
+            ConnectionProvider connectionProvider,
+            ArtifactWebhookNotifier artifactWebhookNotifier
+    ) {
+        return new ArtifactTransferService(connectionProvider, artifactWebhookNotifier);
+    }
+
+    @Bean
+    public ListArtifactTransferLogUseCase listArtifactTransferLogUseCase(
+            ArtifactTransferService artifactTransferService
+    ) {
+        return new ListArtifactTransferLogUseCase(artifactTransferService);
     }
 }

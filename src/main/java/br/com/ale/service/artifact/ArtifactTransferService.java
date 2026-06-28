@@ -2,6 +2,7 @@ package br.com.ale.service.artifact;
 
 import br.com.ale.dao.artifact.ArtifactTransferDAO;
 import br.com.ale.domain.artifact.ArtifactTransfer;
+import br.com.ale.dto.ArtifactTransferLogPageView;
 import br.com.ale.dto.CreateArtifactTransferRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.webhook.ArtifactWebhookNotifier;
@@ -55,6 +56,18 @@ public class ArtifactTransferService {
                     "Service error while creating artifact Transfer[artifactUnitId=" + request.artifactUnitId() +
                             ", fromAccountId=" + request.fromAccountId() + ", " +
                             ", toAccountId=" + request.toAccountId() + "]"
+            );
+        }
+    }
+
+    public ArtifactTransferLogPageView publicFeed(int page, int pageSize) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return artifactTransferDAO.selectPublicFeed(conn, page, pageSize);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while fetching artifact transfer feed " +
+                            "[page=" + page + ", pageSize=" + pageSize + "]",
+                    e
             );
         }
     }

@@ -1,13 +1,16 @@
 package br.com.ale.dao.artifact;
 
-import br.com.ale.domain.artifact.Artifact;
 import br.com.ale.domain.artifact.ArtifactTransfer;
+import br.com.ale.dto.ArtifactTransferLogPageView;
+import br.com.ale.dto.ArtifactTransferLogView;
 import br.com.ale.dto.CreateArtifactTransferRequest;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ArtifactTransferDAO {
@@ -97,6 +100,78 @@ public class ArtifactTransferDAO {
                             "[artifactId=" + artifactTransferId + "]",
                     e
             );
+        }
+    }
+
+    public ArtifactTransferLogPageView selectPublicFeed(Connection conn, int page, int pageSize) {
+
+        String sql = """
+                WITH ranked_transfers AS (
+                    SELECT
+                        t.id,
+                        t.artifact_unit_id,
+                        t.from_account_id,
+                        t.to_account_id,
+                        t.created_at,
+                        (ROW_NUMBER() OVER (PARTITION BY t.artifact_unit_id ORDER BY t.id ASC) - 1) AS transfer_rank
+                    FROM artifact_transfer t
+                ),
+                ranked_prices AS (
+                    SELECT
+                        p.artifact_unit_id,
+                        p.new_price,
+                        (ROW_NUMBER() OVER (PARTITION BY p.artifact_unit_id ORDER BY p.id ASC) - 1) AS price_rank
+                    FROM artifact_price_history p
+                    WHERE p.reason = 'SOLD'
+                )
+                SELECT
+                    rt.id,
+                    a.text       AS artifact_text,
+                    rt.artifact_unit_id,
+                    rp.new_price AS sale_price,
+                    rt.from_account_id,
+                    rt.to_account_id,
+                    rt.created_at,
+                    COUNT(*) OVER () AS total_items
+                FROM ranked_transfers rt
+                JOIN artifact_unit au ON au.id = rt.artifact_unit_id
+                JOIN artifact a       ON a.id  = au.artifact_id
+                LEFT JOIN ranked_prices rp
+                    ON rp.artifact_unit_id = rt.artifact_unit_id
+                   AND rp.price_rank       = rt.transfer_rank
+                ORDER BY rt.created_at DESC
+                LIMIT ? OFFSET ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, pageSize);
+            stmt.setInt(2, page * pageSize);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<ArtifactTransferLogView> items = new ArrayList<>();
+                long totalItems = 0;
+
+                while (rs.next()) {
+                    if (totalItems == 0) totalItems = rs.getLong("total_items");
+                    items.add(new ArtifactTransferLogView(
+                            rs.getLong("id"),
+                            rs.getString("artifact_text"),
+                            rs.getLong("artifact_unit_id"),
+                            rs.getBigDecimal("sale_price"),
+                            rs.getLong("from_account_id"),
+                            rs.getLong("to_account_id"),
+                            rs.getTimestamp("created_at").toInstant()
+                    ));
+                }
+
+                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+                return new ArtifactTransferLogPageView(items, page, pageSize, totalPages, totalItems);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error while selecting artifact transfer feed", e);
         }
     }
 
