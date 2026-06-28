@@ -3,11 +3,13 @@ package br.com.ale.service.artifact;
 import br.com.ale.dao.artifact.ArtifactTransferDAO;
 import br.com.ale.domain.artifact.ArtifactTransfer;
 import br.com.ale.dto.ArtifactTransferLogPageView;
+import br.com.ale.dto.ArtifactUnitTransferView;
 import br.com.ale.dto.CreateArtifactTransferRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
 import br.com.ale.service.webhook.ArtifactWebhookNotifier;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class ArtifactTransferService {
 
@@ -68,6 +70,16 @@ public class ArtifactTransferService {
                     "Service error while fetching artifact transfer feed " +
                             "[page=" + page + ", pageSize=" + pageSize + "]",
                     e
+            );
+        }
+    }
+
+    public List<ArtifactUnitTransferView> selectByUnitId(long artifactUnitId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return artifactTransferDAO.selectByUnitId(conn, artifactUnitId);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while fetching transfer chain [unitId=" + artifactUnitId + "]", e
             );
         }
     }

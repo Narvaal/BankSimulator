@@ -3,6 +3,7 @@ package br.com.ale.dao.artifact;
 import br.com.ale.domain.artifact.ArtifactTransfer;
 import br.com.ale.dto.ArtifactTransferLogPageView;
 import br.com.ale.dto.ArtifactTransferLogView;
+import br.com.ale.dto.ArtifactUnitTransferView;
 import br.com.ale.dto.CreateArtifactTransferRequest;
 
 import java.sql.Connection;
@@ -172,6 +173,58 @@ public class ArtifactTransferDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Database error while selecting artifact transfer feed", e);
+        }
+    }
+
+    public List<ArtifactUnitTransferView> selectByUnitId(Connection conn, long artifactUnitId) {
+
+        String sql = """
+                WITH ranked_transfers AS (
+                    SELECT t.id, t.from_account_id, t.to_account_id, t.created_at,
+                           (ROW_NUMBER() OVER (ORDER BY t.id ASC) - 1) AS transfer_rank
+                    FROM artifact_transfer t
+                    WHERE t.artifact_unit_id = ?
+                ),
+                ranked_prices AS (
+                    SELECT p.new_price,
+                           (ROW_NUMBER() OVER (ORDER BY p.id ASC) - 1) AS price_rank
+                    FROM artifact_price_history p
+                    WHERE p.artifact_unit_id = ?
+                      AND p.reason = 'SOLD'
+                )
+                SELECT rt.id, rt.from_account_id, rt.to_account_id, rt.created_at,
+                       rp.new_price AS sale_price
+                FROM ranked_transfers rt
+                LEFT JOIN ranked_prices rp ON rp.price_rank = rt.transfer_rank
+                ORDER BY rt.created_at ASC
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, artifactUnitId);
+            stmt.setLong(2, artifactUnitId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                List<ArtifactUnitTransferView> result = new ArrayList<>();
+
+                while (rs.next()) {
+                    result.add(new ArtifactUnitTransferView(
+                            rs.getLong("id"),
+                            rs.getLong("from_account_id"),
+                            rs.getLong("to_account_id"),
+                            rs.getBigDecimal("sale_price"),
+                            rs.getTimestamp("created_at").toInstant()
+                    ));
+                }
+
+                return result;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting transfer chain for unit [artifactUnitId=" + artifactUnitId + "]", e
+            );
         }
     }
 

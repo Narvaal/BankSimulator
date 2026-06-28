@@ -8,13 +8,6 @@ import {API_URL} from "../../config";
 
 /* ===================== TYPES ===================== */
 
-interface ArtifactDetail {
-    id: number;
-    text: string;
-    totalSupply: number;
-    createdAt: string;
-}
-
 interface ArtifactPriceHistory {
     artifactId: number;
     artifactUnitId: number;
@@ -23,19 +16,54 @@ interface ArtifactPriceHistory {
     createdAt: string;
 }
 
+interface ArtifactUnitTransferView {
+    id: number;
+    fromAccountId: number;
+    toAccountId: number;
+    salePrice: number | null;
+    createdAt: string;
+}
+
+interface ArtifactUnitDetail {
+    unitId: number;
+    artifactId: number;
+    artifactText: string;
+    ownerAccountId: number;
+    status: "AVAILABLE" | "IN_MARKET" | "RESERVED" | "TRANSFERRING";
+    createdAt: string;
+    priceHistory: ArtifactPriceHistory[];
+    transfers: ArtifactUnitTransferView[];
+}
+
 /* ===================== API ===================== */
 
-async function getArtifact(id: string): Promise<ArtifactDetail> {
-    const res = await fetch(`${API_URL}/artifacts/${id}`);
+async function getUnitDetail(id: string): Promise<ArtifactUnitDetail> {
+    const res = await fetch(`${API_URL}/artifact-units/${id}`);
     if (res.status === 404) throw new Error("not_found");
     if (!res.ok) throw new Error("fetch_error");
     return res.json();
 }
 
-async function getPriceHistory(id: string): Promise<ArtifactPriceHistory[]> {
-    const res = await fetch(`${API_URL}/artifacts/${id}/price-history`);
-    if (!res.ok) return [];
-    return res.json();
+/* ===================== STATUS BADGE ===================== */
+
+function StatusBadge({status}: {status: ArtifactUnitDetail["status"]}) {
+    const styles: Record<string, string> = {
+        AVAILABLE:    "bg-emerald-100 text-emerald-700",
+        IN_MARKET:    "bg-blue-100 text-blue-700",
+        RESERVED:     "bg-amber-100 text-amber-700",
+        TRANSFERRING: "bg-purple-100 text-purple-700",
+    };
+    const labels: Record<string, string> = {
+        AVAILABLE:    "Available",
+        IN_MARKET:    "Listed",
+        RESERVED:     "Reserved",
+        TRANSFERRING: "Transferring",
+    };
+    return (
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${styles[status] ?? "bg-slate-100 text-slate-600"}`}>
+            {labels[status] ?? status}
+        </span>
+    );
 }
 
 /* ===================== PAGE ===================== */
@@ -44,8 +72,7 @@ export default function CardDetail() {
     const {id} = useParams<{id: string}>();
     const {data: account} = useAccount();
 
-    const [artifact, setArtifact] = useState<ArtifactDetail | null>(null);
-    const [priceHistory, setPriceHistory] = useState<ArtifactPriceHistory[]>([]);
+    const [unit, setUnit] = useState<ArtifactUnitDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
 
@@ -66,15 +93,10 @@ export default function CardDetail() {
             try {
                 setLoading(true);
                 setNotFound(false);
-                const [art, history] = await Promise.all([getArtifact(id!), getPriceHistory(id!)]);
-                if (!cancelled) {
-                    setArtifact(art);
-                    setPriceHistory(history);
-                }
+                const data = await getUnitDetail(id!);
+                if (!cancelled) setUnit(data);
             } catch (e: unknown) {
-                if (!cancelled) {
-                    setNotFound(e instanceof Error && e.message === "not_found");
-                }
+                if (!cancelled) setNotFound(e instanceof Error && e.message === "not_found");
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -84,8 +106,8 @@ export default function CardDetail() {
         return () => { cancelled = true; };
     }, [id]);
 
-    const lastPrice = priceHistory.length > 0
-        ? Math.max(...priceHistory.map(h => h.newPrice))
+    const lastPrice = unit?.priceHistory.length
+        ? unit.priceHistory[unit.priceHistory.length - 1].newPrice
         : null;
 
     return (
@@ -126,7 +148,7 @@ export default function CardDetail() {
                 <nav className="mb-5 text-xs text-zinc-400 flex items-center gap-1.5">
                     <Link to="/market" className="hover:text-zinc-600 transition-colors">Marketplace</Link>
                     <span>/</span>
-                    <span className="text-zinc-600">Card #{id}</span>
+                    <span className="text-zinc-600">Unit #{id}</span>
                 </nav>
 
                 {loading && (
@@ -142,20 +164,25 @@ export default function CardDetail() {
                     </div>
                 )}
 
-                {!loading && !notFound && artifact && (
-                    <div className="max-w-2xl mx-auto">
+                {!loading && !notFound && unit && (
+                    <div className="max-w-2xl mx-auto space-y-4">
 
-                        {/* card header */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
+                        {/* header card */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-zinc-900">{artifact.text}</h1>
-                                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-zinc-400">
-                                        <span>Card #{artifact.id}</span>
+                                    <h1 className="text-2xl font-bold text-zinc-900">{unit.artifactText}</h1>
+                                    <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
+                                        <span>Unit #{unit.unitId}</span>
                                         <span>·</span>
-                                        <span>Supply: {artifact.totalSupply}</span>
+                                        <span>Card #{unit.artifactId}</span>
                                         <span>·</span>
-                                        <span>Added {new Date(artifact.createdAt).toLocaleDateString()}</span>
+                                        <span>Owner #{unit.ownerAccountId}</span>
+                                        <span>·</span>
+                                        <span>{new Date(unit.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="mt-2">
+                                        <StatusBadge status={unit.status}/>
                                     </div>
                                 </div>
 
@@ -168,11 +195,45 @@ export default function CardDetail() {
                                     </div>
                                 )}
                             </div>
+                        </div>
 
-                            <div className="mt-5">
-                                <h2 className="text-sm font-semibold text-zinc-700 mb-1">Price History</h2>
-                                <PriceHistoryChart priceHistory={priceHistory}/>
-                            </div>
+                        {/* price history */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <h2 className="text-sm font-semibold text-zinc-700 mb-1">Price History</h2>
+                            <PriceHistoryChart priceHistory={unit.priceHistory}/>
+                        </div>
+
+                        {/* transfer chain */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <h2 className="text-sm font-semibold text-zinc-700 mb-3">Ownership Chain</h2>
+
+                            {unit.transfers.length === 0 ? (
+                                <p className="text-sm text-zinc-400">No transfers yet — this unit has never been sold.</p>
+                            ) : (
+                                <ol className="space-y-3">
+                                    {unit.transfers.map((t, i) => (
+                                        <li key={t.id} className="flex items-center gap-3 text-sm">
+                                            <span className="shrink-0 w-5 h-5 rounded-full bg-slate-100 text-zinc-500 text-xs flex items-center justify-center font-medium">
+                                                {i + 1}
+                                            </span>
+                                            <span className="font-mono text-zinc-500 text-xs">#{t.fromAccountId}</span>
+                                            <span className="text-zinc-300">→</span>
+                                            <span className="font-mono text-zinc-500 text-xs">#{t.toAccountId}</span>
+                                            {t.salePrice != null && (
+                                                <>
+                                                    <span className="text-zinc-300">·</span>
+                                                    <span className="font-semibold text-emerald-600">
+                                                        ${Number(t.salePrice).toFixed(2)}
+                                                    </span>
+                                                </>
+                                            )}
+                                            <span className="ml-auto text-zinc-400 text-xs">
+                                                {new Date(t.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
                         </div>
 
                         {/* actions */}

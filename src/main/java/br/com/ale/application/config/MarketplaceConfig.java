@@ -217,4 +217,19 @@ public class MarketplaceConfig {
     ) {
         return new ListArtifactTransferLogUseCase(artifactTransferService);
     }
+
+    @Bean
+    public GetArtifactUnitByIdUseCase getArtifactUnitByIdUseCase(
+            ArtifactUnitService artifactUnitService,
+            ArtifactService assetService,
+            ArtifactPriceHistoryService artifactPriceHistoryService,
+            ArtifactTransferService artifactTransferService
+    ) {
+        return new GetArtifactUnitByIdUseCase(
+                artifactUnitService,
+                assetService,
+                artifactPriceHistoryService,
+                artifactTransferService
+        );
+    }
 }
