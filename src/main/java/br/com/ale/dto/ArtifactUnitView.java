@@ -5,6 +5,6 @@ import java.time.Instant;
 public record ArtifactUnitView(
                              long artifactId,
                              long artifactUnitId,
-                             String assetText,
+                             String artifactText,
                              Instant createdAt
 ) {}
