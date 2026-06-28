@@ -3,6 +3,7 @@ package br.com.ale.service.artifact;
 import br.com.ale.dao.artifact.ArtifactDAO;
 import br.com.ale.dao.artifact.ArtifactUnitDAO;
 import br.com.ale.domain.artifact.ArtifactUnit;
+import br.com.ale.domain.exception.ArtifactUnitNotFoundException;
 import br.com.ale.dto.ArtifactUnitPageView;
 import br.com.ale.dto.CreateArtifactUnitRequest;
 import br.com.ale.infrastructure.db.ConnectionProvider;
@@ -61,7 +62,9 @@ public class ArtifactUnitService {
     public ArtifactUnit selectById(long artifactUnitId) {
         try (Connection conn = connectionProvider.getConnection()) {
             return artifactUnitDAO.selectById(conn, artifactUnitId)
-                    .orElseThrow(() -> new RuntimeException("ArtifactUnit not found [id=" + artifactUnitId + "]"));
+                    .orElseThrow(() -> new ArtifactUnitNotFoundException(artifactUnitId));
+        } catch (ArtifactUnitNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Service error while selecting artifactUnit [id=" + artifactUnitId + "]", e);
         }

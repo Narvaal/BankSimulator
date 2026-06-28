@@ -142,10 +142,20 @@ export default function Logs() {
                                                 className="hover:bg-slate-50 transition-colors"
                                             >
                                                 <td className="px-5 py-3.5 font-medium text-zinc-800">
-                                                    {entry.artifactText}
+                                                    <Link
+                                                        to={`/card/${entry.artifactUnitId}`}
+                                                        className="hover:text-zinc-500 transition-colors"
+                                                    >
+                                                        {entry.artifactText}
+                                                    </Link>
                                                 </td>
                                                 <td className="px-5 py-3.5 text-zinc-500">
-                                                    #{entry.artifactUnitId}
+                                                    <Link
+                                                        to={`/card/${entry.artifactUnitId}`}
+                                                        className="hover:text-zinc-700 transition-colors"
+                                                    >
+                                                        #{entry.artifactUnitId}
+                                                    </Link>
                                                 </td>
                                                 <td className="px-5 py-3.5 font-semibold text-emerald-600">
                                                     {entry.salePrice != null

@@ -1,5 +1,6 @@
 package br.com.ale.application.api;
 
+import br.com.ale.domain.exception.ArtifactUnitNotFoundException;
 import br.com.ale.domain.exception.InvalidCredentialsException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,15 @@ public class ApiExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ArtifactUnitNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleArtifactUnitNotFound(
+            ArtifactUnitNotFoundException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", ex.getMessage()));
     }
 }

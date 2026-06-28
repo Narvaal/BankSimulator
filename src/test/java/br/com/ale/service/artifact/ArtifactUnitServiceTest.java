@@ -140,7 +140,7 @@ class ArtifactUnitServiceTest {
         );
 
         assertTrue(
-                ex.getMessage().contains("Service error while selecting artifactUnit"),
+                ex.getMessage().contains("9999"),
                 ex.getMessage()
         );
     }
