@@ -68,7 +68,7 @@ function StatusBadge({status}: {status: ArtifactUnitDetail["status"]}) {
 
 /* ===================== PAGE ===================== */
 
-export default function CardDetail() {
+export default function ArtifactDetail() {
     const {id} = useParams<{id: string}>();
     const {data: account} = useAccount();
 
@@ -144,11 +144,10 @@ export default function CardDetail() {
                 className="pt-[60px] p-6 transition-all duration-300"
                 style={{marginLeft: collapsed ? 64 : 220}}
             >
-                {/* breadcrumb */}
                 <nav className="mb-5 text-xs text-zinc-400 flex items-center gap-1.5">
                     <Link to="/market" className="hover:text-zinc-600 transition-colors">Marketplace</Link>
                     <span>/</span>
-                    <span className="text-zinc-600">Unit #{id}</span>
+                    <span className="text-zinc-600">Artifact #{id}</span>
                 </nav>
 
                 {loading && (
@@ -157,7 +156,7 @@ export default function CardDetail() {
 
                 {!loading && notFound && (
                     <div className="text-center mt-20">
-                        <p className="text-zinc-500 text-lg font-medium">Card not found</p>
+                        <p className="text-zinc-500 text-lg font-medium">Artifact not found</p>
                         <Link to="/market" className="mt-4 inline-block text-sm text-zinc-400 hover:text-zinc-700 transition-colors">
                             ← Back to Marketplace
                         </Link>
@@ -167,7 +166,6 @@ export default function CardDetail() {
                 {!loading && !notFound && unit && (
                     <div className="max-w-2xl mx-auto space-y-4">
 
-                        {/* header card */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
@@ -175,7 +173,7 @@ export default function CardDetail() {
                                     <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
                                         <span>Unit #{unit.unitId}</span>
                                         <span>·</span>
-                                        <span>Card #{unit.artifactId}</span>
+                                        <span>Artifact #{unit.artifactId}</span>
                                         <span>·</span>
                                         <span>Owner #{unit.ownerAccountId}</span>
                                         <span>·</span>
@@ -197,18 +195,16 @@ export default function CardDetail() {
                             </div>
                         </div>
 
-                        {/* price history */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <h2 className="text-sm font-semibold text-zinc-700 mb-1">Price History</h2>
                             <PriceHistoryChart priceHistory={unit.priceHistory}/>
                         </div>
 
-                        {/* transfer chain */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <h2 className="text-sm font-semibold text-zinc-700 mb-3">Ownership Chain</h2>
 
                             {unit.transfers.length === 0 ? (
-                                <p className="text-sm text-zinc-400">No transfers yet — this unit has never been sold.</p>
+                                <p className="text-sm text-zinc-400">No transfers yet — this artifact has never been sold.</p>
                             ) : (
                                 <ol className="space-y-3">
                                     {unit.transfers.map((t, i) => (
@@ -236,7 +232,6 @@ export default function CardDetail() {
                             )}
                         </div>
 
-                        {/* actions */}
                         <div className="flex gap-3">
                             <Link
                                 to="/market"

@@ -6,7 +6,7 @@ import Home from "./component/home/Home"
 import Marketplace from "./component/market/Marketplace.tsx";
 import Reward from "./component/reward/Reward.tsx";
 import Logs from "./component/logs/Logs.tsx";
-import CardDetail from "./component/card/CardDetail.tsx";
+import ArtifactDetail from "./component/artifact/ArtifactDetail.tsx";
 import RareLines from "./component/landpage/RareLines.tsx"
 import EmailVerification from "./component/localAuth/EmailVerification.tsx"
 import ResetPassword from  "./component/localAuth/ResetPassword.tsx"
@@ -31,7 +31,7 @@ export default function Router() {
                 <Route path="/market" element={<Marketplace/>}/>
                 <Route path="/reward" element={<Reward/>}/>
                 <Route path="/logs" element={<Logs/>}/>
-                <Route path="/card/:id" element={<CardDetail/>}/>
+                <Route path="/artifact/:id" element={<ArtifactDetail/>}/>
 
             </Routes>
         </BrowserRouter>

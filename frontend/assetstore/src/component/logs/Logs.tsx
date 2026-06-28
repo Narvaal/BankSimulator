@@ -111,7 +111,7 @@ export default function Logs() {
                 <div className="mb-6">
                     <h1 className="text-xl font-bold text-zinc-900">Transfer Log</h1>
                     <p className="text-sm text-zinc-500 mt-0.5">
-                        All card sales on the platform, from newest to oldest.
+                        All artifact sales on the platform, from newest to oldest.
                     </p>
                 </div>
 
@@ -127,7 +127,7 @@ export default function Logs() {
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-slate-100 text-left text-xs text-zinc-500 uppercase tracking-wide">
-                                            <th className="px-5 py-3 font-medium">Card</th>
+                                            <th className="px-5 py-3 font-medium">Artifact</th>
                                             <th className="px-5 py-3 font-medium">Unit #</th>
                                             <th className="px-5 py-3 font-medium">Price</th>
                                             <th className="px-5 py-3 font-medium">From</th>
@@ -143,7 +143,7 @@ export default function Logs() {
                                             >
                                                 <td className="px-5 py-3.5 font-medium text-zinc-800">
                                                     <Link
-                                                        to={`/card/${entry.artifactUnitId}`}
+                                                        to={`/artifact/${entry.artifactUnitId}`}
                                                         className="hover:text-zinc-500 transition-colors"
                                                     >
                                                         {entry.artifactText}
@@ -151,7 +151,7 @@ export default function Logs() {
                                                 </td>
                                                 <td className="px-5 py-3.5 text-zinc-500">
                                                     <Link
-                                                        to={`/card/${entry.artifactUnitId}`}
+                                                        to={`/artifact/${entry.artifactUnitId}`}
                                                         className="hover:text-zinc-700 transition-colors"
                                                     >
                                                         #{entry.artifactUnitId}
