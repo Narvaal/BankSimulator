@@ -239,7 +239,7 @@ export default function Home() {
         return <div className="p-10 text-center">Checking session...</div>;
     }
 
-    if (authError || (!authLoading && !account)) {
+    if (authError || !account) {
         return (
             <AuthRequiredModal onClose={() => navigate(-1)}/>
         );
