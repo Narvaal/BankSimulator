@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { ArrowRightIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 
 const RareLines: React.FC = () => {
   useEffect(() => {
@@ -69,6 +70,8 @@ const RareLines: React.FC = () => {
             <div className="hidden md:flex gap-6 text-sm">
               <a href="#build" className="text-gray-500 hover:text-white transition">Build</a>
               <a href="#stack" className="text-gray-500 hover:text-white transition">Stack</a>
+              <Link to="/market" className="text-gray-500 hover:text-white transition">Marketplace</Link>
+              <Link to="/reward" className="text-gray-500 hover:text-white transition">Rewards</Link>
             </div>
           </div>
 
@@ -140,19 +143,17 @@ const RareLines: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
 
-              <a
-                href="https://app.alessandro-bezerra.me/login/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/market"
                 className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-black bg-[#adc6ff] overflow-hidden transition-all duration-300 hover:-translate-y-1"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Try it
+                  Browse Marketplace
                     <ArrowRightIcon className="w-4 h-4 transition group-hover:translate-x-1" />
                 </span>
 
                 <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition"></span>
-              </a>
+              </Link>
 
             <a
               href="https://github.com/Narvaal/BankSimulator"
