@@ -26,7 +26,7 @@ O produto final não deve parecer um projeto de portfólio. Deve parecer uma pla
 
 ---
 
-## Modelo de Dados — Card Metadata
+## Modelo de Dados — Artifact Metadata
 
 O campo `metadata` da tabela `asset` armazena um documento JSONB. Todos os campos são **obrigatórios**.
 
@@ -233,13 +233,13 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ✅ Claude tem alta precisão para JSON · Custo baixo ~$0.41/semana · Pipeline desacoplada do backend  
 ⚠️ Qualidade de imagem depende do prompt engineering · APIs externas precisam de retry
 
-### ADR-003: Frontend Owns Card Rendering (Fase 3)
+### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
 ✅ Backend nunca conhece detalhes visuais · Fácil adicionar raridades sem mudar backend  
 ⚠️ Lógica de raridade duplicada se houver outros clientes
 
 ### ADR-004: Three.js em Hook Dedicado (Fase 4)
-**Decisão:** Toda lógica Three.js em `useCardRenderer(canvasRef, metadata, rarity)`. Shaders GLSL em arquivos `.glsl` separados importados via Vite. Hook faz dispose no unmount.  
+**Decisão:** Toda lógica Three.js em `useArtifactRenderer(canvasRef, metadata, rarity)`. Shaders GLSL em arquivos `.glsl` separados importados via Vite. Hook faz dispose no unmount.  
 ✅ Componentes React declarativos · Sem memory leak · Shaders testáveis independentemente  
 ⚠️ Performance mobile precisa de fallback 2D
 
@@ -305,13 +305,13 @@ Schema completo em `src/main/resources/schema.sql` (idêntico ao de testes em `s
 | `credential` | Senhas hash separadas da tabela client |
 | `transactions` | Transações com assinatura RSA |
 | `email_verification` | Tokens de verificação e reset de senha |
-| `asset` | Cartas colecionáveis (metadata JSONB, supply controlado) |
-| `asset_unit` | Cópias individuais (status: AVAILABLE/IN_MARKET/RESERVED/TRANSFERRING) |
-| `asset_listing` | Ofertas de venda no marketplace (ACTIVE/SOLD/CANCELED) |
-| `asset_price_history` | Histórico de preços por listing |
-| `asset_bundle` | Pacotes semanais de cartas |
-| `asset_bundle_item` | Relacionamento bundle ↔ asset (1 asset por bundle, UNIQUE) |
-| `asset_transfer` | Histórico de transferências de asset_unit |
+| `artifact` | Tipo de artifact colecionável (`text`, `total_supply`, `created_at`) |
+| `artifact_unit` | Instância individual de um artifact (owner, status: AVAILABLE/IN_MARKET/RESERVED/TRANSFERRING) |
+| `artifact_listing` | Ofertas de venda no marketplace (ACTIVE/SOLD/CANCELED) |
+| `artifact_price_history` | Histórico de preços por listing e por unit |
+| `artifact_bundle` | Pacotes semanais de artifacts |
+| `artifact_bundle_item` | Relacionamento bundle ↔ artifact (1 artifact por bundle, UNIQUE) |
+| `artifact_transfer` | Histórico de transferências de artifact_unit (ownership chain) |
 | `universe` | Universo temático das coleções (Fase 1) |
 | `collection` | Coleção dentro de um universo (Fase 1) |
 | `booster_pack` | Packs fechados aguardando abertura (Fase 5) |
@@ -322,47 +322,50 @@ Schema completo em `src/main/resources/schema.sql` (idêntico ao de testes em `s
 
 ---
 
-## Sistema de Assets
+## Sistema de Artifacts
 
 ### Conceitos Fundamentais
 
-**`asset`** — o "tipo" da carta: metadata JSONB com conteúdo completo, `total_supply` e `created_at`. Único globalmente.
+**`artifact`** — o "tipo" do artifact: `text`, `total_supply`, `created_at`. Único globalmente. No futuro conterá `metadata JSONB` com raridade, ilustração, atributos etc.
 
-**`asset_unit`** — cópia individual e transferível de um `asset`. É o que o usuário realmente possui, com seu próprio dono (`owner_account_id`) e status.
+**`artifact_unit`** — instância individual e transferível de um `artifact`. É o que o usuário realmente possui, com seu próprio dono (`owner_account_id`), status e, no futuro, variante visual (foil, holo etc.).
 
-**Analogia:** `asset` é a tiragem ("AI Titan, 10 cópias"). Cada `asset_unit` é uma das 10 cópias físicas.
+**Analogia:** `artifact` é a tiragem ("AI Titan, 10 cópias"). Cada `artifact_unit` é uma das 10 cópias físicas — cada uma com identidade própria, histórico de preços e cadeia de ownership.
 
 ### Ciclo de Vida
 
-**1. Criação** — `POST /admin/assets/bundles` cria `asset_bundle` + `asset`s em transação única. Nenhum `asset_unit` é criado aqui.
+**1. Criação** — `POST /artifacts/bundles` (com `X-Admin-Token`) cria `artifact_bundle` + `artifact`s em transação única. Nenhum `artifact_unit` é criado aqui.
 
-**2. Claim** — `POST /assets/claim` decrementa `total_supply` atomicamente (`UPDATE ... WHERE total_supply >= 1`) e insere `asset_unit` com `status = AVAILABLE`. Cooldown por conta via `account.next_free_asset_at`.
+**2. Claim** — `POST /artifacts/claim` decrementa `total_supply` atomicamente (`UPDATE ... WHERE total_supply >= 1`) e insere `artifact_unit` com `status = AVAILABLE`. Cooldown por conta via `account.next_free_asset_at`.
 
-**3. Listar no marketplace** — `POST /asset-offers` atualiza `asset_unit.status = IN_MARKET` atomicamente (`WHERE status = 'AVAILABLE' AND owner = ?`) e insere `asset_listing`.
+**3. Listar no marketplace** — `POST /artifact-offers` atualiza `artifact_unit.status = IN_MARKET` atomicamente (`WHERE status = 'AVAILABLE' AND owner = ?`) e insere `artifact_listing`.
 
-**4. Compra** — `POST /asset-listings/{id}/purchase` transfere saldo, troca `owner_account_id` atomicamente (`WHERE status = 'IN_MARKET' AND owner = seller`), marca listing como `SOLD`, registra `asset_transfer` e `asset_price_history`.
+**4. Compra** — `POST /artifact-listings/{id}/purchase` transfere saldo, troca `owner_account_id` atomicamente (`WHERE status = 'IN_MARKET' AND owner = seller`), marca listing como `SOLD`, registra `artifact_transfer` e `artifact_price_history`.
 
-**5. Cancelar** — `POST /asset-offers/cancel` reverte listing para `CANCELED` e unit para `AVAILABLE`.
+**5. Cancelar** — `POST /artifact-offers/cancel` reverte listing para `CANCELED` e unit para `AVAILABLE`.
 
 ### Invariantes
 
-1. `asset.total_supply` nunca fica negativo — CHECK constraint + `WHERE total_supply >= 1` no UPDATE
-2. `asset_bundle_item.asset_id` é UNIQUE — cada asset pertence a exatamente um bundle
+1. `artifact.total_supply` nunca fica negativo — CHECK constraint + `WHERE total_supply >= 1` no UPDATE
+2. `artifact_bundle_item.artifact_id` é UNIQUE — cada artifact pertence a exatamente um bundle
 3. Transições de status são atômicas via UPDATE condicional — eliminam race conditions
 4. Usuário não pode comprar a própria listing
 5. Preço de listing deve ser > 0, máx 2 casas decimais
 6. Marketplace público passa `accountId = -1` quando não autenticado (sem exclusão de próprias listings)
 
-### Endpoints de Assets
+### Endpoints de Artifacts
 
 | Endpoint | Acesso | Descrição |
 |---|---|---|
-| `GET /assets/bundles` | Público | Lista bundles paginados |
-| `GET /assets/bundles/{id}/items` | Público | Assets de um bundle |
-| `GET /asset-listings` | Público | Listings ativos (exclui próprias se autenticado) |
-| `GET /asset-listings/me` | Privado | Próprias listings ativas |
-| `GET /asset-units/me` | Privado | Próprias units AVAILABLE |
-| `GET /assets/{id}/price-history` | Público | Histórico de preços |
+| `GET /artifacts/bundles` | Público | Lista bundles paginados |
+| `GET /artifacts/bundles/{id}/items` | Público | Artifacts de um bundle |
+| `GET /artifacts/{id}` | Público | Artifact por ID (tipo, não instância) |
+| `GET /artifact-listings` | Público | Listings ativos (exclui próprias se autenticado) |
+| `GET /artifact-listings/me` | Privado | Próprias listings ativas |
+| `GET /artifact-units/me` | Privado | Próprias units AVAILABLE |
+| `GET /artifact-units/{id}` | Público | Instância específica: nome, owner, status, price history, ownership chain |
+| `GET /artifact-transfers` | Público | Feed público de todas as transferências (paginado, newest first) |
+| `GET /artifacts/{id}/price-history` | Público | Histórico de preços por unit |
 
 ---
 
@@ -440,6 +443,8 @@ Localizado em `frontend/assetstore/`. URL da API via `VITE_API_URL` (`.env` = pr
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | Público |
 | `/market` | Público (ações requerem login) |
 | `/reward` | Público (claim requer login) |
+| `/logs` | Público — Feed de todas as transferências (paginado, newest first) |
+| `/artifact/:id` | Público — Instância de artifact: nome, owner, status, price history, ownership chain |
 | `/inventory` | Privado (AuthRequiredModal se não autenticado) |
 
 `AuthRequiredModal` aparece quando não autenticado tenta ação protegida. Botões "Cancel" e "Create account" (→ `/register`). Sem redirect automático para `/login`.
@@ -468,13 +473,6 @@ mvn test
 ```
 
 Testes de integração com H2. Schema de teste idêntico ao de produção.
-
-### Testes Quebrados — Prioridade
-
-1. **`AuthResponse`** agora tem 3 campos (`clientId`, `name`, `token`) — testes com 2 campos falham na compilação.
-2. **`AccountOperationsController`** recebe `JwtService` no construtor — testes precisam do 3º argumento.
-3. **`AuthCookieService`** usa `@Value` para `auth.cookie.*` — testes que instanciam diretamente precisam de `ApplicationContext`.
-4. **`AuthController`** tem novo endpoint `GET /auth/session` — pode precisar de ajuste.
 
 ---
 
@@ -526,7 +524,7 @@ Arquivo: `/etc/systemd/system/banksimulator.service`
 ## Endpoints Admin
 
 ```
-POST /admin/assets/bundles   — cria bundle de cartas (X-Admin-Token)
+POST /artifacts/bundles      — cria bundle de artifacts (X-Admin-Token)
 POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 ```
 
@@ -544,6 +542,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | Claim 500 — syntax H2 | `AccountDAO.java` | H2 não suporta `INTERVAL '2 minutes'` |
 | Claim 500 — RETURNING | `AccountDAO.java` | H2 não suporta `UPDATE ... RETURNING` |
 | 401 no marketplace público | `AuthCookieService.java` | `extractToken()` lançava 401; resolvido com `extractTokenOrNull()` e `accountId = -1` |
+| 500 em vez de 404 para artifact unit inexistente | `ArtifactUnitService.java` | `RuntimeException("not found")` era capturada pelo `catch (Exception e)` externo e re-embrulhada como "Service error"; corrigido com `ArtifactUnitNotFoundException extends BusinessRuleException` + re-throw explícito + handler em `ApiExceptionHandler` → HTTP 404 |
 
 ---
 
@@ -553,6 +552,20 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - Sem rate limiting implementado.
 - Sem logs estruturados / observabilidade.
 - Chaves RSA em `/opt/banksimulator/keys/`. Se o EC2 for recriado, chaves existentes são perdidas.
-- **Testes quebrados** — ver seção acima.
+- 82 testes · 18 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
 - Three.js ainda não está no projeto — Fase 4.
 - Pipeline de IA ainda não existe — Fase 2.
+
+---
+
+## Ferramentas de Desenvolvimento
+
+### seed-local.sh
+
+Script para popular o banco H2 local com dados de teste. Cria accounts, artifacts, units, listings e transferências para facilitar o desenvolvimento sem precisar passar pelo fluxo manual completo.
+
+```bash
+./seed-local.sh
+```
+
+Requer o backend rodando em `localhost:5000` com profile `local`.
