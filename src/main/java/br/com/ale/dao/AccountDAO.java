@@ -4,10 +4,10 @@ import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.client.Provider;
-import br.com.ale.dto.AccountDetailsResponse;
-import br.com.ale.dto.CreateAccountRequest;
-import br.com.ale.dto.CreateBalanceOperationRequest;
-import br.com.ale.dto.UpdateAccountRequest;
+import br.com.ale.dto.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -416,6 +416,102 @@ public class AccountDAO {
                     "Database error while selecting next claim instant account " +
                             "[accountNumber=" + accountNumber + "]",
                     e
+            );
+        }
+    }
+
+    public Optional<PublicProfileResponse> selectPublicProfileById(Connection conn, long accountId) {
+
+        String sql = """
+                SELECT a.id, c.name, c.picture, a.account_number
+                  FROM account a
+                  JOIN client c ON c.id = a.client_id
+                 WHERE a.id = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(new PublicProfileResponse(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getString("picture"),
+                            rs.getString("account_number")
+                    ));
+                }
+                return Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while selecting public profile [accountId=" + accountId + "]", e
+            );
+        }
+    }
+
+    public List<PublicProfileResponse> searchByName(Connection conn, String query, int page, int pageSize) {
+
+        String sql = """
+                SELECT a.id, c.name, c.picture, a.account_number
+                  FROM account a
+                  JOIN client c ON c.id = a.client_id
+                 WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                   AND a.status = 'ACTIVE'
+                 ORDER BY c.name
+                 LIMIT ? OFFSET ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, query);
+            stmt.setInt(2, pageSize);
+            stmt.setInt(3, page * pageSize);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<PublicProfileResponse> results = new ArrayList<>();
+                while (rs.next()) {
+                    results.add(new PublicProfileResponse(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getString("picture"),
+                            rs.getString("account_number")
+                    ));
+                }
+                return results;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while searching accounts [query=" + query + "]", e
+            );
+        }
+    }
+
+    public long countByName(Connection conn, String query) {
+
+        String sql = """
+                SELECT COUNT(*)
+                  FROM account a
+                  JOIN client c ON c.id = a.client_id
+                 WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                   AND a.status = 'ACTIVE'
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, query);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getLong(1);
+                return 0;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Database error while counting accounts [query=" + query + "]", e
             );
         }
     }

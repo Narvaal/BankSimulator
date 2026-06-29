@@ -10,6 +10,8 @@ import ArtifactDetail from "./component/artifact/ArtifactDetail.tsx";
 import RareLines from "./component/landpage/RareLines.tsx"
 import EmailVerification from "./component/localAuth/EmailVerification.tsx"
 import ResetPassword from  "./component/localAuth/ResetPassword.tsx"
+import ProfilePage from "./component/profile/ProfilePage.tsx";
+import SearchPage from "./component/search/SearchPage.tsx";
 import {initSession} from "./auth.ts";
 
 export default function Router() {
@@ -25,6 +27,10 @@ export default function Router() {
                 <Route path="/register" element={<CreateAccount/>}/>
                 <Route path="/forgot-password" element={<EmailVerification/>}/>
                 <Route path="/reset-password" element={<ResetPassword/>}/>
+
+                {/* Public — profiles & search */}
+                <Route path="/search" element={<SearchPage/>}/>
+                <Route path="/profile/:accountId" element={<ProfilePage/>}/>
 
                 {/* Private */}
                 <Route path="/inventory" element={<Home/>}/>

@@ -4,6 +4,8 @@ import br.com.ale.application.account.command.ChangePasswordCommand;
 import br.com.ale.application.account.command.ChangePasswordSenderCommand;
 import br.com.ale.application.account.command.CreateAccountCommand;
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
+import br.com.ale.application.account.querry.GetPublicAccountProfileUseCase;
+import br.com.ale.application.account.querry.SearchAccountsByNameUseCase;
 import br.com.ale.application.account.usecase.ChangePasswordUseCase;
 import br.com.ale.application.account.usecase.CreateAccountUseCase;
 import br.com.ale.application.account.usecase.RequestPasswordResetUseCase;
@@ -22,19 +24,25 @@ public class AccountController {
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
     private final GetAccountDetailsUseCase getAccountDetailsUseCase;
+    private final GetPublicAccountProfileUseCase getPublicAccountProfileUseCase;
+    private final SearchAccountsByNameUseCase searchAccountsByNameUseCase;
 
     public AccountController(
             AuthCookieService authCookieService,
             CreateAccountUseCase createAccountUseCase,
             RequestPasswordResetUseCase requestPasswordResetUseCase,
             ChangePasswordUseCase changePasswordUseCase,
-            GetAccountDetailsUseCase getAccountDetailsUseCase
+            GetAccountDetailsUseCase getAccountDetailsUseCase,
+            GetPublicAccountProfileUseCase getPublicAccountProfileUseCase,
+            SearchAccountsByNameUseCase searchAccountsByNameUseCase
     ) {
         this.authCookieService = authCookieService;
         this.createAccountUseCase = createAccountUseCase;
         this.requestPasswordResetUseCase = requestPasswordResetUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
         this.getAccountDetailsUseCase = getAccountDetailsUseCase;
+        this.getPublicAccountProfileUseCase = getPublicAccountProfileUseCase;
+        this.searchAccountsByNameUseCase = searchAccountsByNameUseCase;
     }
 
     @PostMapping
@@ -76,5 +84,19 @@ public class AccountController {
         );
 
         return ResponseEntity.ok("Password reset");
+    }
+
+    @GetMapping("/{accountId}/profile")
+    public PublicProfileResponse profile(@PathVariable("accountId") long accountId) {
+        return getPublicAccountProfileUseCase.execute(accountId);
+    }
+
+    @GetMapping("/search")
+    public PublicProfilePageView search(
+            @RequestParam("q") String q,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize
+    ) {
+        return searchAccountsByNameUseCase.execute(q, page, pageSize);
     }
 }
