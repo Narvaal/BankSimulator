@@ -1,6 +1,6 @@
 import {AnimatePresence, motion} from "framer-motion";
 import type {ComponentType, Dispatch, SetStateAction, SVGProps} from "react";
-import {BriefcaseIcon, GiftIcon, QueueListIcon, ShoppingCartIcon} from "@heroicons/react/24/outline";
+import {BriefcaseIcon, GiftIcon, MagnifyingGlassIcon, QueueListIcon, ShoppingCartIcon} from "@heroicons/react/24/outline";
 import {ChevronLeftIcon} from "@heroicons/react/20/solid";
 import {Link, useLocation} from "react-router-dom";
 
@@ -71,6 +71,7 @@ export default function Sidebar({collapsed, setCollapsed}: Props) {
             transition={{type: "spring", stiffness: 280, damping: 28}}
         >
             <nav className="flex-1 p-2 pt-3 space-y-0.5">
+                <NavItem icon={MagnifyingGlassIcon} text="Search" collapsed={collapsed} link="/search"/>
                 <NavItem icon={BriefcaseIcon} text="Inventory" collapsed={collapsed} link="/inventory"/>
                 <NavItem icon={ShoppingCartIcon} text="Marketplace" collapsed={collapsed} link="/market"/>
                 <NavItem icon={GiftIcon} text="Rewards" collapsed={collapsed} link="/reward"/>

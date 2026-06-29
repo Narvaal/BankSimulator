@@ -3,6 +3,7 @@ package br.com.ale.service.account;
 import br.com.ale.dao.AccountDAO;
 import br.com.ale.dao.TransactionDAO;
 import br.com.ale.domain.account.Account;
+import br.com.ale.domain.exception.AccountNotFoundException;
 import br.com.ale.domain.transaction.TransactionStatus;
 import br.com.ale.domain.transaction.TransactionType;
 import br.com.ale.dto.*;
@@ -17,6 +18,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.sql.Connection;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public class AccountService {
@@ -386,6 +388,32 @@ public class AccountService {
                             "[accountNumber=" + accountNumber +
                             ", amount=" + amount + "]",
                     e
+            );
+        }
+    }
+
+    public PublicProfileResponse getPublicProfile(long accountId) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            return accountDAO.selectPublicProfileById(conn, accountId)
+                    .orElseThrow(() -> new AccountNotFoundException(accountId));
+        } catch (AccountNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while selecting public profile [accountId=" + accountId + "]", e
+            );
+        }
+    }
+
+    public PublicProfilePageView searchByName(String query, int page, int pageSize) {
+        try (Connection conn = connectionProvider.getConnection()) {
+            List<PublicProfileResponse> items = accountDAO.searchByName(conn, query, page, pageSize);
+            long total = accountDAO.countByName(conn, query);
+            int totalPages = (int) Math.ceil((double) total / pageSize);
+            return new PublicProfilePageView(items, page, pageSize, totalPages, total);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Service error while searching accounts [query=" + query + "]", e
             );
         }
     }

@@ -1,6 +1,8 @@
 package br.com.ale.application.config;
 
 import br.com.ale.application.account.querry.GetAccountDetailsUseCase;
+import br.com.ale.application.account.querry.GetPublicAccountProfileUseCase;
+import br.com.ale.application.account.querry.SearchAccountsByNameUseCase;
 import br.com.ale.application.account.usecase.*;
 import br.com.ale.application.auth.usecase.GoogleLoginUseCase;
 import br.com.ale.application.auth.usecase.LocalLoginUseCase;
@@ -217,6 +219,16 @@ public class AuthConfig {
             AuthService authService
     ) {
         return new GetClientProfileUseCase(clientService, authService);
+    }
+
+    @Bean
+    public GetPublicAccountProfileUseCase getPublicAccountProfileUseCase(AccountService accountService) {
+        return new GetPublicAccountProfileUseCase(accountService);
+    }
+
+    @Bean
+    public SearchAccountsByNameUseCase searchAccountsByNameUseCase(AccountService accountService) {
+        return new SearchAccountsByNameUseCase(accountService);
     }
 
     @Bean
