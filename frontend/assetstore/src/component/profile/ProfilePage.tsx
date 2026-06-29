@@ -105,7 +105,7 @@ export default function ProfilePage() {
                 balance={account?.balance ?? 0}
                 nextFreeAssetAt={account?.nextFreeAssetAt ?? new Date().toISOString()}
                 name={account?.name ?? ""}
-                imageUrl={account?.picture ?? null}
+                imageUrl={account?.picture ?? ""}
             />
 
             <main
