@@ -62,9 +62,9 @@ public class ArtifactTransferService {
         }
     }
 
-    public ArtifactTransferLogPageView publicFeed(int page, int pageSize) {
+    public ArtifactTransferLogPageView publicFeed(Long artifactId, int page, int pageSize) {
         try (Connection conn = connectionProvider.getConnection()) {
-            return artifactTransferDAO.selectPublicFeed(conn, page, pageSize);
+            return artifactTransferDAO.selectPublicFeed(conn, artifactId, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while fetching artifact transfer feed " +

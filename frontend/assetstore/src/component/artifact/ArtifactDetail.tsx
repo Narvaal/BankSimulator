@@ -234,13 +234,13 @@ export default function ArtifactDetail() {
 
                         <div className="flex gap-3">
                             <Link
-                                to="/market"
+                                to={`/market?artifactId=${unit.artifactId}&artifactText=${encodeURIComponent(unit.artifactText)}`}
                                 className="flex-1 text-center px-4 py-2.5 rounded-xl bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
                             >
-                                View on Marketplace
+                                View in Market
                             </Link>
                             <Link
-                                to="/logs"
+                                to={`/logs?artifactId=${unit.artifactId}&artifactText=${encodeURIComponent(unit.artifactText)}`}
                                 className="flex-1 text-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-zinc-700 text-sm font-medium hover:bg-slate-50 transition-colors"
                             >
                                 Transfer Log

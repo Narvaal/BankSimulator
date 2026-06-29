@@ -1,9 +1,9 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import {Link, useSearchParams} from "react-router-dom";
 import NavBar from "../navBar/NavBar";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
 import Pagination from "../util/Pagination.tsx";
-import {Link} from "react-router-dom";
 import {API_URL} from "../../config";
 
 /* ===================== TYPES ===================== */
@@ -28,8 +28,14 @@ interface TransferLogPageView {
 
 /* ===================== API ===================== */
 
-async function getTransferLog(page: number, pageSize: number): Promise<TransferLogPageView> {
-    const res = await fetch(`${API_URL}/artifact-transfers?page=${page}&pageSize=${pageSize}`);
+async function getTransferLog(
+    page: number,
+    pageSize: number,
+    artifactId: number | null
+): Promise<TransferLogPageView> {
+    const params = new URLSearchParams({page: String(page), pageSize: String(pageSize)});
+    if (artifactId != null) params.set("artifactId", String(artifactId));
+    const res = await fetch(`${API_URL}/artifact-transfers?${params}`);
     if (!res.ok) throw new Error("Failed to load transfer log");
     return res.json();
 }
@@ -38,12 +44,18 @@ async function getTransferLog(page: number, pageSize: number): Promise<TransferL
 
 export default function Logs() {
     const {data: account} = useAccount();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [log, setLog] = useState<TransferLogPageView | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(0);
     const pageSize = 30;
+
+    const [artifactId, setArtifactId] = useState<number | null>(null);
+    const [artifactLabel, setArtifactLabel] = useState<string | null>(null);
+
+    const filtersInitialized = useRef(false);
 
     const [collapsed, setCollapsed] = useState(() => {
         const saved = localStorage.getItem("sidebar-collapsed");
@@ -55,13 +67,24 @@ export default function Logs() {
     }, [collapsed]);
 
     useEffect(() => {
+        if (filtersInitialized.current) return;
+        filtersInitialized.current = true;
+        const aid = searchParams.get("artifactId");
+        const label = searchParams.get("artifactText");
+        if (aid) {
+            setArtifactId(Number(aid));
+            setArtifactLabel(label);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
         let cancelled = false;
 
         async function load() {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getTransferLog(page, pageSize);
+                const data = await getTransferLog(page, pageSize, artifactId);
                 if (!cancelled) setLog(data);
             } catch {
                 if (!cancelled) setError("Failed to load transfer log");
@@ -72,7 +95,14 @@ export default function Logs() {
 
         load();
         return () => { cancelled = true; };
-    }, [page]);
+    }, [page, artifactId]);
+
+    function clearArtifactFilter() {
+        setArtifactId(null);
+        setArtifactLabel(null);
+        setPage(0);
+        setSearchParams({});
+    }
 
     return (
         <div className="min-h-screen bg-slate-100">
@@ -108,11 +138,25 @@ export default function Logs() {
                 className="pt-[60px] p-6 transition-all duration-300"
                 style={{marginLeft: collapsed ? 64 : 220}}
             >
-                <div className="mb-6">
-                    <h1 className="text-xl font-bold text-zinc-900">Transfer Log</h1>
-                    <p className="text-sm text-zinc-500 mt-0.5">
-                        All artifact sales on the platform, from newest to oldest.
-                    </p>
+                <div className="mb-6 flex items-center gap-3 flex-wrap">
+                    <div>
+                        <h1 className="text-xl font-bold text-zinc-900">Transfer Log</h1>
+                        <p className="text-sm text-zinc-500 mt-0.5">
+                            {artifactId != null
+                                ? `Transfers of "${artifactLabel ?? `#${artifactId}`}"`
+                                : "All artifact sales on the platform, from newest to oldest."}
+                        </p>
+                    </div>
+
+                    {artifactId != null && (
+                        <button
+                            onClick={clearArtifactFilter}
+                            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-zinc-900 text-white hover:bg-zinc-700 transition-colors"
+                        >
+                            <span>{artifactLabel ?? `#${artifactId}`}</span>
+                            <span className="ml-1">×</span>
+                        </button>
+                    )}
                 </div>
 
                 {loading && <p className="text-center text-slate-500">Loading...</p>}

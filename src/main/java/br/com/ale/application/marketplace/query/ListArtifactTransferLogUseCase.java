@@ -11,10 +11,10 @@ public class ListArtifactTransferLogUseCase {
         this.artifactTransferService = artifactTransferService;
     }
 
-    public ArtifactTransferLogPageView execute(int page, int pageSize) {
+    public ArtifactTransferLogPageView execute(Long artifactId, int page, int pageSize) {
         if (page < 0 || pageSize <= 0) {
             throw new IllegalArgumentException("Invalid pagination params");
         }
-        return artifactTransferService.publicFeed(page, pageSize);
+        return artifactTransferService.publicFeed(artifactId, page, pageSize);
     }
 }

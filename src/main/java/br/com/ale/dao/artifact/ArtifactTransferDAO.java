@@ -104,7 +104,9 @@ public class ArtifactTransferDAO {
         }
     }
 
-    public ArtifactTransferLogPageView selectPublicFeed(Connection conn, int page, int pageSize) {
+    public ArtifactTransferLogPageView selectPublicFeed(Connection conn, Long artifactId, int page, int pageSize) {
+
+        String artifactFilter = artifactId != null ? "WHERE au.artifact_id = ?" : "";
 
         String sql = """
                 WITH ranked_transfers AS (
@@ -140,14 +142,17 @@ public class ArtifactTransferDAO {
                 LEFT JOIN ranked_prices rp
                     ON rp.artifact_unit_id = rt.artifact_unit_id
                    AND rp.price_rank       = rt.transfer_rank
+                """ + artifactFilter + """
                 ORDER BY rt.created_at DESC
                 LIMIT ? OFFSET ?
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, pageSize);
-            stmt.setInt(2, page * pageSize);
+            int idx = 1;
+            if (artifactId != null) stmt.setLong(idx++, artifactId);
+            stmt.setInt(idx++, pageSize);
+            stmt.setInt(idx,   page * pageSize);
 
             try (ResultSet rs = stmt.executeQuery()) {
 

@@ -20,8 +20,9 @@ public class ArtifactTransferLogController {
     @GetMapping("")
     public ArtifactTransferLogPageView list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int pageSize
+            @RequestParam(defaultValue = "30") int pageSize,
+            @RequestParam(required = false) Long artifactId
     ) {
-        return listArtifactTransferLogUseCase.execute(page, pageSize);
+        return listArtifactTransferLogUseCase.execute(artifactId, page, pageSize);
     }
 }

@@ -4,10 +4,13 @@ import br.com.ale.application.marketplace.query.GetArtifactListingByIdUseCase;
 import br.com.ale.application.marketplace.query.ListActiveArtifactListingsUseCase;
 import br.com.ale.application.marketplace.query.ListArtifactListingsByOwnerUseCase;
 import br.com.ale.domain.artifact.ArtifactListing;
+import br.com.ale.dto.ArtifactListingFilter;
 import br.com.ale.dto.ArtifactListingPageView;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/artifact-listings")
@@ -36,11 +39,19 @@ public class ArtifactListingQueryController {
     }
 
     @GetMapping("")
-    public ArtifactListingPageView list(@RequestParam("page") int page,
-                                     @RequestParam("pageSize") int pageSize,
-                                     HttpServletRequest request) {
+    public ArtifactListingPageView list(
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam(required = false) Long artifactId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            HttpServletRequest request
+    ) {
         String token = authCookieService.extractTokenOrNull(request);
-        return listActiveArtifactListingsUseCase.execute(token, page, pageSize);
+        ArtifactListingFilter filter = new ArtifactListingFilter(artifactId, q, sort, minPrice, maxPrice);
+        return listActiveArtifactListingsUseCase.execute(token, filter, page, pageSize);
     }
 
     @GetMapping("/me")

@@ -11,6 +11,7 @@ import br.com.ale.domain.artifact.ArtifactUnit;
 import br.com.ale.domain.artifact.ReasonType;
 import br.com.ale.domain.exception.InvalidArtifactListingStateException;
 import br.com.ale.domain.exception.UnauthorizedOperationException;
+import br.com.ale.dto.ArtifactListingFilter;
 import br.com.ale.dto.ArtifactListingPageView;
 import br.com.ale.dto.CreateArtifactListingRequest;
 import br.com.ale.dto.CreatePriceHistoryRequest;
@@ -235,14 +236,14 @@ public class ArtifactListingService {
     }
 
 
-    public ArtifactListingPageView selectActiveByActiveStatus(long accountId, int page, int pageSize) {
+    public ArtifactListingPageView selectActiveByActiveStatus(long accountId, ArtifactListingFilter filter, int page, int pageSize) {
 
         if (page < 0 || pageSize <= 0) {
             throw new IllegalArgumentException("Invalid pagination params");
         }
 
         try (Connection conn = connectionProvider.getConnection()) {
-            return artifactListingDAO.selectActiveByActiveStatus(conn, accountId, page, pageSize);
+            return artifactListingDAO.selectActiveByActiveStatus(conn, accountId, filter, page, pageSize);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Service error while selecting active artifact listing " +

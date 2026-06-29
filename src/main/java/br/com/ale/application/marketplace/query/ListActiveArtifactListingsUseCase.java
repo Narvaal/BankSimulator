@@ -1,6 +1,7 @@
 package br.com.ale.application.marketplace.query;
 
 import br.com.ale.domain.account.Account;
+import br.com.ale.dto.ArtifactListingFilter;
 import br.com.ale.dto.ArtifactListingPageView;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.artifact.ArtifactListingService;
@@ -20,7 +21,7 @@ public class ListActiveArtifactListingsUseCase {
         this.jwtService = jwtService;
     }
 
-    public ArtifactListingPageView execute(String token, int page, int pageSize) {
+    public ArtifactListingPageView execute(String token, ArtifactListingFilter filter, int page, int pageSize) {
 
         long accountId = -1;
 
@@ -31,6 +32,6 @@ public class ListActiveArtifactListingsUseCase {
                     .orElse(-1L);
         }
 
-        return artifactListingService.selectActiveByActiveStatus(accountId, page, pageSize);
+        return artifactListingService.selectActiveByActiveStatus(accountId, filter, page, pageSize);
     }
 }

@@ -1,5 +1,6 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useQueryClient} from "@tanstack/react-query";
+import {useSearchParams} from "react-router-dom";
 import NavBar from "../navBar/NavBar";
 import PriceHistoryChart from "../market/PriceHistoryChart";
 import {useAccount} from "../auth/Auth";
@@ -37,10 +38,27 @@ interface artifactListingPageView {
     totalPages: number;
 }
 
+type SortOption = "newest" | "price_asc" | "price_desc";
+
 /* ===================== API ===================== */
 
-async function getListings(page: number, pageSize: number) {
-    const res = await fetch(`${API_URL}/artifact-listings?page=${page}&pageSize=${pageSize}`, {
+async function getListings(
+    page: number,
+    pageSize: number,
+    artifactId: number | null,
+    search: string,
+    sort: SortOption,
+    minPrice: string,
+    maxPrice: string
+): Promise<artifactListingPageView> {
+    const params = new URLSearchParams({page: String(page), pageSize: String(pageSize)});
+    if (artifactId != null) params.set("artifactId", String(artifactId));
+    if (search.trim().length >= 2) params.set("q", search.trim());
+    if (sort !== "newest") params.set("sort", sort);
+    if (minPrice !== "") params.set("minPrice", minPrice);
+    if (maxPrice !== "") params.set("maxPrice", maxPrice);
+
+    const res = await fetch(`${API_URL}/artifact-listings?${params}`, {
         credentials: "include",
         headers: authHeader()
     });
@@ -88,6 +106,7 @@ function Marketplace() {
 
     const {data: account} = useAccount();
     const queryClient = useQueryClient();
+    const [searchParams] = useSearchParams();
 
     const [mode, setMode] = useState<"market" | "user">("market");
 
@@ -108,12 +127,38 @@ function Marketplace() {
         return saved ? JSON.parse(saved) : false;
     });
 
-    const [message, setMessage] = useState<{
-        type: "success" | "error";
-        text: string;
-    } | null>(null);
-
+    const [message, setMessage] = useState<{type: "success" | "error"; text: string} | null>(null);
     const [authModalOpen, setAuthModalOpen] = useState(false);
+
+    /* ===================== FILTERS ===================== */
+
+    const [artifactId, setArtifactId] = useState<number | null>(null);
+    const [artifactLabel, setArtifactLabel] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [sort, setSort] = useState<SortOption>("newest");
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+
+    const filtersInitialized = useRef(false);
+
+    useEffect(() => {
+        if (filtersInitialized.current) return;
+        filtersInitialized.current = true;
+        const aid = searchParams.get("artifactId");
+        const label = searchParams.get("artifactText");
+        if (aid) {
+            setArtifactId(Number(aid));
+            setArtifactLabel(label);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 400);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    function resetPage() { setPage(0); }
 
     /* ===================== LOAD ===================== */
 
@@ -129,7 +174,7 @@ function Marketplace() {
 
                 const data =
                     mode === "market"
-                        ? await getListings(page, pageSize)
+                        ? await getListings(page, pageSize, artifactId, debouncedSearch, sort, minPrice, maxPrice)
                         : await getUserListings(page, pageSize);
 
                 if (!cancelled) setListings(data);
@@ -143,11 +188,9 @@ function Marketplace() {
 
         load();
 
-        return () => {
-            cancelled = true;
-        };
+        return () => { cancelled = true; };
 
-    }, [account, page, mode]);
+    }, [account, page, mode, artifactId, debouncedSearch, sort, minPrice, maxPrice]);
 
     useEffect(() => {
         localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
@@ -210,6 +253,19 @@ function Marketplace() {
 
     /* ===================== UI ===================== */
 
+    const sortButton = (label: string, value: SortOption) => (
+        <button
+            onClick={() => { setSort(value); resetPage(); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                sort === value
+                    ? "bg-zinc-900 text-white"
+                    : "bg-white border border-slate-200 text-zinc-600 hover:bg-slate-50"
+            }`}
+        >
+            {label}
+        </button>
+    );
+
     return (
         <div className="min-h-screen bg-slate-100">
 
@@ -247,7 +303,7 @@ function Marketplace() {
 
                 {/* ===================== SWITCH ===================== */}
 
-                <div className="mb-6 flex gap-4">
+                <div className="mb-4 flex gap-4">
                     <div className="relative flex bg-slate-200 rounded-full p-1 w-[260px]">
 
                         <div
@@ -276,6 +332,80 @@ function Marketplace() {
 
                     </div>
                 </div>
+
+                {/* ===================== FILTERS (market mode only) ===================== */}
+
+                {mode === "market" && (
+                    <div className="mb-5 flex flex-wrap items-center gap-3">
+
+                        {/* Artifact chip */}
+                        {artifactId != null && (
+                            <div className="flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                                <span>{artifactLabel ?? `#${artifactId}`}</span>
+                                <button
+                                    onClick={() => { setArtifactId(null); setArtifactLabel(null); resetPage(); }}
+                                    className="ml-1 hover:text-zinc-300 transition-colors"
+                                    aria-label="Clear artifact filter"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Search */}
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); resetPage(); }}
+                            placeholder="Search by name..."
+                            className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 w-48"
+                        />
+
+                        {/* Sort */}
+                        <div className="flex gap-1.5">
+                            {sortButton("Newest", "newest")}
+                            {sortButton("Price ↑", "price_asc")}
+                            {sortButton("Price ↓", "price_desc")}
+                        </div>
+
+                        {/* Price range */}
+                        <div className="flex items-center gap-1.5">
+                            <input
+                                type="number"
+                                value={minPrice}
+                                onChange={e => { setMinPrice(e.target.value); resetPage(); }}
+                                placeholder="Min $"
+                                min="0"
+                                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 w-24"
+                            />
+                            <span className="text-slate-400 text-sm">—</span>
+                            <input
+                                type="number"
+                                value={maxPrice}
+                                onChange={e => { setMaxPrice(e.target.value); resetPage(); }}
+                                placeholder="Max $"
+                                min="0"
+                                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 w-24"
+                            />
+                        </div>
+
+                        {/* Clear all */}
+                        {(search || sort !== "newest" || minPrice || maxPrice || artifactId != null) && (
+                            <button
+                                onClick={() => {
+                                    setArtifactId(null); setArtifactLabel(null);
+                                    setSearch(""); setSort("newest");
+                                    setMinPrice(""); setMaxPrice("");
+                                    resetPage();
+                                }}
+                                className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors underline"
+                            >
+                                Clear filters
+                            </button>
+                        )}
+
+                    </div>
+                )}
 
                 {/* ===================== GRID ===================== */}
 
