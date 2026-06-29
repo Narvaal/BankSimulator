@@ -155,7 +155,7 @@ class ListArtifactTransferLogUseCaseTest {
 
     @Test
     void shouldReturnEmptyFeedWhenNoTransfersExist() {
-        var result = useCase.execute(0, 30);
+        var result = useCase.execute(null, 0, 30);
 
         assertNotNull(result);
         assertTrue(result.items().isEmpty());
@@ -176,7 +176,7 @@ class ListArtifactTransferLogUseCaseTest {
 
         buy(listing, buyerClient);
 
-        var result = useCase.execute(0, 30);
+        var result = useCase.execute(null, 0, 30);
 
         assertEquals(1, result.totalItems());
         assertEquals(1, result.items().size());
@@ -212,7 +212,7 @@ class ListArtifactTransferLogUseCaseTest {
         ArtifactListing listing2 = list(unit2, seller, new BigDecimal("20.00"));
         buy(listing2, buyer2Client);
 
-        var result = useCase.execute(0, 30);
+        var result = useCase.execute(null, 0, 30);
 
         assertEquals(2, result.totalItems());
         assertEquals("Second Card", result.items().get(0).artifactText());
@@ -244,7 +244,7 @@ class ListArtifactTransferLogUseCaseTest {
         ArtifactListing listing2 = list(refreshedUnit, buyer1, new BigDecimal("60.00"));
         buy(listing2, buyer2Client);
 
-        var result = useCase.execute(0, 30);
+        var result = useCase.execute(null, 0, 30);
 
         assertEquals(2, result.totalItems());
 
@@ -275,25 +275,64 @@ class ListArtifactTransferLogUseCaseTest {
             buy(listing, buyerClient);
         }
 
-        var page0 = useCase.execute(0, 3);
+        var page0 = useCase.execute(null, 0, 3);
         assertEquals(5, page0.totalItems());
         assertEquals(2, page0.totalPages());
         assertEquals(3, page0.items().size());
         assertEquals(0, page0.page());
 
-        var page1 = useCase.execute(1, 3);
+        var page1 = useCase.execute(null, 1, 3);
         assertEquals(5, page1.totalItems());
         assertEquals(2, page1.items().size());
         assertEquals(1, page1.page());
     }
 
     @Test
+    void shouldFilterByArtifactId() {
+        Client sellerClient = newClient();
+        Account seller = newAccount(sellerClient);
+        Client buyerClient = newClient();
+        Account buyer = fundedAccount(buyerClient, new BigDecimal("9999.00"));
+
+        Artifact target = newArtifact("Target");
+        Artifact other  = newArtifact("Other");
+
+        ArtifactUnit targetUnit = newUnit(target, seller);
+        ArtifactUnit otherUnit  = newUnit(other, seller);
+
+        buy(list(targetUnit, seller, new BigDecimal("10.00")), buyerClient);
+        buy(list(otherUnit,  seller, new BigDecimal("20.00")), buyerClient);
+
+        var result = useCase.execute(target.getId(), 0, 30);
+
+        assertEquals(1, result.totalItems());
+        assertEquals("Target", result.items().get(0).artifactText());
+        assertEquals(targetUnit.getId(), result.items().get(0).artifactUnitId());
+    }
+
+    @Test
+    void shouldReturnAllTransfersWhenArtifactIdIsNull() {
+        Client sellerClient = newClient();
+        Account seller = newAccount(sellerClient);
+        Client buyerClient = newClient();
+        Account buyer = fundedAccount(buyerClient, new BigDecimal("9999.00"));
+
+        buy(list(newUnit(newArtifact("A"), seller), seller, new BigDecimal("1.00")), buyerClient);
+        buy(list(newUnit(newArtifact("B"), seller), seller, new BigDecimal("2.00")), buyerClient);
+        buy(list(newUnit(newArtifact("C"), seller), seller, new BigDecimal("3.00")), buyerClient);
+
+        var result = useCase.execute(null, 0, 30);
+
+        assertEquals(3, result.totalItems());
+    }
+
+    @Test
     void shouldThrowOnNegativePage() {
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(-1, 30));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(null, -1, 30));
     }
 
     @Test
     void shouldThrowOnZeroPageSize() {
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(0, 0));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(null, 0, 0));
     }
 }
