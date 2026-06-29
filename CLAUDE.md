@@ -208,12 +208,16 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 - Animação cinematográfica de abertura (Framer Motion + Three.js)
 
 ### Fase 6 — Marketplace
+- ✅ Filtros no marketplace: artifactId, busca por nome, ordenação, faixa de preço
+- ✅ Transfer log filtrado por artifact (via URL params do ArtifactDetail)
+- Filtro por raridade — pendente até Fase 1 (requer `metadata JSONB`)
 - Histórico de preços com gráficos (Recharts já disponível)
-- Filtros por raridade, categoria, coleção; volume e analytics
+- Volume e analytics por artifact
 
 ### Fase 7 — Collections, Achievements, Profile
+- ✅ Perfil público: `GET /accounts/{id}/profile` + rota `/profile/:accountId`
+- ✅ Busca de usuários: `GET /accounts/search` + rota `/search`
 - Coleções com barra de progresso, achievements desbloqueáveis
-- Perfil público com inventário, conquistas e estatísticas
 
 ### Fase 8 — Automação
 - Pipeline Lambda semanal 100% sem intervenção manual
@@ -257,6 +261,16 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 **Decisão:** Cada UseCase chama `AchievementService.checkAndUnlock(accountId, TriggerType)` ao final, dentro da mesma transação. Sem event bus.  
 ✅ Garantidos em cenários de concorrência · Sem infraestrutura adicional · Fácil debugar  
 ⚠️ UseCases levemente acoplados ao sistema de achievements
+
+### ADR-009: SQL Dinâmico com List<Object> + instanceof Pattern Matching
+**Decisão:** Filtros opcionais em queries SQL são construídos com `StringBuilder` + `List<Object> params`. O bind no `PreparedStatement` usa Java 17 instanceof pattern matching: `if (p instanceof Long l) stmt.setLong(...)`. Sort usa whitelist interna mapeada para SQL — nunca interpolação direta.  
+✅ Type-safe sem ORM · Zero SQL injection · Compatível com H2 e PostgreSQL  
+⚠️ Queries complexas ficam verbosas — aceitar como custo do JDBC puro
+
+### ADR-010: URL Params como Handshake Cross-Route
+**Decisão:** Páginas que precisam passar contexto entre si (ex: ArtifactDetail → Marketplace) usam query params na URL (`?artifactId=X&artifactText=Y`). A página destino lê os params no mount via `useSearchParams()` e aplica o filtro sem estado global.  
+✅ Bookmarkable · Back/forward funciona · Sem Context API ou Zustand  
+⚠️ Label do artifact viaja na URL — não é problema aqui pois é dado público de exibição
 
 ### ADR-008: Pipeline como AWS Lambda + EventBridge (Fase 8)
 **Decisão:** Lambda (Python 3.11) + EventBridge `cron(0 8 ? * MON *)`. Lê secrets do SSM, busca notícias multi-source, gera conteúdo com IA, chama `POST /artifacts/bundles` via `X-Admin-Token`. Logs no CloudWatch; falhas disparam SES.  
@@ -360,12 +374,28 @@ Schema completo em `src/main/resources/schema.sql` (idêntico ao de testes em `s
 | `GET /artifacts/bundles` | Público | Lista bundles paginados |
 | `GET /artifacts/bundles/{id}/items` | Público | Artifacts de um bundle |
 | `GET /artifacts/{id}` | Público | Artifact por ID (tipo, não instância) |
-| `GET /artifact-listings` | Público | Listings ativos (exclui próprias se autenticado) |
+| `GET /artifact-listings` | Público | Listings ativos com filtros opcionais (ver abaixo) |
 | `GET /artifact-listings/me` | Privado | Próprias listings ativas |
 | `GET /artifact-units/me` | Privado | Próprias units AVAILABLE |
 | `GET /artifact-units/{id}` | Público | Instância específica: nome, owner, status, price history, ownership chain |
-| `GET /artifact-transfers` | Público | Feed público de todas as transferências (paginado, newest first) |
+| `GET /artifact-transfers` | Público | Feed público de transferências — aceita `?artifactId=` para filtrar por tipo |
 | `GET /artifacts/{id}/price-history` | Público | Histórico de preços por unit |
+| `GET /accounts/{accountId}/profile` | Público | Perfil público: nome, foto, account number |
+| `GET /accounts/search` | Público | Busca contas por nome (`?q=&page=&pageSize=`, mín 2 chars) |
+
+### Filtros de `GET /artifact-listings`
+
+Query params opcionais — todos combináveis:
+
+| Param | Tipo | Comportamento |
+|---|---|---|
+| `artifactId` | `Long` | Filtra pelo tipo de artifact (mesmo artifact, units diferentes) |
+| `q` | `String` | Busca parcial no nome (ILIKE, mín 2 chars) |
+| `sort` | `String` | `newest` (padrão) · `price_asc` · `price_desc` |
+| `minPrice` | `BigDecimal` | Preço mínimo (inclusivo) |
+| `maxPrice` | `BigDecimal` | Preço máximo (inclusivo) |
+
+Implementação: SQL dinâmico via `ArtifactListingFilter` record + `List<Object> params` com instanceof pattern matching para bind type-safe. `sort` usa whitelist interna — valores inválidos caem no default `newest`.
 
 ---
 
@@ -446,8 +476,18 @@ Localizado em `frontend/assetstore/`. URL da API via `VITE_API_URL` (`.env` = pr
 | `/logs` | Público — Feed de todas as transferências (paginado, newest first) |
 | `/artifact/:id` | Público — Instância de artifact: nome, owner, status, price history, ownership chain |
 | `/inventory` | Privado (AuthRequiredModal se não autenticado) |
+| `/search` | Público — Busca usuários por nome (debounce 400ms, mín 2 chars) |
+| `/profile/:accountId` | Público — Perfil público: avatar, nome, account number, inventário (somente leitura) |
 
 `AuthRequiredModal` aparece quando não autenticado tenta ação protegida. Botões "Cancel" e "Create account" (→ `/register`). Sem redirect automático para `/login`.
+
+### Navegação entre páginas com contexto
+
+`ArtifactDetail` → "View in Market" leva para `/market?artifactId=X&artifactText=Y` — o marketplace lê os params no mount, aplica o filtro automaticamente e exibe um chip removível.
+
+`ArtifactDetail` → "Transfer Log" leva para `/logs?artifactId=X&artifactText=Y` — a página de logs filtra o feed e exibe o nome do artifact no header com botão para limpar.
+
+Esse padrão (URL params como handshake entre páginas) é a convenção do projeto para passagem de contexto cross-route.
 
 ---
 
@@ -552,7 +592,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - Sem rate limiting implementado.
 - Sem logs estruturados / observabilidade.
 - Chaves RSA em `/opt/banksimulator/keys/`. Se o EC2 for recriado, chaves existentes são perdidas.
-- 82 testes · 18 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
+- 106 testes · 19 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
 - Three.js ainda não está no projeto — Fase 4.
 - Pipeline de IA ainda não existe — Fase 2.
 
