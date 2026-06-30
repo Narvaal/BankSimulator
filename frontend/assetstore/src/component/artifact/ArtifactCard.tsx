@@ -1,5 +1,7 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
+import {useState} from "react";
+
 export interface CardMetadata {
     name?: string;
     subtitle?: string;
@@ -15,9 +17,15 @@ export interface CardMetadata {
     lore?: string;
     traits?: { name: string; value: string }[];
     timeline?: { date: string; event: string }[];
+    references?: string[];
     collection?: string;
     cardNumber?: string;
     releaseDate?: string;
+    artist?: string;
+    model?: string;
+    prompt?: string;
+    seed?: string;
+    chosenStyle?: string;
     [key: string]: unknown;
 }
 
@@ -250,6 +258,87 @@ export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
                             </li>
                         ))}
                     </ol>
+                </div>
+            )}
+
+            {/* Sources */}
+            {metadata.references && metadata.references.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Sources</p>
+                    <ul className="space-y-1.5">
+                        {metadata.references.map((url, i) => {
+                            let hostname = url;
+                            try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+                            return (
+                                <li key={i}>
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                                    >
+                                        {hostname}
+                                    </a>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+
+            {/* AI Info */}
+            {(metadata.prompt || metadata.chosenStyle) && (
+                <AiInfoPanel metadata={metadata} />
+            )}
+        </div>
+    );
+}
+
+function AiInfoPanel({ metadata }: { metadata: CardMetadata }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:bg-slate-50 transition-colors"
+            >
+                <span>AI Info</span>
+                <span className="text-zinc-300">{open ? "▲" : "▼"}</span>
+            </button>
+            {open && (
+                <div className="px-4 pb-4 space-y-3 border-t border-slate-100">
+                    {metadata.chosenStyle && (
+                        <div className="pt-3">
+                            <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Art Style</p>
+                            <p className="text-xs text-zinc-600 italic">{metadata.chosenStyle}</p>
+                        </div>
+                    )}
+                    {metadata.prompt && (
+                        <div>
+                            <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Image Prompt</p>
+                            <p className="text-xs text-zinc-500 leading-relaxed">{metadata.prompt}</p>
+                        </div>
+                    )}
+                    <div className="flex gap-4 flex-wrap">
+                        {metadata.model && (
+                            <div>
+                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Model</p>
+                                <p className="text-xs text-zinc-600">{metadata.model}</p>
+                            </div>
+                        )}
+                        {metadata.seed && (
+                            <div>
+                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Seed</p>
+                                <p className="text-xs font-mono text-zinc-600">{metadata.seed}</p>
+                            </div>
+                        )}
+                        {metadata.artist && (
+                            <div>
+                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Artist</p>
+                                <p className="text-xs text-zinc-600">{metadata.artist}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
