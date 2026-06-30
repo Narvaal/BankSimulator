@@ -5,7 +5,7 @@ import UserMenu from "../usermenu/UserMenu.tsx";
 import PriceHistoryChart from "../market/PriceHistoryChart.tsx";
 import {useAccount} from "../auth/Auth";
 import {API_URL} from "../../config";
-import {ArtifactCardDetail, CardMetadata} from "./ArtifactCard.tsx";
+import {ArtifactCardDetail, type CardMetadata} from "./ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
