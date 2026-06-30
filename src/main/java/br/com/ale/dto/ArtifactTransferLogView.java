@@ -5,7 +5,7 @@ import java.time.Instant;
 
 public record ArtifactTransferLogView(
         long id,
-        String artifactText,
+        String artifactName,
         long artifactUnitId,
         BigDecimal salePrice,
         long fromAccountId,

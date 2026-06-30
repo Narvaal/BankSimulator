@@ -14,6 +14,7 @@ import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
+import java.util.Map;
 import br.com.ale.service.artifact.ArtifactListingService;
 import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactUnitService;
@@ -142,7 +143,7 @@ class ArtifactPriceHistoryServiceTest {
         Artifact artifact =
                 assetService.createAsset(
                         new CreateArtifactRequest(
-                                "Artifact " + System.nanoTime(),
+                                Map.of("name", "Artifact " + System.nanoTime(), "rarity", "Common"),
                                 1
                         )
                 );

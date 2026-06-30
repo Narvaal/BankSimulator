@@ -47,9 +47,7 @@ public class ArtifactService {
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Service error while creating artifact " +
-                            "[text=" + request.text() +
-                            ", totalSupply=" + request.totalSupply() + "]",
+                    "Service error while creating artifact [totalSupply=" + request.totalSupply() + "]",
                     e
             );
         }

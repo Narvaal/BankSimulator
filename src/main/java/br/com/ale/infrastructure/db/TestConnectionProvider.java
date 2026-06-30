@@ -64,6 +64,12 @@ public class TestConnectionProvider implements ConnectionProvider {
             }
 
             stmt.execute(sql);
+
+            // Register JSON_VALUE as a H2 alias — H2 2.x does not support it natively
+            stmt.execute(
+                "CREATE ALIAS IF NOT EXISTS JSON_VALUE FOR " +
+                "\"br.com.ale.infrastructure.json.H2JsonFunctions.jsonValue\""
+            );
         }
     }
 

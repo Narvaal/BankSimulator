@@ -1,6 +1,7 @@
 package br.com.ale.dao.artifact;
 
 import br.com.ale.dto.ArtifactBundleItemResponse;
+import br.com.ale.infrastructure.json.JsonUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,7 +42,7 @@ public class ArtifactBundleItemDAO {
 
         String sql = """
             SELECT a.id,
-                   a.text,
+                   a.metadata,
                    a.total_supply,
                    a.created_at
               FROM artifact_bundle_item abi
@@ -67,7 +68,7 @@ public class ArtifactBundleItemDAO {
                 while (rs.next()) {
                     items.add(new ArtifactBundleItemResponse(
                             rs.getLong("id"),
-                            rs.getString("text"),
+                            JsonUtils.fromJson(rs.getString("metadata")),
                             rs.getInt("total_supply"),
                             rs.getTimestamp("created_at").toInstant()
                     ));

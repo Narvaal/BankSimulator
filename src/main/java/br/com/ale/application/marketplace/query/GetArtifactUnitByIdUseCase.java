@@ -32,14 +32,14 @@ public class GetArtifactUnitByIdUseCase {
 
     public ArtifactUnitDetailView execute(long unitId) {
         ArtifactUnit unit = artifactUnitService.selectById(unitId);
-        String artifactText = artifactService.selectById(unit.getArtifactId()).getText();
+        String artifactName = artifactService.selectById(unit.getArtifactId()).getName();
         List<ArtifactPriceHistory> priceHistory = priceHistoryService.listByArtifactId(unitId);
         List<ArtifactUnitTransferView> transfers = transferService.selectByUnitId(unitId);
 
         return new ArtifactUnitDetailView(
                 unit.getId(),
                 unit.getArtifactId(),
-                artifactText,
+                artifactName,
                 unit.getOwnerAccountId(),
                 unit.getStatus().name(),
                 unit.getCreatedAt(),

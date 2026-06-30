@@ -8,7 +8,7 @@ import java.util.List;
 public record ArtifactUnitDetailView(
         long unitId,
         long artifactId,
-        String artifactText,
+        String artifactName,
         long ownerAccountId,
         String status,
         Instant createdAt,

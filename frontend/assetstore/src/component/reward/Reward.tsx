@@ -20,7 +20,7 @@ interface Bundle {
 
 interface Artifact {
     id: number
-    text: string
+    metadata: { name: string; rarity?: string; [key: string]: unknown }
     totalSupply: number
     createdAt: string
 }
@@ -462,7 +462,7 @@ function Reward() {
                                                             : "cursor-pointer bg-slate-50 border-slate-200 hover:bg-slate-100"
                                                         }`}
                                                     >
-                                                        <p className="font-medium">{artifact.text}</p>
+                                                        <p className="font-medium">{artifact.metadata.name}</p>
                                                         <p className="text-xs">
                                                             {disabled ? "Sold Out" : `Supply: ${artifact.totalSupply}`}
                                                         </p>
@@ -512,7 +512,7 @@ function Reward() {
                         <div className="space-y-2 mb-6">
 
                             <p className="text-slate-700">
-                                <span className="font-semibold">Name:</span> {selectedAsset.text}
+                                <span className="font-semibold">Name:</span> {selectedAsset.metadata.name}
                             </p>
 
                             <div className="grid grid-cols-2 gap-4">

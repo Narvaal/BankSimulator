@@ -14,6 +14,7 @@ import br.com.ale.domain.client.Provider;
 import br.com.ale.domain.exception.ArtifactUnitNotFoundException;
 import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import java.util.Map;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.artifact.ArtifactListingService;
@@ -132,7 +133,7 @@ class GetArtifactUnitByIdUseCaseTest {
     }
 
     private Artifact newArtifact(String text) {
-        return artifactService.createAsset(new CreateArtifactRequest(text, 10));
+        return artifactService.createAsset(new CreateArtifactRequest(Map.of("name", text, "rarity", "Common"), 10));
     }
 
     private ArtifactUnit newUnit(Artifact artifact, Account owner) {
@@ -171,7 +172,7 @@ class GetArtifactUnitByIdUseCaseTest {
 
         assertEquals(unit.getId(), detail.unitId());
         assertEquals(artifact.getId(), detail.artifactId());
-        assertEquals("RareLines Genesis #001", detail.artifactText());
+        assertEquals("RareLines Genesis #001", detail.artifactName());
         assertEquals(owner.getId(), detail.ownerAccountId());
         assertEquals("AVAILABLE", detail.status());
         assertNotNull(detail.createdAt());

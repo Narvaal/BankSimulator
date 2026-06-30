@@ -6,6 +6,7 @@ import br.com.ale.util.RandomUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ArtifactGenerationService {
 
@@ -21,23 +22,21 @@ public class ArtifactGenerationService {
         List<Artifact> assets = new ArrayList<>();
 
         for (int i = 0; i < NUMBER_OF_ASSETS_PER_WEEK; i++) {
-            assets.add(
-                    generate(
-                            RandomUtils.pickRandom(adjectives) + " " +
-                                    RandomUtils.pickRandom(nouns) + " " +
-                                    RandomUtils.pickRandom(verbs) + " " +
-                                    RandomUtils.pickRandom(nouns)
-                    )
-            );
+            String name = RandomUtils.pickRandom(adjectives) + " " +
+                    RandomUtils.pickRandom(nouns) + " " +
+                    RandomUtils.pickRandom(verbs) + " " +
+                    RandomUtils.pickRandom(nouns);
+            assets.add(generate(name));
         }
 
         return assets;
     }
 
-    private Artifact generate(String phrase) {
-        return new Artifact(
-                phrase,
-                TOTAL_ASSETS_SUPPLY
+    private Artifact generate(String name) {
+        Map<String, Object> metadata = Map.of(
+                "name", name,
+                "rarity", "Common"
         );
+        return new Artifact(metadata, TOTAL_ASSETS_SUPPLY);
     }
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,9 +32,9 @@ class ArtifactBundleServiceTest {
     @Test
     void shouldCreateWeeklyBundleAndPersistAssets() {
         List<Artifact> assets = List.of(
-                new Artifact(uniqueText("alpha"), 100),
-                new Artifact(uniqueText("beta"), 120),
-                new Artifact(uniqueText("gamma"), 150)
+                new Artifact(metadata("alpha"), 100),
+                new Artifact(metadata("beta"), 120),
+                new Artifact(metadata("gamma"), 150)
         );
 
         List<Artifact> persisted = service.createWeeklyBundle(assets);
@@ -44,16 +45,16 @@ class ArtifactBundleServiceTest {
             assertTrue(artifact.getId() > 0);
         }
 
-        Set<String> expectedTexts = new HashSet<>();
+        Set<String> expectedNames = new HashSet<>();
         for (Artifact artifact : assets) {
-            expectedTexts.add(artifact.getText());
+            expectedNames.add(artifact.getName());
         }
 
-        Set<String> persistedTexts = new HashSet<>();
+        Set<String> persistedNames = new HashSet<>();
         for (Artifact artifact : persisted) {
-            persistedTexts.add(artifact.getText());
+            persistedNames.add(artifact.getName());
         }
-        assertEquals(expectedTexts, persistedTexts);
+        assertEquals(expectedNames, persistedNames);
 
         List<ArtifactBundleResponse> bundles = service.listBundles(0, 10);
         assertEquals(1, bundles.size());
@@ -63,18 +64,18 @@ class ArtifactBundleServiceTest {
 
         assertEquals(assets.size(), items.size());
 
-        Set<String> itemTexts = new HashSet<>();
+        Set<String> itemNames = new HashSet<>();
         for (ArtifactBundleItemResponse item : items) {
-            itemTexts.add(item.text());
+            itemNames.add((String) item.metadata().get("name"));
         }
 
-        assertEquals(expectedTexts, itemTexts);
+        assertEquals(expectedNames, itemNames);
     }
 
     @Test
     void shouldGenerateIdentifierWithRandomWordAndEmoji() {
         service.createWeeklyBundle(List.of(
-                new Artifact(uniqueText("delta"), 100)
+                new Artifact(metadata("delta"), 100)
         ));
 
         List<ArtifactBundleResponse> bundles = service.listBundles(0, 10);
@@ -97,8 +98,8 @@ class ArtifactBundleServiceTest {
         assertTrue(emojis.contains(parts[1]), "Expected emoji to be from emoji list");
     }
 
-    private String uniqueText(String base) {
-        return base + "-" + UUID.randomUUID().toString().substring(0, 8);
+    private Map<String, Object> metadata(String baseName) {
+        return Map.of("name", baseName + "-" + UUID.randomUUID().toString().substring(0, 8), "rarity", "Common");
     }
 
     private void cleanDatabase() {

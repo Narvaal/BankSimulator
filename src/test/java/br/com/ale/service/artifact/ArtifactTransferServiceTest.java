@@ -12,6 +12,7 @@ import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
+import java.util.Map;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.webhook.ArtifactWebhookNotifier;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,7 +95,7 @@ class ArtifactTransferServiceTest {
 
     private ArtifactUnit createArtifactUnit() {
         Artifact artifact = assetService.createAsset(
-                new CreateArtifactRequest("Artifact", 1)
+                new CreateArtifactRequest(Map.of("name", "Artifact", "rarity", "Common"), 1)
         );
 
         return artifactUnitService.createArtifactUnit(

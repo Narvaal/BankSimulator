@@ -7,6 +7,8 @@ import br.com.ale.service.artifact.ArtifactService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GetArtifactByIdUseCaseTest {
@@ -35,8 +37,8 @@ class GetArtifactByIdUseCaseTest {
         }
     }
 
-    private Artifact createArtifact(String text, int supply) {
-        return artifactService.createAsset(new CreateArtifactRequest(text, supply));
+    private Artifact createArtifact(String name, int supply) {
+        return artifactService.createAsset(new CreateArtifactRequest(Map.of("name", name, "rarity", "Common"), supply));
     }
 
     @Test
@@ -55,7 +57,7 @@ class GetArtifactByIdUseCaseTest {
 
         Artifact result = useCase.execute(created.getId());
 
-        assertEquals("Quantum Leap", result.getText());
+        assertEquals("Quantum Leap", result.getName());
         assertEquals(5, result.getTotalSupply());
         assertNotNull(result.getCreatedAt());
     }
@@ -80,9 +82,9 @@ class GetArtifactByIdUseCaseTest {
         Artifact result1 = useCase.execute(a1.getId());
         Artifact result2 = useCase.execute(a2.getId());
 
-        assertEquals("First Card", result1.getText());
+        assertEquals("First Card", result1.getName());
         assertEquals(3, result1.getTotalSupply());
-        assertEquals("Second Card", result2.getText());
+        assertEquals("Second Card", result2.getName());
         assertEquals(7, result2.getTotalSupply());
         assertNotEquals(result1.getId(), result2.getId());
     }

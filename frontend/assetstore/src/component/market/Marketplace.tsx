@@ -25,7 +25,7 @@ interface ListingView {
     id: number;
     artifactUnitId: number;
     artifactId: number;
-    artifactText: string;
+    artifactName: string;
     price: number;
     createdAt: string;
 }
@@ -146,7 +146,7 @@ function Marketplace() {
         if (filtersInitialized.current) return;
         filtersInitialized.current = true;
         const aid = searchParams.get("artifactId");
-        const label = searchParams.get("artifactText");
+        const label = searchParams.get("artifactName");
         if (aid) {
             setArtifactId(Number(aid));
             setArtifactLabel(label);
@@ -425,7 +425,7 @@ function Marketplace() {
                                 hover:shadow-md hover:scale-[1.02] transition
                                 p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
                             >
-                                <span className="text-slate-800 font-semibold">{item.artifactText}</span>
+                                <span className="text-slate-800 font-semibold">{item.artifactName}</span>
                                 <div className="mt-1 text-xs text-slate-500">
                                     Artifact #{item.artifactId} • Unity #{item.artifactUnitId} •{" "}
                                     {new Date(item.createdAt).toLocaleDateString()}
@@ -463,7 +463,7 @@ function Marketplace() {
                         </h2>
 
                         <div className="text-left mb-4">
-                            <div className="text-slate-800 font-semibold">{selectedListing.artifactText}</div>
+                            <div className="text-slate-800 font-semibold">{selectedListing.artifactName}</div>
                             <div className="text-xs text-slate-500 mb-1">
                                 Artifact #{selectedListing.artifactId} • Unity #{selectedListing.artifactUnitId} •{" "}
                                 {new Date(selectedListing.createdAt).toLocaleDateString()}

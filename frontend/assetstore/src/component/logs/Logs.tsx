@@ -10,7 +10,7 @@ import {API_URL} from "../../config";
 
 interface TransferLogView {
     id: number;
-    artifactText: string;
+    artifactName: string;
     artifactUnitId: number;
     salePrice: number | null;
     fromAccountId: number;
@@ -70,7 +70,7 @@ export default function Logs() {
         if (filtersInitialized.current) return;
         filtersInitialized.current = true;
         const aid = searchParams.get("artifactId");
-        const label = searchParams.get("artifactText");
+        const label = searchParams.get("artifactName");
         if (aid) {
             setArtifactId(Number(aid));
             setArtifactLabel(label);
@@ -190,7 +190,7 @@ export default function Logs() {
                                                         to={`/artifact/${entry.artifactUnitId}`}
                                                         className="hover:text-zinc-500 transition-colors"
                                                     >
-                                                        {entry.artifactText}
+                                                        {entry.artifactName}
                                                     </Link>
                                                 </td>
                                                 <td className="px-5 py-3.5 text-zinc-500">

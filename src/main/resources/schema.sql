@@ -68,7 +68,7 @@ CREATE TABLE transactions
 CREATE TABLE artifact
 (
     id           BIGSERIAL PRIMARY KEY,
-    text         TEXT      NOT NULL UNIQUE,
+    metadata     JSONB     NOT NULL DEFAULT '{}',
     total_supply INT       NOT NULL CHECK (total_supply >= 0),
     created_at   TIMESTAMP NOT NULL DEFAULT now()
 );

@@ -7,7 +7,7 @@ public record ArtifactListingView(
         long id,
         long artifactUnitId,
         long artifactId,
-        String artifactText,
+        String artifactName,
         BigDecimal price,
         Instant createdAt
 ) {

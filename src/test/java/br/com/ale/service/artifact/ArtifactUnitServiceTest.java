@@ -9,6 +9,7 @@ import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateAccountRequest;
 import br.com.ale.dto.CreateArtifactRequest;
+import java.util.Map;
 import br.com.ale.dto.CreateArtifactUnitRequest;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
@@ -86,7 +87,7 @@ class ArtifactUnitServiceTest {
 
     private Artifact createAsset() {
         return assetService.createAsset(
-                new CreateArtifactRequest("Cool Artifact", 10)
+                new CreateArtifactRequest(Map.of("name", "Cool Artifact", "rarity", "Common"), 10)
         );
     }
 

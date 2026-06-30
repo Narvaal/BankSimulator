@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +16,7 @@ class ArtifactServiceTest {
     private ArtifactService assetService;
     private TestConnectionProvider provider;
 
-    private static final String VALID_TEXT = "legendary blue dragon";
+    private static final Map<String, Object> VALID_METADATA = Map.of("name", "legendary blue dragon", "rarity", "Rare");
     private static final int VALID_TOTAL_SUPPLY = 100;
 
     @BeforeEach
@@ -48,15 +49,12 @@ class ArtifactServiceTest {
     void shouldCreateAsset() {
 
         Artifact artifact = assetService.createAsset(
-                new CreateArtifactRequest(
-                        VALID_TEXT,
-                        VALID_TOTAL_SUPPLY
-                )
+                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
         );
 
         assertNotNull(artifact);
         assertTrue(artifact.getId() > 0);
-        assertEquals(VALID_TEXT, artifact.getText());
+        assertEquals("legendary blue dragon", artifact.getName());
         assertEquals(VALID_TOTAL_SUPPLY, artifact.getTotalSupply());
         assertNotNull(artifact.getCreatedAt());
     }
@@ -65,16 +63,13 @@ class ArtifactServiceTest {
     void shouldPersistAssetAndRetrieveById() {
 
         Artifact created = assetService.createAsset(
-                new CreateArtifactRequest(
-                        VALID_TEXT,
-                        VALID_TOTAL_SUPPLY
-                )
+                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
         );
 
         Artifact fetched = assetService.selectById(created.getId());
 
         assertEquals(created.getId(), fetched.getId());
-        assertEquals(created.getText(), fetched.getText());
+        assertEquals(created.getName(), fetched.getName());
         assertEquals(created.getTotalSupply(), fetched.getTotalSupply());
         assertEquals(created.getCreatedAt(), fetched.getCreatedAt());
     }
@@ -96,21 +91,18 @@ class ArtifactServiceTest {
     }
 
     @Test
-    void shouldFailWhenCreatingAssetWithBlankText() {
+    void shouldFailWhenCreatingAssetWithBlankName() {
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> assetService.createAsset(
-                        new CreateArtifactRequest(
-                                "   ",
-                                VALID_TOTAL_SUPPLY
-                        )
+                        new CreateArtifactRequest(Map.of("name", "   ", "rarity", "Common"), VALID_TOTAL_SUPPLY)
                 )
         );
 
         assertNotNull(exception.getCause());
         assertTrue(
-                exception.getCause().getMessage().contains("Artifact text cannot be blank"),
+                exception.getCause().getMessage().contains("non-blank 'name'"),
                 exception.getCause().getMessage()
         );
     }
@@ -121,10 +113,7 @@ class ArtifactServiceTest {
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> assetService.createAsset(
-                        new CreateArtifactRequest(
-                                VALID_TEXT,
-                                0
-                        )
+                        new CreateArtifactRequest(VALID_METADATA, 0)
                 )
         );
 
@@ -143,10 +132,7 @@ class ArtifactServiceTest {
     void shouldSetCreatedAtFromDatabase() {
 
         Artifact artifact = assetService.createAsset(
-                new CreateArtifactRequest(
-                        VALID_TEXT,
-                        VALID_TOTAL_SUPPLY
-                )
+                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
         );
 
         Instant now = Instant.now();

@@ -215,7 +215,7 @@ public class ArtifactListingDAO {
                     l.price,
                     l.created_at,
                     u.artifact_id,
-                    a.text AS artifact_text,
+                    JSON_VALUE(a.metadata, '$.name') AS artifact_name,
                     COUNT(*) OVER() AS total_items
                 FROM artifact_listing l
                 JOIN artifact_unit u ON u.id = l.artifact_unit_id
@@ -229,7 +229,7 @@ public class ArtifactListingDAO {
             params.add(filter.artifactId());
         }
         if (filter.search() != null && !filter.search().isBlank()) {
-            sql.append("AND LOWER(a.text) LIKE LOWER(?)\n");
+            sql.append("AND LOWER(JSON_VALUE(a.metadata, '$.name')) LIKE LOWER(?)\n");
             params.add("%" + filter.search() + "%");
         }
         if (filter.minPrice() != null) {
@@ -271,7 +271,7 @@ public class ArtifactListingDAO {
                             rs.getLong("id"),
                             rs.getLong("artifact_unit_id"),
                             rs.getLong("artifact_id"),
-                            rs.getString("artifact_text"),
+                            rs.getString("artifact_name"),
                             rs.getBigDecimal("price"),
                             rs.getTimestamp("created_at").toInstant()
                     ));
@@ -361,7 +361,7 @@ public class ArtifactListingDAO {
                     l.id,
                     l.artifact_unit_id,
                     u.artifact_id,
-                    a.text AS artifact_text,
+                    JSON_VALUE(a.metadata, '$.name') AS artifact_name,
                     l.price,
                     l.created_at,
                     l.updated_at,
@@ -397,7 +397,7 @@ public class ArtifactListingDAO {
                                     rs.getLong("id"),
                                     rs.getLong("artifact_unit_id"),
                                     rs.getLong("artifact_id"),
-                                    rs.getString("artifact_text"),
+                                    rs.getString("artifact_name"),
                                     rs.getBigDecimal("price"),
                                     rs.getTimestamp("created_at").toInstant()
                             )

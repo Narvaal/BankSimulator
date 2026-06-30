@@ -33,7 +33,7 @@ public class ArtifactBundleService {
     public List<Artifact> createWeeklyBundle(List<Artifact> generatedAssets) {
         List<CreateArtifactRequest> requests = new ArrayList<>(generatedAssets.size());
         for (Artifact artifact : generatedAssets) {
-            requests.add(new CreateArtifactRequest(artifact.getText(), artifact.getTotalSupply()));
+            requests.add(new CreateArtifactRequest(artifact.getMetadata(), artifact.getTotalSupply()));
         }
         return createBundleInternal(requests, null).assets();
     }

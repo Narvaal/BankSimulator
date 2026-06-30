@@ -257,7 +257,7 @@ public class ArtifactUnitDAO {
                     u.id AS artifact_unit_id,
                     u.created_at,
                     a.id AS artifact_id,
-                    a.text AS artifact_text,
+                    JSON_VALUE(a.metadata, '$.name') AS artifact_name,
                     COUNT(*) OVER() AS total_items
                 FROM artifact_unit u
                 JOIN artifact a ON a.id = u.artifact_id
@@ -292,7 +292,7 @@ public class ArtifactUnitDAO {
                             new ArtifactUnitView(
                                     rs.getLong("artifact_id"),
                                     rs.getLong("artifact_unit_id"),
-                                    rs.getString("artifact_text"),
+                                    rs.getString("artifact_name"),
                                     getInstantOrNull(rs, "created_at")
                             )
                     );

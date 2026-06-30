@@ -10,6 +10,7 @@ import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.ClientService;
+import java.util.Map;
 import br.com.ale.service.artifact.ArtifactListingService;
 import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactUnitService;
@@ -108,7 +109,7 @@ class ArtifactPurchaseServiceTest {
     private Artifact createAsset() {
         return assetService.createAsset(
                 new CreateArtifactRequest(
-                        "Cool Artifact " + System.nanoTime(),
+                        Map.of("name", "Cool Artifact " + System.nanoTime(), "rarity", "Common"),
                         1
                 )
         );

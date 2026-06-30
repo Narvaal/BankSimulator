@@ -18,7 +18,7 @@ interface PublicProfile {
 interface ArtifactView {
     artifactUnitId: number;
     artifactId: number;
-    artifactText: string;
+    artifactName: string;
     createdAt: string;
 }
 
@@ -177,7 +177,7 @@ export default function ProfilePage() {
                                                 p-5 flex flex-col items-center justify-center text-center min-h-27 no-underline"
                                         >
                                             <span className="text-slate-800 font-semibold">
-                                                {artifact.artifactText}
+                                                {artifact.artifactName}
                                             </span>
                                             <div className="mt-1 text-xs text-slate-500">
                                                 Artifact #{artifact.artifactId} • Unity #{artifact.artifactUnitId}

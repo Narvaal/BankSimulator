@@ -1,32 +1,35 @@
 package br.com.ale.domain.artifact;
 
 import java.time.Instant;
+import java.util.Map;
 
 public class Artifact {
 
     private final Long id;
-    private final String text;
+    private final Map<String, Object> metadata;
     private final int totalSupply;
     private final Instant createdAt;
 
-    public Artifact(Long id, String text, int totalSupply, Instant createAt) {
+    public Artifact(Long id, Map<String, Object> metadata, int totalSupply, Instant createdAt) {
         this.id = id;
-        this.text = validateText(text);
+        this.metadata = validateMetadata(metadata);
         this.totalSupply = validateTotalSupply(totalSupply);
-        this.createdAt = createAt;
+        this.createdAt = createdAt;
     }
 
-    public Artifact(String text, int totalSupply) {
-        this(null, text, totalSupply, null);
+    public Artifact(Map<String, Object> metadata, int totalSupply) {
+        this(null, metadata, totalSupply, null);
     }
 
-    private String validateText(String text) {
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Artifact text cannot be blank [text=" + text + "]"
-            );
+    private Map<String, Object> validateMetadata(Map<String, Object> metadata) {
+        if (metadata == null) {
+            throw new IllegalArgumentException("Artifact metadata cannot be null");
         }
-        return text;
+        Object name = metadata.get("name");
+        if (name == null || name.toString().isBlank()) {
+            throw new IllegalArgumentException("Artifact metadata must contain a non-blank 'name' field");
+        }
+        return metadata;
     }
 
     private int validateTotalSupply(int totalSupply) {
@@ -39,10 +42,8 @@ public class Artifact {
     }
 
     public Long getId() { return id; }
-    public String getText() { return text; }
+    public Map<String, Object> getMetadata() { return metadata; }
+    public String getName() { return (String) metadata.get("name"); }
     public int getTotalSupply() { return totalSupply; }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public Instant getCreatedAt() { return createdAt; }
 }

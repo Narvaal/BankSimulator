@@ -27,7 +27,7 @@ interface ArtifactUnitTransferView {
 interface ArtifactUnitDetail {
     unitId: number;
     artifactId: number;
-    artifactText: string;
+    artifactName: string;
     ownerAccountId: number;
     status: "AVAILABLE" | "IN_MARKET" | "RESERVED" | "TRANSFERRING";
     createdAt: string;
@@ -169,7 +169,7 @@ export default function ArtifactDetail() {
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-zinc-900">{unit.artifactText}</h1>
+                                    <h1 className="text-2xl font-bold text-zinc-900">{unit.artifactName}</h1>
                                     <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
                                         <span>Unit #{unit.unitId}</span>
                                         <span>·</span>
@@ -234,13 +234,13 @@ export default function ArtifactDetail() {
 
                         <div className="flex gap-3">
                             <Link
-                                to={`/market?artifactId=${unit.artifactId}&artifactText=${encodeURIComponent(unit.artifactText)}`}
+                                to={`/market?artifactId=${unit.artifactId}&artifactName=${encodeURIComponent(unit.artifactName)}`}
                                 className="flex-1 text-center px-4 py-2.5 rounded-xl bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
                             >
                                 View in Market
                             </Link>
                             <Link
-                                to={`/logs?artifactId=${unit.artifactId}&artifactText=${encodeURIComponent(unit.artifactText)}`}
+                                to={`/logs?artifactId=${unit.artifactId}&artifactName=${encodeURIComponent(unit.artifactName)}`}
                                 className="flex-1 text-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-zinc-700 text-sm font-medium hover:bg-slate-50 transition-colors"
                             >
                                 Transfer Log

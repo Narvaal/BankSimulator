@@ -15,6 +15,7 @@ import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.account.AccountService;
+import java.util.Map;
 import br.com.ale.service.artifact.ArtifactListingService;
 import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactUnitService;
@@ -127,8 +128,8 @@ class ListActiveArtifactListingsUseCaseTest {
         return account;
     }
 
-    private Artifact newArtifact(String text) {
-        return artifactService.createAsset(new CreateArtifactRequest(text, 10));
+    private Artifact newArtifact(String name) {
+        return artifactService.createAsset(new CreateArtifactRequest(Map.of("name", name, "rarity", "Common"), 10));
     }
 
     private ArtifactUnit newUnit(Artifact artifact, Account owner) {
@@ -176,7 +177,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, noFilter(), 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Alpha", result.items().get(0).artifactText());
+        assertEquals("Alpha", result.items().get(0).artifactName());
     }
 
     @Test
@@ -198,7 +199,7 @@ class ListActiveArtifactListingsUseCaseTest {
 
         // seller's own listing is excluded
         assertEquals(1, result.totalItems());
-        assertEquals("Theirs", result.items().get(0).artifactText());
+        assertEquals("Theirs", result.items().get(0).artifactName());
     }
 
     @Test
@@ -220,7 +221,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Target Artifact", result.items().get(0).artifactText());
+        assertEquals("Target Artifact", result.items().get(0).artifactName());
     }
 
     @Test
@@ -235,7 +236,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Apple Vision Pro", result.items().get(0).artifactText());
+        assertEquals("Apple Vision Pro", result.items().get(0).artifactName());
     }
 
     @Test
@@ -250,7 +251,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Bitcoin ETF Approved", result.items().get(0).artifactText());
+        assertEquals("Bitcoin ETF Approved", result.items().get(0).artifactName());
     }
 
     @Test
@@ -267,9 +268,9 @@ class ListActiveArtifactListingsUseCaseTest {
 
         List<ArtifactListingView> items = result.items();
         assertEquals(3, items.size());
-        assertEquals("Cheap",     items.get(0).artifactText());
-        assertEquals("Mid",       items.get(1).artifactText());
-        assertEquals("Expensive", items.get(2).artifactText());
+        assertEquals("Cheap",     items.get(0).artifactName());
+        assertEquals("Mid",       items.get(1).artifactName());
+        assertEquals("Expensive", items.get(2).artifactName());
     }
 
     @Test
@@ -286,9 +287,9 @@ class ListActiveArtifactListingsUseCaseTest {
 
         List<ArtifactListingView> items = result.items();
         assertEquals(3, items.size());
-        assertEquals("Expensive", items.get(0).artifactText());
-        assertEquals("Mid",       items.get(1).artifactText());
-        assertEquals("Cheap",     items.get(2).artifactText());
+        assertEquals("Expensive", items.get(0).artifactName());
+        assertEquals("Mid",       items.get(1).artifactName());
+        assertEquals("Cheap",     items.get(2).artifactName());
     }
 
     @Test
@@ -303,7 +304,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Expensive", result.items().get(0).artifactText());
+        assertEquals("Expensive", result.items().get(0).artifactName());
     }
 
     @Test
@@ -318,7 +319,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Cheap", result.items().get(0).artifactText());
+        assertEquals("Cheap", result.items().get(0).artifactName());
     }
 
     @Test
@@ -335,7 +336,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Mid Range", result.items().get(0).artifactText());
+        assertEquals("Mid Range", result.items().get(0).artifactName());
     }
 
     @Test
@@ -392,7 +393,7 @@ class ListActiveArtifactListingsUseCaseTest {
         var result = useCase.execute(null, filter, 0, 20);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Apple Vision Pro", result.items().get(0).artifactText());
+        assertEquals("Apple Vision Pro", result.items().get(0).artifactName());
     }
 
     @Test
@@ -409,6 +410,6 @@ class ListActiveArtifactListingsUseCaseTest {
 
         assertEquals(2, result.totalItems());
         // newest first = "Second" was inserted last
-        assertEquals("Second", result.items().get(0).artifactText());
+        assertEquals("Second", result.items().get(0).artifactName());
     }
 }

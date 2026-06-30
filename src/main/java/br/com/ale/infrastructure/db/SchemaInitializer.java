@@ -29,12 +29,27 @@ public class SchemaInitializer implements ApplicationRunner {
         }
 
         try (Connection conn = connectionProvider.getConnection()) {
+            registerH2AliasesIfNeeded(conn);
             if (tableExists(conn, "client")) {
                 return;
             }
             executeSchema(conn);
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize database schema", e);
+        }
+    }
+
+    private void registerH2AliasesIfNeeded(Connection conn) throws Exception {
+        DatabaseMetaData metaData = conn.getMetaData();
+        String productName = metaData.getDatabaseProductName();
+        if (productName == null || !productName.toLowerCase().contains("h2")) {
+            return;
+        }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(
+                "CREATE ALIAS IF NOT EXISTS JSON_VALUE FOR " +
+                "\"br.com.ale.infrastructure.json.H2JsonFunctions.jsonValue\""
+            );
         }
     }
 

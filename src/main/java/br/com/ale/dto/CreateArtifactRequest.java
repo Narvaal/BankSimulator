@@ -1,4 +1,6 @@
 package br.com.ale.dto;
 
-public record CreateArtifactRequest(String text, int totalSupply) {
+import java.util.Map;
+
+public record CreateArtifactRequest(Map<String, Object> metadata, int totalSupply) {
 }

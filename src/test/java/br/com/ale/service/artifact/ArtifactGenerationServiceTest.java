@@ -33,21 +33,21 @@ class ArtifactGenerationServiceTest {
     }
 
     @Test
-    void shouldGenerateValidAssetText() {
+    void shouldGenerateValidArtifactName() {
         Artifact artifact = assetGenerationService.generateWeeklyAssets().get(0);
 
-        assertNotNull(artifact.getText());
-        assertFalse(artifact.getText().isBlank());
-        assertTrue(artifact.getText().contains(" "));
+        assertNotNull(artifact.getName());
+        assertFalse(artifact.getName().isBlank());
+        assertTrue(artifact.getName().contains(" "));
     }
 
     @Test
-    void shouldHaveNonEmptyTextForAllGeneratedAssets() {
+    void shouldHaveNonEmptyNameForAllGeneratedAssets() {
         List<Artifact> assets = assetGenerationService.generateWeeklyAssets();
 
         for (Artifact artifact : assets) {
-            assertNotNull(artifact.getText());
-            assertFalse(artifact.getText().isBlank());
+            assertNotNull(artifact.getName());
+            assertFalse(artifact.getName().isBlank());
         }
     }
 
@@ -55,15 +55,15 @@ class ArtifactGenerationServiceTest {
     void shouldNotGenerateDuplicateAssetsInSameWeek() {
         List<Artifact> assets = assetGenerationService.generateWeeklyAssets();
 
-        Set<String> uniqueTexts = new HashSet<>();
+        Set<String> uniqueNames = new HashSet<>();
 
         for (Artifact artifact : assets) {
-            uniqueTexts.add(artifact.getText());
+            uniqueNames.add(artifact.getName());
         }
 
         assertEquals(
                 assets.size(),
-                uniqueTexts.size(),
+                uniqueNames.size(),
                 "Assets should be unique within the same week"
         );
     }
@@ -74,15 +74,15 @@ class ArtifactGenerationServiceTest {
         List<Artifact> secondRun = assetGenerationService.generateWeeklyAssets();
 
         assertNotEquals(
-                extractTexts(firstRun),
-                extractTexts(secondRun),
+                extractNames(firstRun),
+                extractNames(secondRun),
                 "Two generations should not be identical"
         );
     }
 
-    private List<String> extractTexts(List<Artifact> assets) {
+    private List<String> extractNames(List<Artifact> assets) {
         return assets.stream()
-                .map(Artifact::getText)
+                .map(Artifact::getName)
                 .toList();
     }
 }

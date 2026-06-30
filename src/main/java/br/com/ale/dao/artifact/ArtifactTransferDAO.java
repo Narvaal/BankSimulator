@@ -129,7 +129,7 @@ public class ArtifactTransferDAO {
                 )
                 SELECT
                     rt.id,
-                    a.text       AS artifact_text,
+                    JSON_VALUE(a.metadata, '$.name') AS artifact_name,
                     rt.artifact_unit_id,
                     rp.new_price AS sale_price,
                     rt.from_account_id,
@@ -163,7 +163,7 @@ public class ArtifactTransferDAO {
                     if (totalItems == 0) totalItems = rs.getLong("total_items");
                     items.add(new ArtifactTransferLogView(
                             rs.getLong("id"),
-                            rs.getString("artifact_text"),
+                            rs.getString("artifact_name"),
                             rs.getLong("artifact_unit_id"),
                             rs.getBigDecimal("sale_price"),
                             rs.getLong("from_account_id"),

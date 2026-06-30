@@ -3,6 +3,7 @@ package br.com.ale.dao.artifact;
 import br.com.ale.domain.artifact.Artifact;
 import br.com.ale.dto.ArtifactSummaryResponse;
 import br.com.ale.dto.CreateArtifactRequest;
+import br.com.ale.infrastructure.json.JsonUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,30 +18,28 @@ public class ArtifactDAO {
     public Artifact insert(Connection conn, CreateArtifactRequest request) {
 
         String sql = """
-                INSERT INTO artifact (text, total_supply)
+                INSERT INTO artifact (metadata, total_supply)
                 VALUES (?, ?)
                 """;
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
-            stmt.setString(1, request.text());
+            stmt.setString(1, JsonUtils.toJson(request.metadata()));
             stmt.setInt(2, request.totalSupply());
 
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected == 0) {
                 throw new RuntimeException(
-                        "Failed to insert artifact [text=" + request.text() +
-                                ", totalSupply=" + request.totalSupply() + "]"
+                        "Failed to insert artifact [totalSupply=" + request.totalSupply() + "]"
                 );
             }
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (!rs.next()) {
                     throw new RuntimeException(
-                            "Failed to retrieve artifact id [text=" + request.text() +
-                                    ", totalSupply=" + request.totalSupply() + "]"
+                            "Failed to retrieve artifact id [totalSupply=" + request.totalSupply() + "]"
                     );
                 }
 
@@ -56,9 +55,7 @@ public class ArtifactDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while inserting artifact " +
-                            "[text=" + request.text() +
-                            ", totalSupply=" + request.totalSupply() + "]",
+                    "Database error while inserting artifact [totalSupply=" + request.totalSupply() + "]",
                     e
             );
         }
@@ -68,7 +65,7 @@ public class ArtifactDAO {
 
         String sql = """
                 SELECT id,
-                       text,
+                       metadata,
                        total_supply,
                        created_at
                   FROM artifact
@@ -82,9 +79,7 @@ public class ArtifactDAO {
             try (ResultSet rs = stmt.executeQuery()) {
 
                 if (rs.next()) {
-                    return Optional.of(
-                            mapRow(rs)
-                    );
+                    return Optional.of(mapRow(rs));
                 }
 
                 return Optional.empty();
@@ -92,8 +87,7 @@ public class ArtifactDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while selecting artifact " +
-                            "[artifactId=" + artifactId + "]",
+                    "Database error while selecting artifact [artifactId=" + artifactId + "]",
                     e
             );
         }
@@ -102,7 +96,7 @@ public class ArtifactDAO {
     private static Artifact mapRow(ResultSet rs) throws SQLException {
         return new Artifact(
                 rs.getLong("id"),
-                rs.getString("text"),
+                JsonUtils.fromJson(rs.getString("metadata")),
                 rs.getInt("total_supply"),
                 rs.getTimestamp("created_at").toInstant()
         );
@@ -110,7 +104,7 @@ public class ArtifactDAO {
 
     public List<ArtifactSummaryResponse> selectAllSummaries(Connection conn) {
         String sql = """
-                SELECT text,
+                SELECT metadata,
                        total_supply,
                        created_at
                   FROM artifact
@@ -122,7 +116,7 @@ public class ArtifactDAO {
                 List<ArtifactSummaryResponse> assets = new ArrayList<>();
                 while (rs.next()) {
                     assets.add(new ArtifactSummaryResponse(
-                            rs.getString("text"),
+                            JsonUtils.fromJson(rs.getString("metadata")),
                             rs.getInt("total_supply"),
                             rs.getTimestamp("created_at").toInstant()
                     ));
@@ -130,7 +124,7 @@ public class ArtifactDAO {
                 return assets;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Database error while selecting assets", e);
+            throw new RuntimeException("Database error while selecting artifacts", e);
         }
     }
 
@@ -152,8 +146,7 @@ public class ArtifactDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(
-                    "Database error while updating artifact supply " +
-                            "[artifactId=" + artifactId + "]",
+                    "Database error while updating artifact supply [artifactId=" + artifactId + "]",
                     e
             );
         }

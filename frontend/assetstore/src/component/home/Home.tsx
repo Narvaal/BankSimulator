@@ -14,7 +14,7 @@ import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
 interface ArtifactView {
     artifactUnitId: number;
     artifactId: number;
-    artifactText: string;
+    artifactName: string;
     createdAt: string;
 }
 
@@ -288,7 +288,7 @@ export default function Home() {
                                 >
 
                         <span className="text-slate-800 font-semibold">
-                            {artifact.artifactText}
+                            {artifact.artifactName}
                         </span>
 
                                     <div className="mt-1 text-xs text-slate-500">
@@ -330,7 +330,7 @@ export default function Home() {
 
                         <div className="text-left mb-4">
                             <div className="text-slate-800 font-semibold">
-                                {selectedAsset.artifactText}
+                                {selectedAsset.artifactName}
                             </div>
                             <div className="text-xs text-slate-500">
                                 Artifact #{selectedAsset.artifactId} • Unity

@@ -15,6 +15,7 @@ import br.com.ale.dto.*;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.account.AccountService;
+import java.util.Map;
 import br.com.ale.service.artifact.ArtifactListingService;
 import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactTransferService;
@@ -129,7 +130,7 @@ class ListArtifactTransferLogUseCaseTest {
     }
 
     private Artifact newArtifact(String text) {
-        return artifactService.createAsset(new CreateArtifactRequest(text, 10));
+        return artifactService.createAsset(new CreateArtifactRequest(Map.of("name", text, "rarity", "Common"), 10));
     }
 
     private ArtifactUnit newUnit(Artifact artifact, Account owner) {
@@ -182,7 +183,7 @@ class ListArtifactTransferLogUseCaseTest {
         assertEquals(1, result.items().size());
 
         var entry = result.items().get(0);
-        assertEquals("Rare Lines #001", entry.artifactText());
+        assertEquals("Rare Lines #001", entry.artifactName());
         assertEquals(unit.getId(), entry.artifactUnitId());
         assertEquals(0, new BigDecimal("50.00").compareTo(entry.salePrice()));
         assertEquals(seller.getId(), entry.fromAccountId());
@@ -215,8 +216,8 @@ class ListArtifactTransferLogUseCaseTest {
         var result = useCase.execute(null, 0, 30);
 
         assertEquals(2, result.totalItems());
-        assertEquals("Second Card", result.items().get(0).artifactText());
-        assertEquals("First Card", result.items().get(1).artifactText());
+        assertEquals("Second Card", result.items().get(0).artifactName());
+        assertEquals("First Card", result.items().get(1).artifactName());
     }
 
     @Test
@@ -306,7 +307,7 @@ class ListArtifactTransferLogUseCaseTest {
         var result = useCase.execute(target.getId(), 0, 30);
 
         assertEquals(1, result.totalItems());
-        assertEquals("Target", result.items().get(0).artifactText());
+        assertEquals("Target", result.items().get(0).artifactName());
         assertEquals(targetUnit.getId(), result.items().get(0).artifactUnitId());
     }
 

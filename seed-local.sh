@@ -26,9 +26,9 @@ BUNDLE=$(curl -s -X POST "$BASE_URL/artifacts/bundles" \
   -d "{
     \"identifier\": \"$WEEK\",
     \"assets\": [
-      { \"text\": \"Rare Lines #001\", \"totalSupply\": 5 },
-      { \"text\": \"Epic Lines #001\", \"totalSupply\": 3 },
-      { \"text\": \"Legendary Lines #001\", \"totalSupply\": 1 }
+      { \"metadata\": { \"name\": \"Rare Lines #001\", \"rarity\": \"Rare\", \"category\": \"Technology\", \"subtitle\": \"The beginning of something rare\" }, \"totalSupply\": 5 },
+      { \"metadata\": { \"name\": \"Epic Lines #001\", \"rarity\": \"Epic\", \"category\": \"Science\", \"subtitle\": \"A moment worth collecting\" }, \"totalSupply\": 3 },
+      { \"metadata\": { \"name\": \"Legendary Lines #001\", \"rarity\": \"Legendary\", \"category\": \"Culture\", \"subtitle\": \"History in the making\" }, \"totalSupply\": 1 }
     ]
   }")
 echo "   → $BUNDLE"
