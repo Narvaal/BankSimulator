@@ -58,6 +58,71 @@ Return a JSON array of {n} selected events:
 
 Return ONLY the JSON array, no markdown, no explanation."""
 
+ART_STYLES = [
+    # Illustration & Painting
+    "oil painting, dramatic chiaroscuro lighting, museum quality",
+    "watercolor illustration, loose brushstrokes, paper texture visible",
+    "gouache painting, flat graphic shapes, bold color blocks",
+    "acrylic painting, impasto texture, palette knife strokes",
+    "ink wash painting, sumi-e style, minimalist composition",
+    "colored pencil illustration, soft hatching, dreamy tones",
+    "pastel drawing, soft blending, impressionistic",
+    "crayon illustration, childlike energy, waxy texture, vibrant colors",
+    "charcoal drawing, dramatic shadows, rough texture",
+    "woodblock print, ukiyo-e style, flat perspective, bold outlines",
+    # Digital & 3D
+    "3D render, octane render, cinematic lighting, photorealistic",
+    "3D render, stylized low-poly, flat shading, geometric shapes",
+    "3D render, clay material, matte surface, soft shadows, toy aesthetic",
+    "3D render, glass and chrome materials, reflective surfaces",
+    "unreal engine 5, hyperrealistic, volumetric lighting, film grain",
+    "isometric 3D illustration, flat colors, game asset style",
+    "voxel art, pixelated 3D, colorful, crisp edges",
+    # Comic & Animation
+    "comic book art, Ben-Day dots, bold outlines, Jack Kirby style",
+    "manga illustration, screentone shading, dynamic action lines",
+    "cel-shaded animation, Disney Renaissance style, expressive",
+    "anime key visual, Studio Ghibli aesthetic, painterly backgrounds",
+    "Saturday morning cartoon, retro 80s animation style",
+    "graphic novel, noir atmosphere, high contrast, Frank Miller style",
+    "pop art, Andy Warhol style, flat colors, halftone dots",
+    "sticker illustration, clean outlines, bright palette, glossy",
+    # Photography & Cinema
+    "cinematic photography, anamorphic lens flare, shallow depth of field",
+    "editorial photography, studio lighting, high contrast, magazine cover",
+    "documentary photography, raw, gritty, available light only",
+    "product photography, dramatic shadow, high-end commercial",
+    "infrared photography, surreal tones, glowing highlights",
+    "lomography, film grain, color leaks, vintage saturation",
+    "long exposure photography, light trails, motion blur, night scene",
+    # Historical & Movement
+    "art nouveau, Alphonse Mucha style, ornate borders, floral motifs",
+    "art deco, geometric patterns, gold and black, 1920s glamour",
+    "bauhaus design, primary colors, geometric shapes, functional",
+    "soviet propaganda poster, bold flat colors, heroic composition",
+    "renaissance painting, sfumato technique, classical composition",
+    "impressionist painting, Monet style, broken brushwork, light study",
+    "surrealist painting, Salvador Dalí style, dreamlike impossible geometry",
+    "constructivism, bold diagonals, red and black, avant-garde",
+    # Texture & Material
+    "linocut print, hand-carved texture, two-color, rough edges",
+    "screen print, limited palette, misregistration effect, poster art",
+    "risograph print, grainy texture, overlapping color layers",
+    "embroidery illustration, thread texture, stitched appearance",
+    "stained glass, leaded lines, jewel-toned colors, backlit glow",
+    "mosaic, tesserae texture, Byzantine style, gold background",
+    "paper cut art, layered silhouettes, shadow depth, craft aesthetic",
+    "neon sign aesthetic, glowing tubes, dark background, city night",
+    # Retro & Futuristic
+    "retrofuturism, 1950s sci-fi illustration, chrome robots, atomic age",
+    "synthwave, neon grid, 80s cyberpunk, retrowave sunset",
+    "vaporwave aesthetic, pastel purple and pink, glitch, nostalgia",
+    "steampunk illustration, brass gears, Victorian era, sepia tones",
+    "cassette futurism, analog controls, warm CRT glow, knobs and dials",
+    "Y2K aesthetic, chrome gradients, iridescent, early internet energy",
+    "solarpunk, lush vegetation, community warmth, optimistic future light",
+]
+
 METADATA_PROMPT = """You are generating metadata for a premium digital trading card on the RareLines platform.
 
 EVENT:
@@ -70,11 +135,14 @@ Collection: {collection}
 Release date: {release_date}
 Reference URL: {url}
 
+Available art styles (pick exactly ONE that best fits this event's theme and mood):
+{art_styles}
+
 Generate a complete metadata JSON following the schema below EXACTLY. Respect all character limits.
 
 SCHEMA AND LIMITS:
 - name: max 30 chars
-- subtitle: max 60 chars
+- subtitle: max 60 chars — NOT a news headline. A clever, slightly acidic one-liner that editorially reframes the event. Think magazine cover tagline, not Reuters wire. ("The favorite toy of astronomers who gave up on humans", "What happens when Silicon Valley reads the Bible once")
 - category: exactly one of Technology | Finance | Science | Culture | Sports | Politics
 - rarity: exactly one of Common | Rare | Epic | Legendary | Mythic | Ultimate
 
@@ -88,8 +156,13 @@ SCHEMA AND LIMITS:
 
 - attributes: influence/innovation/controversy/longevity/reach — all 1-100
 - abilities: 1-2 items, name ≤25 chars, description ≤120 chars
+  IMPORTANT: abilities are NOT game mechanics with numbers. They are witty, cynical observations about what this thing actually does in the world. No "+X to Y". Write like a sarcastic encyclopedia — punchy name (2-4 words), punchline description.
+  Example for a Podcast card: name "Open Mic Night" / desc "Grants anyone with a microphone and 40 minutes the ability to become an expert on anything."
 - passive: name ≤25 chars, description ≤120 chars
-- weakness: max 80 chars
+  A permanent, irrefutable truth about this thing — written as a dry museum plaque written by someone who has had enough.
+  Example: name "Still Talking" / desc "No crisis, ban, or advertiser boycott has ever successfully shut one down permanently."
+- weakness: max 80 chars — a one-liner so true it's funny. Can mirror an ability and flip it.
+  Example for Podcast: "Lets everyone say whatever they want."
 - flavorText: max 15 words, ironic/cynical/sharp tone ("The future arrived. Apple priced it so you'd know your place in it.")
 - lore: max 300 chars
 - traits: 2-4 items, name ≤15 chars, value ≤20 chars
@@ -100,14 +173,10 @@ SCHEMA AND LIMITS:
 - cardNumber: "{card_number}"
 - releaseDate: "{release_date}"
 - artist: "RareLines AI"
-- model: "amazon.titan-image-generator-v2:0"
-- prompt: A detailed Stable Diffusion prompt for a cinematic digital trading card illustration representing this event. Focus on visual imagery, dramatic lighting, no text, no watermarks. Include art style directives.
+- model: "sd3-large"
+- chosenStyle: the exact string of the art style you selected from the list above
+- prompt: A detailed Stable Diffusion image prompt for this card's illustration. Start with the chosen art style, then describe the scene — dramatic, visually rich, no text, no watermarks, no faces unless stylistically integral.
 - seed: a random 7-digit number as a string
-
-TONE GUIDE:
-- flavorText: reveal uncomfortable truths or ironic angles ("A financial revolution, mostly used to make the already-rich slightly richer.")
-- weakness: can be sharp ("Depends on people continuing to care, which history suggests is optimistic.")
-- Avoid: humor about individuals by name, sarcasm about tragedies
 
 Return ONLY the JSON object, no markdown fences, no explanation."""
 
@@ -185,6 +254,7 @@ def generate_card(
     collection = f"Weekly Digest {week}"
     release_date = date.today().isoformat()
 
+    art_styles_block = "\n".join(f"- {s}" for s in ART_STYLES)
     prompt = METADATA_PROMPT.format(
         title=event["title"],
         description=event.get("description", event["title"]),
@@ -194,10 +264,16 @@ def generate_card(
         collection=collection,
         release_date=release_date,
         url=event.get("url", ""),
+        art_styles=art_styles_block,
     )
 
     raw = _invoke_claude(bedrock, prompt)
     metadata = json.loads(_clean_json(raw))
+
+    # Guarantee an art style is present (fallback to random if Claude omitted it)
+    if not metadata.get("chosenStyle"):
+        metadata["chosenStyle"] = random.choice(ART_STYLES)
+        logger.warning("Claude did not choose an art style — assigned randomly")
 
     # Enforce effects based on declared rarity (Claude might deviate)
     rarity = metadata.get("rarity", "Rare")
