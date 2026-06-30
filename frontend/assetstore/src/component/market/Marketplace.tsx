@@ -10,6 +10,7 @@ import {API_URL} from "../../config";
 import {authHeader} from "../../auth";
 import {Link} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
+import {RarityBadge, ArtifactCardDetail, CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -26,6 +27,7 @@ interface ListingView {
     artifactUnitId: number;
     artifactId: number;
     artifactName: string;
+    metadata: CardMetadata;
     price: number;
     createdAt: string;
 }
@@ -418,21 +420,31 @@ function Marketplace() {
 
                         {listings.items.map((item) => (
 
-                            <div
-                                key={item.id}
-                                onClick={() => openListing(item)}
-                                className="rounded-xl border border-slate-200 bg-white shadow-sm
-                                hover:shadow-md hover:scale-[1.02] transition
-                                p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
-                            >
-                                <span className="text-slate-800 font-semibold">{item.artifactName}</span>
-                                <div className="mt-1 text-xs text-slate-500">
-                                    Artifact #{item.artifactId} • Unity #{item.artifactUnitId} •{" "}
-                                    {new Date(item.createdAt).toLocaleDateString()}
+                            <div key={item.id} className="flex flex-col gap-1">
+                                <div
+                                    onClick={() => openListing(item)}
+                                    className="relative rounded-xl overflow-hidden border-2 border-slate-200 cursor-pointer hover:scale-[1.03] hover:shadow-lg transition-all"
+                                    style={{ aspectRatio: "2/3" }}
+                                >
+                                    {item.metadata?.illustration ? (
+                                        <img
+                                            src={item.metadata.illustration}
+                                            alt={item.artifactName}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-600" />
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                                    <div className="absolute top-1.5 right-1.5">
+                                        <RarityBadge rarity={item.metadata?.rarity} />
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                                        <p className="text-white font-bold text-xs line-clamp-1">{item.artifactName}</p>
+                                        <p className="text-emerald-400 font-bold text-sm">${Number(item.price).toFixed(2)}</p>
+                                    </div>
                                 </div>
-                                <span className="mt-2 text-emerald-500 font-bold text-sm">
-                                    ${item.price.toFixed(2)}
-                                </span>
                             </div>
 
                         ))}
@@ -454,100 +466,102 @@ function Marketplace() {
             {authModalOpen && <AuthRequiredModal onClose={() => setAuthModalOpen(false)}/>}
 
             {selectedListing && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
 
-                    <div className="bg-white rounded-2xl w-[440px] p-6 shadow-xl">
+                    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl max-h-[90vh] flex flex-col">
 
-                        <h2 className="text-xl font-bold mb-2">
-                            {mode === "market" ? "Buy Artifact" : "Manage Listing"}
-                        </h2>
-
-                        <div className="text-left mb-4">
-                            <div className="text-slate-800 font-semibold">{selectedListing.artifactName}</div>
-                            <div className="text-xs text-slate-500 mb-1">
-                                Artifact #{selectedListing.artifactId} • Unity #{selectedListing.artifactUnitId} •{" "}
-                                {new Date(selectedListing.createdAt).toLocaleDateString()}
-                            </div>
-                            <span className="text-emerald-500 font-bold text-lg">
-                                ${selectedListing.price.toFixed(2)}
-                            </span>
+                        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+                            <h2 className="text-lg font-bold">
+                                {mode === "market" ? "Buy Artifact" : "Manage Listing"}
+                            </h2>
+                            <button onClick={() => setSelectedListing(null)} className="text-zinc-400 hover:text-zinc-600 text-xl leading-none">✕</button>
                         </div>
 
-                        <div className="mb-5">
-                            <h3 className="text-sm font-semibold mb-2">Price History</h3>
+                        <div className="overflow-y-auto flex-1 px-5 pb-2 space-y-4">
+
+                            {selectedListing.metadata && Object.keys(selectedListing.metadata).length > 0 && (
+                                <ArtifactCardDetail metadata={selectedListing.metadata} />
+                            )}
+
+                            <div className="text-xs text-zinc-400 text-center">
+                                Artifact #{selectedListing.artifactId} · Unit #{selectedListing.artifactUnitId} · {new Date(selectedListing.createdAt).toLocaleDateString()}
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold mb-2">Price History</h3>
                             {loadingHistory ? (
                                 <p className="text-sm text-slate-500">Loading history...</p>
                             ) : (
                                 <PriceHistoryChart priceHistory={priceHistory}/>
                             )}
-                        </div>
-
-                        {mode === "market" && account && (
-                            <div className="mb-8">
-                                <div className="text-sm font-semibold mb-2">Purchase summary</div>
-                                <div className="flex justify-between text-slate-500 text-sm">
-                                    <span>Balance</span>
-                                    <span>${account.balance.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-slate-500 text-sm">
-                                    <span>Item price</span>
-                                    <span>- ${selectedListing.price.toFixed(2)}</span>
-                                </div>
-                                <div className="border-t border-slate-300 mt-2 pt-2 flex justify-between text-sm text-slate-800">
-                                    <span>Remaining</span>
-                                    <span>${(account.balance - selectedListing.price).toFixed(2)}</span>
-                                </div>
                             </div>
-                        )}
 
-                        <div className="flex justify-end gap-3">
-
-                            <button
-                                onClick={() => setSelectedListing(null)}
-                                className="px-4 py-2 border rounded-lg text-black hover:bg-slate-900 hover:text-white transition"
-                            >
-                                Close
-                            </button>
-
-                            {mode === "market" ? (
-                                <button
-                                    onClick={handleBuy}
-                                    disabled={!!account && account.balance < selectedListing.price}
-                                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition"
-                                >
-                                    {account ? "Confirm Purchase" : "Sign in to buy"}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            await cancelOffer(selectedListing.id);
-                                            setListings(prev => {
-                                                if (!prev) return prev;
-                                                return {...prev, items: prev.items.filter(l => l.id !== selectedListing.id)};
-                                            });
-                                            setMessage({type: "success", text: "Listing canceled"});
-                                            setTimeout(() => setSelectedListing(null), 800);
-                                        } catch {
-                                            setMessage({type: "error", text: "Failed to cancel listing"});
-                                            setTimeout(() => setSelectedListing(null), 800);
-                                        }
-                                    }}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
-                                >
-                                    Cancel Offer
-                                </button>
+                            {mode === "market" && account && (
+                                <div className="bg-slate-50 rounded-xl p-3">
+                                    <div className="text-xs font-semibold text-zinc-500 mb-2">Purchase summary</div>
+                                    <div className="flex justify-between text-slate-500 text-sm">
+                                        <span>Balance</span>
+                                        <span>${account.balance.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-slate-500 text-sm">
+                                        <span>Item price</span>
+                                        <span>- ${Number(selectedListing.price).toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-slate-200 mt-2 pt-2 flex justify-between text-sm font-semibold text-slate-800">
+                                        <span>Remaining</span>
+                                        <span>${(account.balance - selectedListing.price).toFixed(2)}</span>
+                                    </div>
+                                </div>
                             )}
-
                         </div>
 
-                        {message && (
-                            <div className={`mt-4 text-sm px-3 py-2 rounded-md ${
-                                message.type === "error" ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
-                            }`}>
-                                {message.text}
+                        {/* Actions */}
+                        <div className="px-5 py-4 border-t border-slate-100 shrink-0 space-y-2">
+                            {message && (
+                                <div className={`p-2.5 rounded-lg text-sm text-center font-medium ${
+                                    message.type === "error" ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
+                                }`}>
+                                    {message.text}
+                                </div>
+                            )}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setSelectedListing(null)}
+                                    className="flex-1 px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 transition text-sm"
+                                >
+                                    Close
+                                </button>
+                                {mode === "market" ? (
+                                    <button
+                                        onClick={handleBuy}
+                                        disabled={!!account && account.balance < selectedListing.price}
+                                        className="flex-1 px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50 transition text-sm"
+                                    >
+                                        {account ? "Confirm Purchase" : "Sign in to buy"}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await cancelOffer(selectedListing.id);
+                                                setListings(prev => {
+                                                    if (!prev) return prev;
+                                                    return {...prev, items: prev.items.filter(l => l.id !== selectedListing.id)};
+                                                });
+                                                setMessage({type: "success", text: "Listing canceled"});
+                                                setTimeout(() => setSelectedListing(null), 800);
+                                            } catch {
+                                                setMessage({type: "error", text: "Failed to cancel listing"});
+                                                setTimeout(() => setSelectedListing(null), 800);
+                                            }
+                                        }}
+                                        className="flex-1 px-4 py-2 rounded-xl bg-red-600 text-white font-medium hover:bg-red-500 transition text-sm"
+                                    >
+                                        Cancel Offer
+                                    </button>
+                                )}
                             </div>
-                        )}
+                        </div>
 
                     </div>
                 </div>

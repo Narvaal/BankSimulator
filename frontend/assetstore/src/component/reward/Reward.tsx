@@ -9,6 +9,7 @@ import {API_URL} from "../../config";
 import {authHeader} from "../../auth";
 import {Link} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
+import {ArtifactCardThumb, ArtifactCardDetail, CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -450,24 +451,21 @@ function Reward() {
                                             {bundleAssets[bundle.id]?.map((artifact, index) => {
 
                                                 const disabled = artifact.totalSupply === 0;
+                                                const meta = artifact.metadata as CardMetadata;
 
                                                 return (
-
-                                                    <div
-                                                        key={`${bundle.id}-${artifact.id}-${index}`}
-                                                        onClick={() => !disabled && openAsset(artifact)}
-                                                        className={`border rounded-lg p-3 transition
-                                                        ${disabled
-                                                            ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                                                            : "cursor-pointer bg-slate-50 border-slate-200 hover:bg-slate-100"
-                                                        }`}
-                                                    >
-                                                        <p className="font-medium">{artifact.metadata.name}</p>
-                                                        <p className="text-xs">
-                                                            {disabled ? "Sold Out" : `Supply: ${artifact.totalSupply}`}
-                                                        </p>
+                                                    <div key={`${bundle.id}-${artifact.id}-${index}`} className="relative">
+                                                        <ArtifactCardThumb
+                                                            metadata={meta}
+                                                            disabled={disabled}
+                                                            onClick={() => openAsset(artifact)}
+                                                        />
+                                                        <div className="mt-1 text-center">
+                                                            <span className="text-[10px] text-zinc-400">
+                                                                {disabled ? "Sold Out" : `${artifact.totalSupply} left`}
+                                                            </span>
+                                                        </div>
                                                     </div>
-
                                                 );
 
                                             })}
@@ -501,62 +499,52 @@ function Reward() {
 
             {selectedAsset && (
 
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
 
-                    <div className="bg-white rounded-2xl p-7 w-96 shadow-2xl border border-slate-200">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm max-h-[90vh] flex flex-col">
 
-                        <h2 className="text-2xl font-bold mb-5 text-slate-800">Claim Artifact</h2>
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+                            <h2 className="text-lg font-bold text-slate-800">Claim Artifact</h2>
+                            <button onClick={closeModal} className="text-zinc-400 hover:text-zinc-600 transition text-xl leading-none">✕</button>
+                        </div>
 
-                        {/* ASSET INFO */}
-
-                        <div className="space-y-2 mb-6">
-
-                            <p className="text-slate-700">
-                                <span className="font-semibold">Name:</span> {selectedAsset.metadata.name}
+                        {/* Scrollable card content */}
+                        <div className="overflow-y-auto flex-1 px-5 pb-2">
+                            <ArtifactCardDetail metadata={selectedAsset.metadata as CardMetadata} />
+                            <p className="text-xs text-zinc-400 text-center mt-3">
+                                {selectedAsset.totalSupply} remaining · Created {new Date(selectedAsset.createdAt).toLocaleDateString()}
                             </p>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <p className="text-sm text-slate-500">Supply: {selectedAsset.totalSupply}</p>
-                                <p className="text-sm text-slate-500">
-                                    Created At: {new Date(selectedAsset.createdAt).toLocaleDateString()}
-                                </p>
-                            </div>
-
                         </div>
 
-                        {/* MODAL BUTTONS */}
-
-                        <div className="flex justify-end gap-3 mb-4">
-
-                            <button
-                                onClick={closeModal}
-                                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={handleClaim}
-                                disabled={loadingClaim}
-                                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
-                            >
-                                {loadingClaim ? "Claiming..." : account ? "Confirm Claim" : "Sign in to claim"}
-                            </button>
-
-                        </div>
-
-                        {/* MODAL MESSAGE */}
-
-                        {message && (
-                            <div className={`mt-4 p-3 rounded-lg text-sm text-center font-medium
-                                ${message.type === "success"
-                                    ? "bg-green-100 text-green-700 border border-green-300"
-                                    : "bg-red-100 text-red-700 border border-red-300"
-                                }`}
-                            >
-                                {message.text}
+                        {/* Actions */}
+                        <div className="px-5 py-4 border-t border-slate-100 shrink-0 space-y-2">
+                            {message && (
+                                <div className={`p-2.5 rounded-lg text-sm text-center font-medium
+                                    ${message.type === "success"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
+                                    }`}
+                                >
+                                    {message.text}
+                                </div>
+                            )}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={closeModal}
+                                    className="flex-1 px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 transition text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleClaim}
+                                    disabled={loadingClaim}
+                                    className="flex-1 px-4 py-2 rounded-xl bg-zinc-900 text-white font-medium hover:bg-zinc-700 transition disabled:opacity-50 text-sm"
+                                >
+                                    {loadingClaim ? "Claiming..." : account ? "Confirm Claim" : "Sign in to claim"}
+                                </button>
                             </div>
-                        )}
+                        </div>
 
                     </div>
 
