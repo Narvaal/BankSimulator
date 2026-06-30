@@ -140,9 +140,33 @@ Available art styles (pick exactly ONE that best fits this event's theme and moo
 
 Generate a complete metadata JSON following the schema below EXACTLY. Respect all character limits.
 
-SCHEMA AND LIMITS:
+━━━ TONE — READ THIS BEFORE WRITING ANYTHING ━━━
+
+The voice is acidic, skeptical, and precise. The humor lives in the OBSERVATION, never in the structure.
+
+FORBIDDEN patterns — these are tired and lazy:
+  ✗ Comparisons to relatable mundane things ("still less annoying than your CrossFit friend", "like a gym membership you never use")
+  ✗ Setup → punchline joke structure ("X happened. And Y is the funny part.")
+  ✗ Pop culture references used as punchlines (Netflix, Instagram, TikTok as the joke itself)
+  ✗ Explaining the joke ("which means...", "ensuring that...", "turning X into Y")
+  ✗ Hyperbole for comic effect ("the most important thing ever", "absolutely nobody asked for")
+  ✗ Any sentence that could appear in a BuzzFeed listicle
+
+WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
+  ✓ State what actually happened with a word that makes the reader feel something
+  ✓ The irony is in the facts themselves, not in the framing
+  ✓ Dry. Clinical. Like a coroner's report with opinions.
+  ✓ "Four billion dollars to confirm other planets are also mostly empty." ← the joke is the precision
+  ✓ "The government officially validates what your doctor was already prescribing under different terminology." ← no punchline, just the truth stated clearly
+
+━━━ SCHEMA AND LIMITS ━━━
+
 - name: max 30 chars
-- subtitle: max 60 chars — NOT a news headline. A clever, slightly acidic one-liner that editorially reframes the event. Think magazine cover tagline, not Reuters wire. ("The favorite toy of astronomers who gave up on humans", "What happens when Silicon Valley reads the Bible once")
+- subtitle: max 60 chars. An editorial reframe, not a headline and not a joke. One sentence that shifts how you see the event. Think: what would a very smart, very tired person say this is really about?
+  ✗ "When politics discovers the drug everyone's on anyway" (joke structure)
+  ✓ "The government's official endorsement arrives three years after everyone's doctor"
+  ✓ "Proof that Mars is only interesting when something on it is moving"
+
 - category: exactly one of Technology | Finance | Science | Culture | Sports | Politics
 - rarity: exactly one of Common | Rare | Epic | Legendary | Mythic | Ultimate
 
@@ -155,16 +179,32 @@ SCHEMA AND LIMITS:
   Ultimate:  foil=true, glow="#ff0080", shimmer=true, particles="cinematic", borderLight=true
 
 - attributes: influence/innovation/controversy/longevity/reach — all 1-100
+
 - abilities: 1-2 items, name ≤25 chars, description ≤120 chars
-  IMPORTANT: abilities are NOT game mechanics with numbers. They are witty, cynical observations about what this thing actually does in the world. No "+X to Y". Write like a sarcastic encyclopedia — punchy name (2-4 words), punchline description.
-  Example for a Podcast card: name "Open Mic Night" / desc "Grants anyone with a microphone and 40 minutes the ability to become an expert on anything."
+  A cynical observation about what this thing actually does. No numbers. No "+X to Y". No explaining.
+  The name is a label. The description is the observation — one sentence, as short as possible, as true as possible.
+  ✗ "Transforms a pharmaceutical blockbuster into a government obligation, ensuring manufacturers never have to choose between profits."
+  ✓ "Converts a drug companies already sell for $900 into a bill someone else signs."
+  ✗ "Grants anyone with a microphone and 40 minutes the ability to become an expert on anything."
+  ✓ "Anyone with a microphone and a grievance now has a distribution channel."
+
 - passive: name ≤25 chars, description ≤120 chars
-  A permanent, irrefutable truth about this thing — written as a dry museum plaque written by someone who has had enough.
-  Example: name "Still Talking" / desc "No crisis, ban, or advertiser boycott has ever successfully shut one down permanently."
-- weakness: max 80 chars — a one-liner so true it's funny. Can mirror an ability and flip it.
-  Example for Podcast: "Lets everyone say whatever they want."
-- flavorText: max 15 words, ironic/cynical/sharp tone ("The future arrived. Apple priced it so you'd know your place in it.")
-- lore: max 300 chars
+  The one thing about this subject that will still be true in ten years. Stated without editorializing.
+  ✗ "$50 monthly sounds reasonable until you realize someone else is paying $900 for the same syringe."
+  ✓ "The price is set by whoever needs to justify the price."
+
+- weakness: max 80 chars. One sentence. The most uncomfortable true thing about this subject. No joke structure.
+  ✗ "Still costs more per year than a gym membership nobody uses either"
+  ✓ "Requires the patient to exist within a system that has already decided their value."
+
+- flavorText: max 15 words. A sentence that lands like a verdict, not a punchline. Read it aloud — if it sounds like a tweet, rewrite it.
+  ✗ "Ran a marathon on Mars. Still less annoying than your CrossFit friend."
+  ✓ "The future arrived. Apple priced it so you'd know your place in it."
+
+- lore: max 200 chars. Two sentences maximum. What happened, and what it reveals about the people who let it happen. No Wikipedia summary. No "starting in [year]". Start in the middle.
+  ✗ "After years of pharmaceutical companies perfecting billion-dollar drugs and millions ordering them through telehealth loopholes, the federal government decided to make it official."
+  ✓ "The drug already existed. The coverage arriving now means someone finally ran the numbers on who votes."
+
 - traits: 2-4 items, name ≤15 chars, value ≤20 chars
 - timeline: 2-5 items, date=YYYY-MM-DD, event ≤60 chars
 - references: 1-5 URLs (use the provided URL plus any well-known public references)
@@ -175,7 +215,16 @@ SCHEMA AND LIMITS:
 - artist: "RareLines AI"
 - model: "sd3-large"
 - chosenStyle: the exact string of the art style you selected from the list above
-- prompt: A detailed Stable Diffusion image prompt for this card's illustration. Start with the chosen art style, then describe the scene — dramatic, visually rich, no text, no watermarks, no faces unless stylistically integral.
+
+- prompt: Stable Diffusion image prompt. Structure it as: [chosen art style], [dynamic composition], [subject], [camera/lens], [lighting], [mood]. No text, no watermarks.
+
+  COMPOSITION RULES — the image must feel alive:
+  • Never center a static object. Static = dead.
+  • Choose one composition: subject caught mid-motion | extreme close-up filling the frame | worm's eye view looking up | bird's eye aerial | Dutch angle 30° | subject at rule-of-thirds edge | foreground element framing distant subject
+  • Choose one lens character: macro (tiny subject fills frame) | wide-angle distortion | telephoto compression | fisheye | tilt-shift miniature effect | anamorphic cinematic
+  • If the event is abstract (a policy, a financial move, a scientific result), personify it — create a character that embodies it. A drug approval is a bureaucrat in a lab coat mid-stamp. A market event is a suited figure in freefall. A space discovery is an astronomer with jaw dropped staring at something off-frame.
+  • Imply movement: flowing fabric, motion blur on hands/feet, particles mid-air, a figure between two positions.
+
 - seed: a random 7-digit number as a string
 
 Return ONLY the JSON object, no markdown fences, no explanation."""

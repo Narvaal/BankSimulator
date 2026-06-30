@@ -53,6 +53,12 @@ resource "aws_iam_role_policy" "pipeline_lambda" {
         Action   = ["s3:PutObject"]
         Resource = "${aws_s3_bucket.frontend.arn}/cards/*"
       },
+      # CloudFront — invalidate cached card images after upload
+      {
+        Effect   = "Allow"
+        Action   = ["cloudfront:CreateInvalidation"]
+        Resource = "*"
+      },
       # SES — send failure alert emails
       {
         Effect   = "Allow"
