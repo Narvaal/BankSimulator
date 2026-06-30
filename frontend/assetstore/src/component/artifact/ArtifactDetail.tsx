@@ -5,6 +5,7 @@ import UserMenu from "../usermenu/UserMenu.tsx";
 import PriceHistoryChart from "../market/PriceHistoryChart.tsx";
 import {useAccount} from "../auth/Auth";
 import {API_URL} from "../../config";
+import {ArtifactCardDetail, CardMetadata} from "./ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -28,6 +29,7 @@ interface ArtifactUnitDetail {
     unitId: number;
     artifactId: number;
     artifactName: string;
+    metadata: CardMetadata;
     ownerAccountId: number;
     status: "AVAILABLE" | "IN_MARKET" | "RESERVED" | "TRANSFERRING";
     createdAt: string;
@@ -166,28 +168,23 @@ export default function ArtifactDetail() {
                 {!loading && !notFound && unit && (
                     <div className="max-w-2xl mx-auto space-y-4">
 
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <h1 className="text-2xl font-bold text-zinc-900">{unit.artifactName}</h1>
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
-                                        <span>Unit #{unit.unitId}</span>
-                                        <span>·</span>
-                                        <span>Artifact #{unit.artifactId}</span>
-                                        <span>·</span>
-                                        <span>Owner #{unit.ownerAccountId}</span>
-                                        <span>·</span>
-                                        <span>{new Date(unit.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="mt-2">
-                                        <StatusBadge status={unit.status}/>
-                                    </div>
+                        {/* Status bar */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                            <div className="flex items-center justify-between gap-4 flex-wrap">
+                                <div className="flex items-center gap-2.5 flex-wrap text-xs text-zinc-400">
+                                    <StatusBadge status={unit.status}/>
+                                    <span>Unit #{unit.unitId}</span>
+                                    <span>·</span>
+                                    <span>Artifact #{unit.artifactId}</span>
+                                    <span>·</span>
+                                    <span>Owner #{unit.ownerAccountId}</span>
+                                    <span>·</span>
+                                    <span>{new Date(unit.createdAt).toLocaleDateString()}</span>
                                 </div>
-
                                 {lastPrice !== null && (
-                                    <div className="shrink-0 text-right">
-                                        <div className="text-xs text-zinc-400 mb-0.5">Last sale</div>
-                                        <div className="text-xl font-bold text-emerald-600">
+                                    <div className="text-right shrink-0">
+                                        <div className="text-[10px] text-zinc-400">Last sale</div>
+                                        <div className="text-lg font-bold text-emerald-600">
                                             ${Number(lastPrice).toFixed(2)}
                                         </div>
                                     </div>
@@ -195,14 +192,24 @@ export default function ArtifactDetail() {
                             </div>
                         </div>
 
+                        {/* Card detail */}
+                        {unit.metadata && Object.keys(unit.metadata).length > 0 ? (
+                            <ArtifactCardDetail metadata={unit.metadata} />
+                        ) : (
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                <h1 className="text-2xl font-bold text-zinc-900">{unit.artifactName}</h1>
+                            </div>
+                        )}
+
+                        {/* Price history */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <h2 className="text-sm font-semibold text-zinc-700 mb-1">Price History</h2>
                             <PriceHistoryChart priceHistory={unit.priceHistory}/>
                         </div>
 
+                        {/* Ownership chain */}
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                             <h2 className="text-sm font-semibold text-zinc-700 mb-3">Ownership Chain</h2>
-
                             {unit.transfers.length === 0 ? (
                                 <p className="text-sm text-zinc-400">No transfers yet — this artifact has never been sold.</p>
                             ) : (

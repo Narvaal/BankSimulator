@@ -5,6 +5,7 @@ import br.com.ale.domain.artifact.ArtifactUnitStatus;
 import br.com.ale.dto.ArtifactUnitPageView;
 import br.com.ale.dto.ArtifactUnitView;
 import br.com.ale.dto.CreateArtifactUnitRequest;
+import br.com.ale.infrastructure.json.JsonUtils;
 
 import java.sql.*;
 import java.time.Instant;
@@ -258,6 +259,7 @@ public class ArtifactUnitDAO {
                     u.created_at,
                     a.id AS artifact_id,
                     JSON_VALUE(a.metadata, '$.name') AS artifact_name,
+                    a.metadata,
                     COUNT(*) OVER() AS total_items
                 FROM artifact_unit u
                 JOIN artifact a ON a.id = u.artifact_id
@@ -293,6 +295,7 @@ public class ArtifactUnitDAO {
                                     rs.getLong("artifact_id"),
                                     rs.getLong("artifact_unit_id"),
                                     rs.getString("artifact_name"),
+                                    JsonUtils.fromJson(rs.getString("metadata")),
                                     getInstantOrNull(rs, "created_at")
                             )
                     );

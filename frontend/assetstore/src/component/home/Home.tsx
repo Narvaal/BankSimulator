@@ -8,6 +8,7 @@ import { API_URL } from "../../config";
 import { authHeader } from "../../auth";
 import {useNavigate} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
+import {ArtifactCardThumb, ArtifactCardDetail, CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -15,6 +16,7 @@ interface ArtifactView {
     artifactUnitId: number;
     artifactId: number;
     artifactName: string;
+    metadata: CardMetadata;
     createdAt: string;
 }
 
@@ -276,30 +278,26 @@ export default function Home() {
                     {!loading && !error && assets && (
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
                             {assets.items.map((artifact) => (
-
-                                <div
-                                    key={artifact.artifactUnitId}
-                                    onClick={() => openAsset(artifact)}
-                                    className="rounded-xl border border-slate-200 bg-white shadow-sm
-                        hover:shadow-md hover:scale-[1.02] transition
-                        p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
-                                >
-
-                        <span className="text-slate-800 font-semibold">
-                            {artifact.artifactName}
-                        </span>
-
-                                    <div className="mt-1 text-xs text-slate-500">
-                                        Artifact #{artifact.artifactId} • Unity
-                                        #{artifact.artifactUnitId} • {new Date(artifact.createdAt).toLocaleDateString()}
+                                artifact.metadata && Object.keys(artifact.metadata).length > 0 ? (
+                                    <ArtifactCardThumb
+                                        key={artifact.artifactUnitId}
+                                        metadata={artifact.metadata}
+                                        onClick={() => openAsset(artifact)}
+                                    />
+                                ) : (
+                                    <div
+                                        key={artifact.artifactUnitId}
+                                        onClick={() => openAsset(artifact)}
+                                        className="rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:scale-[1.02] transition p-5 cursor-pointer flex flex-col items-center justify-center text-center min-h-27"
+                                    >
+                                        <span className="text-slate-800 font-semibold">{artifact.artifactName}</span>
+                                        <div className="mt-1 text-xs text-slate-500">
+                                            #{artifact.artifactId} · unit #{artifact.artifactUnitId}
+                                        </div>
                                     </div>
-
-                                </div>
-
+                                )
                             ))}
-
                         </div>
 
                     )}
@@ -322,87 +320,61 @@ export default function Home() {
 
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-                    <div className="bg-white rounded-2xl w-105 p-6 shadow-xl">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
 
-                        <h2 className="text-xl font-bold mb-2">
-                            Sell Artifact
-                        </h2>
+                        {/* Scrollable body */}
+                        <div className="overflow-y-auto flex-1 p-6 space-y-4">
 
-                        <div className="text-left mb-4">
-                            <div className="text-slate-800 font-semibold">
-                                {selectedAsset.artifactName}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                                Artifact #{selectedAsset.artifactId} • Unity
-                                #{selectedAsset.artifactUnitId} • {new Date(selectedAsset.createdAt).toLocaleDateString()}
-                            </div>
-                        </div>
+                            <h2 className="text-xl font-bold">Sell Artifact</h2>
 
-                        {/* PRICE HISTORY */}
-
-                        <div className="mb-5">
-
-                            <h3 className="text-sm font-semibold mb-2">
-                                Price History
-                            </h3>
-
-                            {loadingHistory && (
-                                <p className="text-sm text-slate-500">
-                                    Loading...
-                                </p>
+                            {selectedAsset.metadata && Object.keys(selectedAsset.metadata).length > 0 ? (
+                                <ArtifactCardDetail metadata={selectedAsset.metadata} />
+                            ) : (
+                                <div className="text-slate-800 font-semibold">{selectedAsset.artifactName}</div>
                             )}
 
-                            <PriceHistoryChart priceHistory={priceHistory}></PriceHistoryChart>
-
-                        </div>
-
-                        {/* PRICE INPUT */}
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            placeholder="Price"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            className="w-full border rounded-lg p-2 mb-4"
-                        />
-
-                        {/* BUTTONS */}
-
-                        <div className="flex justify-end gap-3">
-
-                            <button
-                                onClick={() => setSelectedAsset(null)}
-                                className="px-4 py-2 border rounded-lg text-black hover:bg-slate-900 hover:text-white"
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                onClick={handleSell}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg"
-                            >
-                                List for sale
-                            </button>
-
-                        </div>
-
-                        {/* MESSAGE */}
-
-                        {message && (
-
-                            <div
-                                className={`mt-4 text-sm text-center p-2 rounded ${
-                                    message.type === "success"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-red-100 text-red-700"
-                                }`}
-                            >
-                                {message.text}
+                            {/* PRICE HISTORY */}
+                            <div>
+                                <h3 className="text-sm font-semibold mb-2">Price History</h3>
+                                {loadingHistory && <p className="text-sm text-slate-500">Loading...</p>}
+                                <PriceHistoryChart priceHistory={priceHistory} />
                             </div>
 
-                        )}
+                        </div>
+
+                        {/* STICKY FOOTER */}
+                        <div className="border-t border-slate-100 p-4 space-y-3 shrink-0">
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                placeholder="Price"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                                className="w-full border rounded-lg p-2 text-sm"
+                            />
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setSelectedAsset(null)}
+                                    className="flex-1 px-4 py-2 border rounded-lg text-sm text-zinc-700 hover:bg-slate-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSell}
+                                    className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    List for sale
+                                </button>
+                            </div>
+
+                            {message && (
+                                <p className={`text-xs text-center ${message.type === "success" ? "text-emerald-600" : "text-red-600"}`}>
+                                    {message.text}
+                                </p>
+                            )}
+                        </div>
 
                     </div>
 

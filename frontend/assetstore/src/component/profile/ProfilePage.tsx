@@ -5,6 +5,7 @@ import UserMenu from "../usermenu/UserMenu";
 import Pagination from "../util/Pagination";
 import {useAccount} from "../auth/Auth";
 import {API_URL} from "../../config";
+import {ArtifactCardThumb, CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -19,6 +20,7 @@ interface ArtifactView {
     artifactUnitId: number;
     artifactId: number;
     artifactName: string;
+    metadata: CardMetadata;
     createdAt: string;
 }
 
@@ -169,20 +171,20 @@ export default function ProfilePage() {
                             {inventory && inventory.items.length > 0 && (
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                                     {inventory.items.map((artifact) => (
-                                        <Link
-                                            key={artifact.artifactUnitId}
-                                            to={`/artifact/${artifact.artifactUnitId}`}
-                                            className="rounded-xl border border-slate-200 bg-white shadow-sm
-                                                hover:shadow-md hover:scale-[1.02] transition
-                                                p-5 flex flex-col items-center justify-center text-center min-h-27 no-underline"
-                                        >
-                                            <span className="text-slate-800 font-semibold">
-                                                {artifact.artifactName}
-                                            </span>
-                                            <div className="mt-1 text-xs text-slate-500">
-                                                Artifact #{artifact.artifactId} • Unity #{artifact.artifactUnitId}
-                                            </div>
-                                        </Link>
+                                        artifact.metadata && Object.keys(artifact.metadata).length > 0 ? (
+                                            <Link key={artifact.artifactUnitId} to={`/artifact/${artifact.artifactUnitId}`} className="block no-underline">
+                                                <ArtifactCardThumb metadata={artifact.metadata} />
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                key={artifact.artifactUnitId}
+                                                to={`/artifact/${artifact.artifactUnitId}`}
+                                                className="rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:scale-[1.02] transition p-5 flex flex-col items-center justify-center text-center min-h-27 no-underline"
+                                            >
+                                                <span className="text-slate-800 font-semibold">{artifact.artifactName}</span>
+                                                <div className="mt-1 text-xs text-slate-500">#{artifact.artifactId}</div>
+                                            </Link>
+                                        )
                                     ))}
                                 </div>
                             )}

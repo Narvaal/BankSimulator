@@ -6,6 +6,7 @@ import br.com.ale.dto.ArtifactListingFilter;
 import br.com.ale.dto.ArtifactListingPageView;
 import br.com.ale.dto.ArtifactListingView;
 import br.com.ale.dto.CreateArtifactListingRequest;
+import br.com.ale.infrastructure.json.JsonUtils;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -216,6 +217,7 @@ public class ArtifactListingDAO {
                     l.created_at,
                     u.artifact_id,
                     JSON_VALUE(a.metadata, '$.name') AS artifact_name,
+                    a.metadata,
                     COUNT(*) OVER() AS total_items
                 FROM artifact_listing l
                 JOIN artifact_unit u ON u.id = l.artifact_unit_id
@@ -272,6 +274,7 @@ public class ArtifactListingDAO {
                             rs.getLong("artifact_unit_id"),
                             rs.getLong("artifact_id"),
                             rs.getString("artifact_name"),
+                            JsonUtils.fromJson(rs.getString("metadata")),
                             rs.getBigDecimal("price"),
                             rs.getTimestamp("created_at").toInstant()
                     ));
@@ -362,6 +365,7 @@ public class ArtifactListingDAO {
                     l.artifact_unit_id,
                     u.artifact_id,
                     JSON_VALUE(a.metadata, '$.name') AS artifact_name,
+                    a.metadata,
                     l.price,
                     l.created_at,
                     l.updated_at,
@@ -398,6 +402,7 @@ public class ArtifactListingDAO {
                                     rs.getLong("artifact_unit_id"),
                                     rs.getLong("artifact_id"),
                                     rs.getString("artifact_name"),
+                                    JsonUtils.fromJson(rs.getString("metadata")),
                                     rs.getBigDecimal("price"),
                                     rs.getTimestamp("created_at").toInstant()
                             )
