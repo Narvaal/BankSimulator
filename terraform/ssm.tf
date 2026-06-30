@@ -67,3 +67,23 @@ resource "aws_ssm_parameter" "webhook_asset_url" {
   type  = "String"
   value = var.webhook_asset_url
 }
+
+# ── Pipeline (Fase 2) ────────────────────────────────────────────────────────
+
+resource "aws_ssm_parameter" "newsapi_key" {
+  name  = "${local.ssm_prefix}/newsapi_key"
+  type  = "SecureString"
+  value = var.newsapi_key
+}
+
+resource "aws_ssm_parameter" "reddit_client_id" {
+  name  = "${local.ssm_prefix}/reddit_client_id"
+  type  = "SecureString"
+  value = var.reddit_client_id
+}
+
+resource "aws_ssm_parameter" "reddit_client_secret" {
+  name  = "${local.ssm_prefix}/reddit_client_secret"
+  type  = "SecureString"
+  value = var.reddit_client_secret
+}

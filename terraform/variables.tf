@@ -55,3 +55,28 @@ variable "app_base_url" {
 variable "webhook_asset_url" {
   default = "https://api.alessandro-bezerra.me/webhook"
 }
+
+# ── Pipeline (Fase 2) ────────────────────────────────────────────────────────
+
+variable "newsapi_key" {
+  sensitive = true
+}
+
+variable "reddit_client_id" {
+  sensitive = true
+  default   = ""
+}
+
+variable "reddit_client_secret" {
+  sensitive = true
+  default   = ""
+}
+
+variable "bedrock_region" {
+  default = "us-east-1"
+}
+
+variable "pipeline_schedule" {
+  description = "EventBridge cron for the weekly pipeline (UTC)"
+  default     = "cron(0 8 ? * MON *)"
+}

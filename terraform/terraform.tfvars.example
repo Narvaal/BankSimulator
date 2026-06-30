@@ -12,3 +12,10 @@ kofi_verification_token = "PREENCHA_COM_VALOR_ATUAL"
 
 # Google OAuth
 google_client_id = "PREENCHA_COM_VALOR_ATUAL"
+
+# Pipeline (Fase 2) — fontes de notícias
+# NewsAPI:  https://newsapi.org  (plano free = 100 req/dia, suficiente)
+# Reddit:   https://www.reddit.com/prefs/apps → criar app "script"
+newsapi_key          = "PREENCHA_COM_VALOR_ATUAL"
+reddit_client_id     = "PREENCHA_COM_VALOR_ATUAL"
+reddit_client_secret = "PREENCHA_COM_VALOR_ATUAL"
