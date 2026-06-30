@@ -5,7 +5,7 @@ import UserMenu from "../usermenu/UserMenu";
 import Pagination from "../util/Pagination";
 import {useAccount} from "../auth/Auth";
 import {API_URL} from "../../config";
-import {ArtifactCardThumb, CardMetadata} from "../artifact/ArtifactCard.tsx";
+import {ArtifactCardThumb, type CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 

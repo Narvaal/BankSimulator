@@ -10,7 +10,7 @@ import {API_URL} from "../../config";
 import {authHeader} from "../../auth";
 import {Link} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
-import {RarityBadge, ArtifactCardDetail, CardMetadata} from "../artifact/ArtifactCard.tsx";
+import {RarityBadge, ArtifactCardDetail, type CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 

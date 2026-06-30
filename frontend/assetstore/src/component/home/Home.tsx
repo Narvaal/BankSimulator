@@ -8,7 +8,7 @@ import { API_URL } from "../../config";
 import { authHeader } from "../../auth";
 import {useNavigate} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
-import {ArtifactCardThumb, ArtifactCardDetail, CardMetadata} from "../artifact/ArtifactCard.tsx";
+import {ArtifactCardThumb, ArtifactCardDetail, type CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
