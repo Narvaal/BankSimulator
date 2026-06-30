@@ -17,13 +17,15 @@ def _slugify(name: str) -> str:
     return slug[:80]
 
 
-def upload_image(s3, image_bytes: bytes, artifact_name: str, bucket: str, cdn_base: str) -> tuple[str, str]:
+def upload_image(s3, image_bytes: bytes, artifact_name: str, bucket: str, cdn_base: str, seed: str = "") -> tuple[str, str]:
     """
-    Upload a PNG illustration to S3, invalidate CloudFront cache, and return
-    (illustration_url, background_url).
+    Upload a PNG illustration to S3 and return (illustration_url, background_url).
+    Seed is included in the filename so each generation gets a unique, immutable URL.
     """
     slug = _slugify(artifact_name)
-    key = f"cards/{slug}.png"
+    # Seed in filename = unique URL per generation = no cache invalidation needed
+    suffix = f"-{seed}" if seed else ""
+    key = f"cards/{slug}{suffix}.png"
 
     s3.put_object(
         Bucket=bucket,
@@ -33,20 +35,6 @@ def upload_image(s3, image_bytes: bytes, artifact_name: str, bucket: str, cdn_ba
         CacheControl="public, max-age=31536000, immutable",
     )
     logger.info(f"Uploaded to S3: {key}")
-
-    # Invalidate CloudFront so re-generated cards aren't served stale
-    try:
-        cf = boto3.client("cloudfront", region_name="us-east-1")
-        cf.create_invalidation(
-            DistributionId=CLOUDFRONT_DISTRIBUTION_ID,
-            InvalidationBatch={
-                "Paths": {"Quantity": 1, "Items": [f"/{key}"]},
-                "CallerReference": f"{slug}-{id(image_bytes)}",
-            },
-        )
-        logger.info(f"CloudFront invalidation created for /{key}")
-    except Exception as e:
-        logger.warning(f"CloudFront invalidation failed (non-fatal): {e}")
 
     cdn_base = cdn_base.rstrip("/")
     illustration_url = f"{cdn_base}/{key}"

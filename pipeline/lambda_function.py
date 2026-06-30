@@ -109,7 +109,8 @@ def handler(event, context):
                 metadata, image_bytes = generate_card(bedrock, ev, card_number, week, stability_api_key)
 
                 illustration_url, background_url = upload_image(
-                    s3, image_bytes, metadata["name"], bucket, cdn_base
+                    s3, image_bytes, metadata["name"], bucket, cdn_base,
+                    seed=metadata.get("seed", ""),
                 )
                 metadata["illustration"] = illustration_url
                 metadata["background"]   = background_url
