@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public class ArtifactDAO {
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql, new String[]{"id"})) {
 
-            stmt.setString(1, JsonUtils.toJson(request.metadata()));
+            stmt.setObject(1, JsonUtils.toJson(request.metadata()), Types.OTHER);
             stmt.setInt(2, request.totalSupply());
 
             int rowsAffected = stmt.executeUpdate();
