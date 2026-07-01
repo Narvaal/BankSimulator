@@ -1,7 +1,7 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
 import {useEffect, useState, type ReactNode} from "react";
-import {ShieldCheckIcon, BoltIcon} from "@heroicons/react/24/outline";
+import {ShieldCheckIcon, BoltIcon, ExclamationTriangleIcon} from "@heroicons/react/24/outline";
 
 export interface CardMetadata {
     name?: string;
@@ -142,8 +142,8 @@ export function ArtifactCardFullscreen({
                 ✕
             </button>
 
-            <div className="min-h-full flex items-center justify-center p-4 py-12">
-                <div className="w-full max-w-[420px]" onClick={(e) => e.stopPropagation()}>
+            <div className="min-h-full flex flex-col items-center justify-center p-4 py-12">
+                <div onClick={(e) => e.stopPropagation()}>
 
                     {title && (
                         <p className="text-white/50 text-xs font-semibold uppercase tracking-widest text-center mb-3">
@@ -151,9 +151,11 @@ export function ArtifactCardFullscreen({
                         </p>
                     )}
 
-                    {/* Full-art card */}
+                    <div className="flex flex-wrap gap-4 justify-center items-start">
+
+                    {/* Full-art card (front) */}
                     <div
-                        className={`relative mx-auto rounded-2xl overflow-hidden border-2 ${s.border} ${s.glow ? `shadow-2xl ${s.glow}` : "shadow-2xl"}`}
+                        className={`relative shrink-0 rounded-2xl overflow-hidden border-2 ${s.border} ${s.glow ? `shadow-2xl ${s.glow}` : "shadow-2xl"}`}
                         style={{ height: "min(75vh, 640px)", aspectRatio: "2/3" }}
                     >
                         {metadata.illustration ? (
@@ -219,20 +221,133 @@ export function ArtifactCardFullscreen({
                                 </div>
                             )}
 
+                            {metadata.weakness && (
+                                <div className="w-full bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
+                                    <div className="flex items-center gap-1 text-white/50">
+                                        <ExclamationTriangleIcon className="w-3 h-3" />
+                                        <span className="text-[9px] font-semibold uppercase tracking-widest">Weakness</span>
+                                    </div>
+                                    <p className="text-white/80 text-[11px] mt-1 leading-snug">{metadata.weakness}</p>
+                                </div>
+                            )}
+
                             {metadata.flavorText && (
                                 <p className="text-white/50 text-[10px] italic leading-snug pt-0.5">"{metadata.flavorText}"</p>
                             )}
                         </div>
                     </div>
 
-                    {/* Extra content — actions, price history, etc. */}
-                    {children && (
-                        <div className="mt-3 bg-white rounded-2xl shadow-2xl overflow-hidden">
-                            {children}
-                        </div>
+                    {/* Back — everything not already on the front */}
+                    <ArtifactCardBack metadata={metadata} borderClass={s.border} glowClass={s.glow} />
+
+                    </div>
+                </div>
+
+                {/* Extra content — actions, price history, etc. */}
+                {children && (
+                    <div className="mt-3 w-full max-w-[420px] bg-white rounded-2xl shadow-2xl overflow-hidden">
+                        {children}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ArtifactCardBack({
+    metadata,
+    borderClass,
+    glowClass,
+}: {
+    metadata: CardMetadata;
+    borderClass: string;
+    glowClass: string;
+}) {
+    return (
+        <div
+            className={`relative shrink-0 rounded-2xl overflow-hidden border-2 bg-white flex flex-col ${borderClass} ${glowClass ? `shadow-2xl ${glowClass}` : "shadow-2xl"}`}
+            style={{ height: "min(75vh, 640px)", aspectRatio: "2/3" }}
+        >
+            <div className="overflow-y-auto flex-1 p-4 space-y-3">
+                <div className="text-center pb-2 border-b border-slate-100">
+                    <p className="text-xs font-bold text-zinc-700">{metadata.name}</p>
+                    {(metadata.collection || metadata.cardNumber) && (
+                        <p className="text-[10px] text-zinc-400 mt-0.5">
+                            {metadata.collection}{metadata.collection && metadata.cardNumber ? " · " : ""}{metadata.cardNumber ? `#${metadata.cardNumber}` : ""}
+                        </p>
                     )}
                 </div>
+
+                {metadata.lore && (
+                    <div>
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">Lore</p>
+                        <p className="text-xs text-zinc-600 leading-relaxed">{metadata.lore}</p>
+                    </div>
+                )}
+
+                {metadata.traits && metadata.traits.length > 0 && (
+                    <div>
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Traits</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {metadata.traits.map((t, i) => (
+                                <div key={i} className="bg-slate-50 rounded-md px-2 py-1">
+                                    <span className="text-[8px] text-zinc-400 block">{t.name}</span>
+                                    <span className="text-[10px] font-semibold text-zinc-700">{t.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {metadata.timeline && metadata.timeline.length > 0 && (
+                    <div>
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Timeline</p>
+                        <ol className="space-y-1">
+                            {metadata.timeline.map((t, i) => (
+                                <li key={i} className="flex gap-2 text-[10px]">
+                                    <span className="text-zinc-400 font-mono shrink-0">{t.date}</span>
+                                    <span className="text-zinc-600">{t.event}</span>
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                )}
+
+                {metadata.references && metadata.references.length > 0 && (
+                    <div>
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Sources</p>
+                        <ul className="space-y-1">
+                            {metadata.references.map((url, i) => {
+                                let hostname = url;
+                                try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch { /* keep raw url */ }
+                                return (
+                                    <li key={i}>
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                                        >
+                                            {hostname}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                )}
+
+                {(metadata.prompt || metadata.chosenStyle) && (
+                    <AiInfoPanel metadata={metadata} />
+                )}
             </div>
+
+            {(metadata.artist || metadata.releaseDate) && (
+                <div className="shrink-0 border-t border-slate-100 px-4 py-2 flex justify-between text-[9px] text-zinc-400">
+                    {metadata.artist && <span>Art by {metadata.artist}</span>}
+                    {metadata.releaseDate && <span>{new Date(metadata.releaseDate).toLocaleDateString()}</span>}
+                </div>
+            )}
         </div>
     );
 }
