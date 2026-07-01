@@ -231,18 +231,27 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
   • Choose one composition: subject caught mid-motion | extreme close-up filling the frame | worm's eye view looking up | bird's eye aerial | Dutch angle 30° | subject at rule-of-thirds edge | foreground element framing distant subject
   • Choose one lens: macro | wide-angle distortion | telephoto compression | fisheye | tilt-shift | anamorphic cinematic
 
-  THE GOLDEN RULE — never illustrate the phenomenon. Illustrate the moment a person encountered it.
-  The Big Ring is not a picture of a ring in space. It's an astronomer at 2am whose coffee is cold because she hasn't moved since the data printed.
-  A superconductor discovery is not a glowing crystal. It's an engineer's hands holding a strip of gray tape over a magnet, watching it float.
-  A drug policy is not a pill. It's a pharmacist's stamp mid-descent on a Medicare form.
+  THE GOLDEN RULE — never illustrate the phenomenon in the abstract. Anchor it in a specific object or human detail.
+  The Big Ring is not a picture of a ring in space. It's a thermal printout of spectral data being unrolled by weathered hands.
+  A superconductor discovery is not a glowing crystal. It's a strip of gray tape hovering 1cm above a magnet on a steel lab bench.
+  A drug policy is not a pill. It's a rubber stamp mid-descent onto a Medicare approval form.
+
+  SUBJECT VARIETY — each card must feel different from the others. Rotate through these options:
+  • HANDS ONLY: extreme close-up of hands doing something specific — assembling, stamping, holding, writing. No face visible.
+  • OBJECT ALONE: a single specific object, no person, shot with unusual angle or lens. The object must be nameable.
+  • SILHOUETTE FROM BEHIND: a figure seen from behind facing something large — never facing the viewer, never centered.
+  • EXTREME FACE CLOSE-UP: one eye, or mouth, or profile — never a full face centered in frame.
+  • ENVIRONMENT WITHOUT PEOPLE: the room/place where the event happened, specific details, no person present.
+
+  NEVER: a full person standing or sitting centered in the frame looking at the viewer or at something in front of them. That is the most generic AI output possible.
 
   THE OBJECT MUST BE SPECIFIC AND NAMEABLE:
-  ✓ "skeletal robotic frame" — you know exactly what this looks like
-  ✓ "strip of superconducting tape hovering above a magnet on a lab bench"
-  ✓ "thermal printout of spectral data being unrolled"
-  ✗ "glowing crystalline lattice structure" — the AI draws any generic prism
-  ✗ "impossible cosmic ring bending through space" — the AI draws generic space art
-  ✗ "abstract geometric energy" — meaningless, produces noise
+  ✓ "skeletal robotic frame with exposed titanium actuator joints"
+  ✓ "strip of gray metallic tape hovering 1cm above a cylindrical neodymium magnet"
+  ✓ "thermal printout of spectral data, edges curling"
+  ✗ "glowing crystalline lattice structure" — draws a generic prism
+  ✗ "impossible cosmic ring bending through space" — draws generic space art
+  ✗ "abstract geometric energy" — meaningless
 
   FORBIDDEN OUTPUTS — if your prompt contains these words, rewrite it:
   • "glowing" (unless it literally glows, like neon or fire)
@@ -268,7 +277,7 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
 
   THE BENCHMARK: the best card in this batch shows factory worker's hands assembling a skeletal robotic frame from below (worm's eye), soviet poster colors, harsh shadows, movement in the hands. That is the target — specific object, human hands, concrete action, strong composition.
 
-- seed: a random 7-digit number as a string
+- seed: "{seed}" — use this exact value, do not change it
 
 Return ONLY the JSON object, no markdown fences, no explanation."""
 
@@ -346,6 +355,9 @@ def generate_card(
     collection = f"Weekly Digest {week}"
     release_date = date.today().isoformat()
 
+    # Seed generated here — Claude must not pick it (avoids repeated defaults)
+    seed_int = random.randint(1000000, 9999999)
+
     art_styles_block = "\n".join(f"- {s}" for s in ART_STYLES)
     prompt = METADATA_PROMPT.format(
         title=event["title"],
@@ -357,6 +369,7 @@ def generate_card(
         release_date=release_date,
         url=event.get("url", ""),
         art_styles=art_styles_block,
+        seed=str(seed_int),
     )
 
     raw = _invoke_claude(bedrock, prompt)
@@ -387,14 +400,11 @@ def generate_card(
     metadata.setdefault("artist", "RareLines AI")
     metadata["model"] = IMAGE_MODEL
 
+    # Enforce seed generated above — ignore whatever Claude put in the JSON
+    metadata["seed"] = str(seed_int)
+
     # Generate illustration
     illustration_prompt = metadata.get("prompt", f"Digital trading card art for {event['title']}, cinematic, dramatic lighting, no text")
-    seed_str = metadata.get("seed", str(random.randint(1000000, 9999999)))
-    try:
-        seed_int = int(seed_str)
-    except (ValueError, TypeError):
-        seed_int = random.randint(1000000, 9999999)
-        metadata["seed"] = str(seed_int)
 
     logger.info(f"Generating illustration for: {metadata.get('name', event['title'])}")
     image_bytes = _invoke_stability(illustration_prompt, seed_int, stability_api_key)
