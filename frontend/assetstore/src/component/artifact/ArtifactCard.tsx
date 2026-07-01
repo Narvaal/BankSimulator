@@ -1,6 +1,7 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
 import {useEffect, useState, type ReactNode} from "react";
+import {ShieldCheckIcon, BoltIcon} from "@heroicons/react/24/outline";
 
 export interface CardMetadata {
     name?: string;
@@ -192,21 +193,29 @@ export function ArtifactCardFullscreen({
                                 )}
                             </div>
 
+                            {metadata.passive && (
+                                <div className="w-full bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
+                                    <div className="flex items-center gap-1 text-white/50">
+                                        <ShieldCheckIcon className="w-3 h-3" />
+                                        <span className="text-[9px] font-semibold uppercase tracking-widest">Passive</span>
+                                    </div>
+                                    <p className="text-white text-xs font-bold mt-1">{metadata.passive.name}</p>
+                                    <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{metadata.passive.description}</p>
+                                </div>
+                            )}
+
                             {metadata.abilities && metadata.abilities.length > 0 && (
                                 <div className="space-y-1.5">
                                     {metadata.abilities.map((ab, i) => (
                                         <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
-                                            <p className="text-white text-xs font-bold">{ab.name}</p>
+                                            <div className="flex items-center gap-1 text-white/50">
+                                                <BoltIcon className="w-3 h-3" />
+                                                <span className="text-[9px] font-semibold uppercase tracking-widest">Ability</span>
+                                            </div>
+                                            <p className="text-white text-xs font-bold mt-1">{ab.name}</p>
                                             <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{ab.description}</p>
                                         </div>
                                     ))}
-                                </div>
-                            )}
-
-                            {metadata.passive && (
-                                <div className="w-full bg-amber-400/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-amber-300/20">
-                                    <p className="text-amber-200 text-xs font-bold">{metadata.passive.name}</p>
-                                    <p className="text-amber-100/70 text-[10px] mt-0.5 leading-snug">{metadata.passive.description}</p>
                                 </div>
                             )}
 
