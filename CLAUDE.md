@@ -59,7 +59,7 @@ O campo `metadata` da tabela `asset` armazena um documento JSONB. Todos os campo
   "references": ["https://www.apple.com/apple-vision-pro/"],
 
   "collection": "Tech Giants 2024", "cardNumber": "042", "releaseDate": "2024-06-03",
-  "artist": "RareLines AI", "model": "dall-e-3", "prompt": "Futuristic spatial computing headset...", "seed": "4829301"
+  "artist": "RareLines AI", "model": "stability-ai-sd3-ultra", "chosenStyle": "soviet propaganda poster", "prompt": "Futuristic spatial computing headset...", "seed": "4829301"
 }
 ```
 
@@ -110,9 +110,19 @@ Defaults por raridade:
 
 Escrever como comentarista inteligente e levemente cínico: respeita os fatos, aponta o absurdo. O humor é no *como*, nunca no *o quê*.
 
-**`flavorText`** — ironia, duplo sentido ou verdade desconfortável:
+**`flavorText`** — ironia seca, verdade desconfortável, especificidade que dói:
 > *"The future arrived. Apple priced it so you'd know your place in it."*
-> *"A financial revolution, mostly used to make the already-rich slightly richer."*
+> *"Four billion dollars to confirm other planets are also mostly empty."*
+
+**Proibido em `flavorText`:** setup→punchline (estilo de piada), comparações com cultura pop, adjetivos entusiasmados ("stunning", "incredible"), conclusões filosóficas amplas. Tom clínico/seco é melhor que tom humorístico forçado.
+
+**`subtitle`** — factual. O que aconteceu. Uma palavra carregando peso.
+> ✅ *"Astronomers find a 1.3 billion light-year ring the math forbids"*  
+> ❌ *"The universe built something our models say it couldn't"* (editorial — reframing, não fato)
+
+**`abilities`** — efeito real no mundo, não mecânica de jogo. Imaginável como ativável numa batalha de argumentos.
+> ✅ *"Can detain anyone within 100 miles of a border, which is where 2/3 of Americans live."*  
+> ❌ *"Forces cosmologists to revise equations."* (abstrato, não playable)
 
 **`weakness`** — pode ser afiada:
 > *"Depends on people continuing to care, which history suggests is optimistic."*
@@ -151,19 +161,49 @@ O `booster_pack` **não contém** `asset_unit`s antecipadamente. As cartas são 
 
 ```
 Google Trends + NewsAPI + Reddit API (multi-source)
-↓ Claude API seleciona 10 eventos mais relevantes
-↓ Claude API gera metadata JSON completo por evento
-↓ DALL-E 3 gera ilustração por carta
-↓ S3 armazena imagens permanentemente
+↓ Claude via AWS Bedrock seleciona 10 eventos mais relevantes
+↓ Claude via Bedrock gera metadata JSON completo por evento
+  (seed gerado em Python antes da chamada — Claude não escolhe seed)
+↓ Stability AI SD3 Ultra gera ilustração por carta (REST API)
+↓ S3 armazena imagens com nome {slug}-{seed}.png (URL única por geração)
 ↓ POST /artifacts/bundles → backend cria bundle + artifacts
 ↓ Boosters gerados para distribuição
 ```
 
 **Execução:** AWS Lambda (Python 3.11) + EventBridge Scheduler (toda segunda, 08:00 UTC)
 
-**Custo estimado/semana (~10 cartas):** ~$0.41 (Claude API ~$0.01 + DALL-E 3 ~$0.40; Lambda/S3 desprezível)
+**Custo estimado/semana (~10 cartas):** ~$0.65 (Bedrock Claude ~$0.01 + Stability AI SD3 Ultra ~$0.065/imagem × 10; Lambda/S3 desprezível)
+
+**Deploy da Lambda:** CI/CD **não** faz deploy da Lambda. Após mudanças em `pipeline/`:
+```bash
+cd pipeline && bash build.sh
+aws lambda update-function-code --function-name rarelines-pipeline --zip-file fileb://pipeline.zip
+```
 
 **Por que não X/Twitter API:** Trending topics exige tier Basic ($100/mês). Google Trends + Reddit cobrem gratuitamente.
+
+**Atenção — bundle identifier único por semana:** Re-rodar a pipeline na mesma semana causa `unique constraint violation` em `artifact_bundle_identifier_key`. Solução: deletar o bundle anterior no RDS antes de re-rodar.
+
+### Geração de Imagens — Regras
+
+**Regra de ouro do prompt:** nunca ilustre o fenômeno. Ilustre o momento em que uma pessoa encontrou ele. O objeto na cena deve ser específico e nomeável.
+
+**Arcótipos de composição** (Claude escolhe um por carta; evita que todas fiquem parecidas):
+- HANDS ONLY — nenhum rosto, nenhum corpo
+- OBJECT ALONE — sem pessoa
+- SILHOUETTE FROM BEHIND — luz na frente, sombra voltada para o espectador
+- EXTREME FACE CLOSE-UP — olho ou boca preenchendo o frame
+- ENVIRONMENT WITHOUT PEOPLE — escala implícita por objetos cotidianos
+
+**Proibido por categoria:**
+- Tech → robôs, chips brilhantes, hologramas
+- Medical → pílulas, seringas, stethoscopes
+- Space → estrelas genéricas, planetas, nebulosas
+- Finance → gráficos de bolsa, moedas, notas
+
+**Palavras proibidas no prompt:** glowing, crystalline, cosmic, neural network, abstract, futuristic, surreal, ethereal
+
+**Art style:** Claude escolhe 1 estilo de uma lista de 55 (~7 famílias) injetada no prompt. Estilo inesperado para o assunto tende a funcionar melhor (ex: propaganda soviética para carta de tecnologia). Guardado em `metadata.chosenStyle`.
 
 ---
 
@@ -183,20 +223,27 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 
 ## Roadmap de Implementação
 
-### Fase 1 — Domain Refactor
-- Adicionar `metadata JSONB` na tabela `asset`, remover campo `text`
-- Introduzir entidades `Universe` e `Collection`
-- Atualizar APIs de bundle/criação para aceitar metadata
+### ✅ Fase 1 — Domain Refactor (completa)
+- ✅ `metadata JSONB` na tabela `artifact`, campo `text` removido
+- ✅ Entidades `Universe` e `Collection` no schema
+- ✅ APIs de bundle/criação aceitam `metadata` completo
+- ✅ `GET /artifact-listings`, `GET /artifact-units/me`, `GET /artifact-units/{id}` retornam `metadata`
 
-### Fase 2 — AI Pipeline
-- Ingestão multi-source: Google Trends + NewsAPI + Reddit API
-- Claude API: seleção de eventos + geração de metadata JSON
-- DALL-E 3 para ilustrações, upload para S3
-- AWS Lambda (Python 3.11) + EventBridge Scheduler
+### ✅ Fase 2 — AI Pipeline (completa)
+- ✅ Ingestão multi-source: Google Trends + NewsAPI + Reddit API
+- ✅ Bedrock Claude: seleção de eventos + geração de metadata JSON com tom ácido
+- ✅ Stability AI SD3 Ultra: ilustrações via REST API
+- ✅ AWS Lambda (Python 3.11) + EventBridge Scheduler (toda segunda, 08:00 UTC)
+- ✅ S3 com filenames baseados em seed (URLs imutáveis por geração)
+- ✅ Art style selection: 55 estilos, Claude escolhe por carta, salvo em `chosenStyle`
 
-### Fase 3 — Card Rendering Engine (2D)
-- Componente React com frente/verso e animação de flip
-- Composição em camadas (CSS + Framer Motion), variantes por raridade
+### Fase 3 — Card Rendering Engine (2D) — parcial ✅
+- ✅ `ArtifactCard.tsx`: `ArtifactCardThumb` (grid) + `ArtifactCardDetail` (modal/detalhe) com todos os campos
+- ✅ Variantes visuais por raridade (badge, border, glow)
+- ✅ Seções: ilustração hero, atributos com barras, abilities, passive, weakness, lore, traits, timeline, sources, AI Info (collapsible)
+- ✅ Integrado em: Inventory, Marketplace, Reward, ArtifactDetail, ProfilePage
+- Animação de flip frente/verso — pendente
+- Composição em camadas com Framer Motion — pendente
 
 ### Fase 4 — Three.js
 - Shaders GLSL: foil, reflection, glow
@@ -210,7 +257,7 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ### Fase 6 — Marketplace
 - ✅ Filtros no marketplace: artifactId, busca por nome, ordenação, faixa de preço
 - ✅ Transfer log filtrado por artifact (via URL params do ArtifactDetail)
-- Filtro por raridade — pendente até Fase 1 (requer `metadata JSONB`)
+- ✅ Filtro por raridade desbloqueado (Fase 1 completa — `metadata JSONB` disponível)
 - Histórico de preços com gráficos (Recharts já disponível)
 - Volume e analytics por artifact
 
@@ -220,8 +267,9 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 - Coleções com barra de progresso, achievements desbloqueáveis
 
 ### Fase 8 — Automação
-- Pipeline Lambda semanal 100% sem intervenção manual
-- Logs CloudWatch + alerta SES em caso de falha
+- ✅ Pipeline Lambda semanal rodando (EventBridge cron segunda 08:00 UTC)
+- ✅ Logs CloudWatch + alerta SES em caso de falha
+- Deploy da Lambda ainda manual (ver seção Pipeline)
 
 ---
 
@@ -232,10 +280,20 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ✅ Zero migrações futuras · Pipeline gera JSON diretamente · Frontend renderiza sem mudança de API  
 ⚠️ Queries por atributo precisam de índices JSONB · Validação de schema é responsabilidade da aplicação
 
-### ADR-002: Claude API + DALL-E 3 (Fase 2)
-**Decisão:** Claude API (Anthropic SDK Python) para metadata JSON estruturado. DALL-E 3 (OpenAI SDK) para ilustrações. Imagens no S3.  
-✅ Claude tem alta precisão para JSON · Custo baixo ~$0.41/semana · Pipeline desacoplada do backend  
-⚠️ Qualidade de imagem depende do prompt engineering · APIs externas precisam de retry
+### ADR-002: AWS Bedrock (Claude) + Stability AI SD3 Ultra (Fase 2)
+**Decisão:** Claude via AWS Bedrock (`anthropic.claude-sonnet-4-5`) para metadata JSON. Stability AI SD3 Ultra REST API para ilustrações (sem SDK oficial). Imagens no S3.  
+✅ Bedrock elimina chave de API Anthropic direta · SD3 Ultra ~$0.065/imagem (6x mais barato que DALL-E 3) · Pipeline desacoplada do backend  
+⚠️ Stability AI não tem SDK Python oficial — chamada HTTP direta · Bedrock disponível apenas em us-east-1 (separado da região principal us-east-2)
+
+### ADR-011: Seed-based S3 Filenames para Cache Permanente (Fase 2)
+**Decisão:** Imagens salvas como `cards/{slug}-{seed}.png` em vez de `cards/{slug}.png`. Seed gerado em Python antes de chamar Claude, injetado no prompt como `{seed}`, e sempre sobrescrito após o parse (Claude não controla o seed).  
+✅ `CacheControl: immutable` + URL única = browser nunca precisa re-fetch · Sem invalidação de CloudFront necessária · Cada re-geração tem URL diferente  
+⚠️ Imagens de gerações antigas ficam no S3 indefinidamente (custo desprezível)
+
+### ADR-012: Art Style Selection via Lista Injetada no Prompt (Fase 2)
+**Decisão:** 55 estilos artísticos (7 famílias) são injetados no prompt de metadata. Claude escolhe 1 estilo por carta e retorna em `chosenStyle`. Python atribui estilo aleatório como fallback se Claude omitir. Flattening defensivo do sub-objeto `visual` caso Claude o crie.  
+✅ Variedade visual sem intervenção manual · `chosenStyle` persistido no metadata = reproduzível · Fallback robusto  
+⚠️ Claude às vezes aninha `prompt/seed/chosenStyle` em sub-objeto `visual` — código deve fazer flatten
 
 ### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
@@ -285,7 +343,7 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 
 **Frontend** (`frontend/assetstore/`): React 19 + TypeScript 5.9 · Vite · Tailwind CSS 4 + Framer Motion · React Router 7 · React Query 5 · Recharts · Three.js (Fase 4)
 
-**Pipeline** (`pipeline/`): Python 3.11+ · `anthropic` SDK · `openai` SDK · `boto3` · `pytrends` · `praw`
+**Pipeline** (`pipeline/`): Python 3.11+ · `boto3` (Bedrock + S3 + SSM + SES) · Stability AI REST API (HTTP direto) · `pytrends` · `praw` · `requests`
 
 **Banco:** PostgreSQL (prod) · H2 em `MODE=PostgreSQL` (testes/local) · Schema em `src/main/resources/schema.sql`
 
@@ -319,7 +377,7 @@ Schema completo em `src/main/resources/schema.sql` (idêntico ao de testes em `s
 | `credential` | Senhas hash separadas da tabela client |
 | `transactions` | Transações com assinatura RSA |
 | `email_verification` | Tokens de verificação e reset de senha |
-| `artifact` | Tipo de artifact colecionável (`text`, `total_supply`, `created_at`) |
+| `artifact` | Tipo de artifact colecionável (`metadata JSONB`, `total_supply`, `created_at`) |
 | `artifact_unit` | Instância individual de um artifact (owner, status: AVAILABLE/IN_MARKET/RESERVED/TRANSFERRING) |
 | `artifact_listing` | Ofertas de venda no marketplace (ACTIVE/SOLD/CANCELED) |
 | `artifact_price_history` | Histórico de preços por listing e por unit |
@@ -340,7 +398,7 @@ Schema completo em `src/main/resources/schema.sql` (idêntico ao de testes em `s
 
 ### Conceitos Fundamentais
 
-**`artifact`** — o "tipo" do artifact: `text`, `total_supply`, `created_at`. Único globalmente. No futuro conterá `metadata JSONB` com raridade, ilustração, atributos etc.
+**`artifact`** — o "tipo" do artifact: `metadata JSONB`, `total_supply`, `created_at`. Único globalmente. O campo `metadata` contém nome, raridade, ilustração, atributos, habilidades, lore e todos os campos de exibição da carta.
 
 **`artifact_unit`** — instância individual e transferível de um `artifact`. É o que o usuário realmente possui, com seu próprio dono (`owner_account_id`), status e, no futuro, variante visual (foil, holo etc.).
 
@@ -413,10 +471,10 @@ Secrets em SSM Parameter Store `/banksimulator/*`. Script `fetch-env.py` os busc
 | `GOOGLE_CLIENT_ID` | Google OAuth |
 | `AWS_SES_FROM` | Email remetente |
 | `APP_BASE_URL` | URL base (usado em emails) |
-| `/banksimulator/anthropic_api_key` | Claude API (Fase 2+) |
-| `/banksimulator/openai_api_key` | DALL-E 3 (Fase 2+) |
-| `/banksimulator/newsapi_key` | NewsAPI (Fase 2+) |
-| `/banksimulator/reddit_client_id/secret` | Reddit API (Fase 2+) |
+| `/banksimulator/stability_api_key` | Stability AI SD3 Ultra (pipeline) |
+| `/banksimulator/newsapi_key` | NewsAPI (pipeline) |
+| `/banksimulator/reddit_client_id` | Reddit API client ID (pipeline, opcional) |
+| `/banksimulator/reddit_client_secret` | Reddit API secret (pipeline, opcional) |
 
 **Cookie por profile:**
 
@@ -528,7 +586,7 @@ Testes de integração com H2. Schema de teste idêntico ao de produção.
 | CloudFront | `E2P13GEXYNJRCP` — CDN do frontend |
 | Route53 | `api.` → EC2, `app.` → CloudFront |
 
-**Custo estimado:** ~$27/mês (infra) + ~$1.65/mês (pipeline IA)
+**Custo estimado:** ~$27/mês (infra) + ~$2.60/mês (pipeline IA — ~$0.65/semana × 4)
 
 ---
 
@@ -583,6 +641,12 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | Claim 500 — RETURNING | `AccountDAO.java` | H2 não suporta `UPDATE ... RETURNING` |
 | 401 no marketplace público | `AuthCookieService.java` | `extractToken()` lançava 401; resolvido com `extractTokenOrNull()` e `accountId = -1` |
 | 500 em vez de 404 para artifact unit inexistente | `ArtifactUnitService.java` | `RuntimeException("not found")` era capturada pelo `catch (Exception e)` externo e re-embrulhada como "Service error"; corrigido com `ArtifactUnitNotFoundException extends BusinessRuleException` + re-throw explícito + handler em `ApiExceptionHandler` → HTTP 404 |
+| CI build falha — verbatimModuleSyntax | `*.tsx` (5 arquivos) | `tsconfig.app.json` tem `"verbatimModuleSyntax": true`; imports de tipo devem usar `import { type Foo }`. tsc local não capturava pois usava `tsconfig.json`, não `tsconfig.app.json` |
+| Browser serve imagens antigas | `image_uploader.py` | `CacheControl: immutable` + mesmo nome de arquivo = browser nunca re-fetcha. Fix: seed no nome do arquivo (`{slug}-{seed}.png`) — cada geração tem URL única |
+| Claude sempre usa seed `7294816` | `card_generator.py` | O valor de exemplo no schema virou o default de Claude. Fix: seed gerado em Python antes da chamada, injetado via `{seed}` no prompt, sempre sobrescrito após parse |
+| Claude aninha campos em sub-objeto `visual` | `card_generator.py` | Claude às vezes retorna `{ "visual": { "prompt": ..., "seed": ..., "chosenStyle": ... } }`. Fix: flatten defensivo do sub-objeto após parse JSON |
+| Lambda executando código antigo | `pipeline/` | CI/CD não faz deploy da Lambda. Mudanças só chegam com `bash build.sh && aws lambda update-function-code` manual |
+| Unique constraint ao re-rodar pipeline na mesma semana | `lambda_function.py` | Identifier é `weekly-{YYYY-W##}` — reutilizado na mesma semana. Fix: deletar bundle anterior no RDS antes de re-rodar |
 
 ---
 
@@ -594,7 +658,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - Chaves RSA em `/opt/banksimulator/keys/`. Se o EC2 for recriado, chaves existentes são perdidas.
 - 106 testes · 19 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
 - Three.js ainda não está no projeto — Fase 4.
-- Pipeline de IA ainda não existe — Fase 2.
+- Pipeline de IA rodando em produção (Fase 2 completa). Deploy da Lambda é manual — CI não atualiza o código.
 
 ---
 
