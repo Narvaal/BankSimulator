@@ -162,10 +162,12 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
 ━━━ SCHEMA AND LIMITS ━━━
 
 - name: max 30 chars
-- subtitle: max 60 chars. An editorial reframe, not a headline and not a joke. One sentence that shifts how you see the event. Think: what would a very smart, very tired person say this is really about?
+- subtitle: max 60 chars. What actually happened, stated plainly but with one word that carries weight. Not philosophical. Not a punchline. The name is the label — the subtitle is the fact.
+  ✗ "The universe built something our models say it couldn't." (too philosophical, echoes the name)
   ✗ "When politics discovers the drug everyone's on anyway" (joke structure)
-  ✓ "The government's official endorsement arrives three years after everyone's doctor"
-  ✓ "Proof that Mars is only interesting when something on it is moving"
+  ✓ "Astronomers find a 1.3 billion light-year ring the math forbids"
+  ✓ "Medicare extends coverage to GLP-1 drugs starting July 2026"
+  ✓ "Perseverance rover crosses 42 kilometers on Martian surface"
 
 - category: exactly one of Technology | Finance | Science | Culture | Sports | Politics
 - rarity: exactly one of Common | Rare | Epic | Legendary | Mythic | Ultimate
@@ -181,21 +183,26 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
 - attributes: influence/innovation/controversy/longevity/reach — all 1-100
 
 - abilities: 1-2 items, name ≤25 chars, description ≤120 chars
-  A cynical observation about what this thing actually does. No numbers. No "+X to Y". No explaining.
-  The name is a label. The description is the observation — one sentence, as short as possible, as true as possible.
-  ✗ "Transforms a pharmaceutical blockbuster into a government obligation, ensuring manufacturers never have to choose between profits."
-  ✓ "Converts a drug companies already sell for $900 into a bill someone else signs."
-  ✗ "Grants anyone with a microphone and 40 minutes the ability to become an expert on anything."
-  ✓ "Anyone with a microphone and a grievance now has a distribution channel."
+  What this card DOES to the world around it — stated as a capability, as if it could activate.
+  Imagine two players facing each other: one plays this card. What actually happens? What does this thing inflict, produce, or make impossible for the other side?
+  The humor comes from the thing being accurately described, not from wordplay.
+  Think: what is the real-world power of this subject, stated plainly?
+
+  ✗ "Forces cosmologists to revise equations they've taught as gospel" — describes effect on abstractions
+  ✗ "Theoretical Collapse — Makes the models wrong" — too vague, card-gamey
+  ✓ Big Ring: name "Unmapped Territory" / desc "Every star atlas published before 2022 now has a footnote. Every cosmologist who said it was impossible still has tenure."
+  ✓ ICE card: name "Jurisdiction Expansion" / desc "Can detain anyone within 100 miles of a border, which is where 2/3 of Americans live."
+  ✓ Podcast: name "Zero Vetting" / desc "Reaches more people than the evening news and requires less fact-checking than a WhatsApp message."
+  ✓ Medicare drug: name "Price Conversion" / desc "The same molecule costs $900 out-of-pocket or $50 with coverage. The molecule doesn't know the difference."
 
 - passive: name ≤25 chars, description ≤120 chars
-  The one thing about this subject that will still be true in ten years. Stated without editorializing.
-  ✗ "$50 monthly sounds reasonable until you realize someone else is paying $900 for the same syringe."
+  The permanent condition this subject creates that nobody can turn off. Not a buff. The thing that's just true now.
   ✓ "The price is set by whoever needs to justify the price."
+  ✓ "Podcasters don't need credentials. They need an RSS feed and something to be angry about."
 
-- weakness: max 80 chars. One sentence. The most uncomfortable true thing about this subject. No joke structure.
-  ✗ "Still costs more per year than a gym membership nobody uses either"
-  ✓ "Requires the patient to exist within a system that has already decided their value."
+- weakness: max 80 chars. The thing that limits it or makes it absurd. One sentence, no setup.
+  ✓ "Requires the patient to already be inside the system that priced them out."
+  ✓ "Only matters if anyone with funding agrees it should."
 
 - flavorText: max 15 words. A sentence that lands like a verdict, not a punchline. Read it aloud — if it sounds like a tweet, rewrite it.
   ✗ "Ran a marathon on Mars. Still less annoying than your CrossFit friend."
@@ -216,14 +223,50 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
 - model: "sd3-large"
 - chosenStyle: the exact string of the art style you selected from the list above
 
-- prompt: Stable Diffusion image prompt. Structure it as: [chosen art style], [dynamic composition], [subject], [camera/lens], [lighting], [mood]. No text, no watermarks.
+- prompt: Stable Diffusion image prompt. Structure it as: [chosen art style], [dynamic composition], [specific scene], [camera/lens], [lighting], [mood]. No text, no watermarks.
 
-  COMPOSITION RULES — the image must feel alive:
+  COMPOSITION RULES — the image must feel alive and specific:
+  • One moment. One character or subject. Not a collage of symbols.
   • Never center a static object. Static = dead.
   • Choose one composition: subject caught mid-motion | extreme close-up filling the frame | worm's eye view looking up | bird's eye aerial | Dutch angle 30° | subject at rule-of-thirds edge | foreground element framing distant subject
-  • Choose one lens character: macro (tiny subject fills frame) | wide-angle distortion | telephoto compression | fisheye | tilt-shift miniature effect | anamorphic cinematic
-  • If the event is abstract (a policy, a financial move, a scientific result), personify it — create a character that embodies it. A drug approval is a bureaucrat in a lab coat mid-stamp. A market event is a suited figure in freefall. A space discovery is an astronomer with jaw dropped staring at something off-frame.
-  • Imply movement: flowing fabric, motion blur on hands/feet, particles mid-air, a figure between two positions.
+  • Choose one lens: macro | wide-angle distortion | telephoto compression | fisheye | tilt-shift | anamorphic cinematic
+
+  THE GOLDEN RULE — never illustrate the phenomenon. Illustrate the moment a person encountered it.
+  The Big Ring is not a picture of a ring in space. It's an astronomer at 2am whose coffee is cold because she hasn't moved since the data printed.
+  A superconductor discovery is not a glowing crystal. It's an engineer's hands holding a strip of gray tape over a magnet, watching it float.
+  A drug policy is not a pill. It's a pharmacist's stamp mid-descent on a Medicare form.
+
+  THE OBJECT MUST BE SPECIFIC AND NAMEABLE:
+  ✓ "skeletal robotic frame" — you know exactly what this looks like
+  ✓ "strip of superconducting tape hovering above a magnet on a lab bench"
+  ✓ "thermal printout of spectral data being unrolled"
+  ✗ "glowing crystalline lattice structure" — the AI draws any generic prism
+  ✗ "impossible cosmic ring bending through space" — the AI draws generic space art
+  ✗ "abstract geometric energy" — meaningless, produces noise
+
+  FORBIDDEN OUTPUTS — if your prompt contains these words, rewrite it:
+  • "glowing" (unless it literally glows, like neon or fire)
+  • "crystalline", "lattice", "structure", "formation" (too abstract)
+  • "cosmic", "celestial", "galactic", "stellar", "nebula" (space cliché)
+  • "neural network", "circuit board", "binary", "data stream" (tech cliché)
+  • "flowing fabric of spacetime", "bending reality", "impossible geometry" (Dalí cliché)
+  • "abstract", "ethereal", "mystical", "otherworldly"
+
+  FORBIDDEN SUBJECTS BY CATEGORY:
+  • Space events: no starfields, no rocket launches, no floating planets, no cosmic structures
+  • Tech/AI events: no humanoid robots, no circuit boards, no blue glowing networks
+  • Medical events: no pills on tables, no syringes floating, no stethoscopes
+  • Finance events: no stock charts, no falling coins, no suited men at desks
+  • Political events: no flags, no podiums, no handshakes
+
+  STYLE × SUBJECT — pair unexpected styles with subjects. The contrast creates tension:
+  • Space discovery → soviet propaganda poster (not Dalí — Dalí + space = default AI output)
+  • Drug policy → ukiyo-e woodblock
+  • Tech event → watercolor illustration
+  • Financial event → 1950s retrofuturist illustration
+  • Political event → children's crayon or risograph
+
+  THE BENCHMARK: the best card in this batch shows factory worker's hands assembling a skeletal robotic frame from below (worm's eye), soviet poster colors, harsh shadows, movement in the hands. That is the target — specific object, human hands, concrete action, strong composition.
 
 - seed: a random 7-digit number as a string
 
@@ -318,6 +361,15 @@ def generate_card(
 
     raw = _invoke_claude(bedrock, prompt)
     metadata = json.loads(_clean_json(raw))
+
+    # Claude sometimes nests image fields under a "visual" sub-object — flatten it
+    visual = metadata.pop("visual", None)
+    if isinstance(visual, dict):
+        for field in ("prompt", "seed", "chosenStyle", "model"):
+            if field not in metadata or not metadata[field]:
+                if field in visual:
+                    metadata[field] = visual[field]
+        logger.info("Flattened nested 'visual' sub-object from Claude output")
 
     # Guarantee an art style is present (fallback to random if Claude omitted it)
     if not metadata.get("chosenStyle"):
