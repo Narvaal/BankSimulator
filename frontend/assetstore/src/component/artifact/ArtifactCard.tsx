@@ -192,21 +192,21 @@ export function ArtifactCardFullscreen({
                                 )}
                             </div>
 
-                            {metadata.attributes && Object.keys(metadata.attributes).length > 0 && (
-                                <div className="flex gap-4 flex-wrap pt-0.5">
-                                    {Object.entries(metadata.attributes).map(([key, val]) => (
-                                        <div key={key} className="text-center">
-                                            <p className="text-white font-bold text-sm leading-none">{val}</p>
-                                            <p className="text-white/40 text-[8px] uppercase tracking-wide mt-1">{key.slice(0, 3)}</p>
+                            {metadata.abilities && metadata.abilities.length > 0 && (
+                                <div className="space-y-1.5">
+                                    {metadata.abilities.map((ab, i) => (
+                                        <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
+                                            <p className="text-white text-xs font-bold">{ab.name}</p>
+                                            <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{ab.description}</p>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            {metadata.abilities && metadata.abilities[0] && (
-                                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
-                                    <p className="text-white text-xs font-bold">{metadata.abilities[0].name}</p>
-                                    <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{metadata.abilities[0].description}</p>
+                            {metadata.passive && (
+                                <div className="w-full bg-amber-400/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-amber-300/20">
+                                    <p className="text-amber-200 text-xs font-bold">{metadata.passive.name}</p>
+                                    <p className="text-amber-100/70 text-[10px] mt-0.5 leading-snug">{metadata.passive.description}</p>
                                 </div>
                             )}
 
