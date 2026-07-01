@@ -140,9 +140,35 @@ Available art styles (pick exactly ONE that best fits this event's theme and moo
 
 Generate a complete metadata JSON following the schema below EXACTLY. Respect all character limits.
 
-SCHEMA AND LIMITS:
+━━━ TONE — READ THIS BEFORE WRITING ANYTHING ━━━
+
+The voice is acidic, skeptical, and precise. The humor lives in the OBSERVATION, never in the structure.
+
+FORBIDDEN patterns — these are tired and lazy:
+  ✗ Comparisons to relatable mundane things ("still less annoying than your CrossFit friend", "like a gym membership you never use")
+  ✗ Setup → punchline joke structure ("X happened. And Y is the funny part.")
+  ✗ Pop culture references used as punchlines (Netflix, Instagram, TikTok as the joke itself)
+  ✗ Explaining the joke ("which means...", "ensuring that...", "turning X into Y")
+  ✗ Hyperbole for comic effect ("the most important thing ever", "absolutely nobody asked for")
+  ✗ Any sentence that could appear in a BuzzFeed listicle
+
+WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
+  ✓ State what actually happened with a word that makes the reader feel something
+  ✓ The irony is in the facts themselves, not in the framing
+  ✓ Dry. Clinical. Like a coroner's report with opinions.
+  ✓ "Four billion dollars to confirm other planets are also mostly empty." ← the joke is the precision
+  ✓ "The government officially validates what your doctor was already prescribing under different terminology." ← no punchline, just the truth stated clearly
+
+━━━ SCHEMA AND LIMITS ━━━
+
 - name: max 30 chars
-- subtitle: max 60 chars — NOT a news headline. A clever, slightly acidic one-liner that editorially reframes the event. Think magazine cover tagline, not Reuters wire. ("The favorite toy of astronomers who gave up on humans", "What happens when Silicon Valley reads the Bible once")
+- subtitle: max 60 chars. What actually happened, stated plainly but with one word that carries weight. Not philosophical. Not a punchline. The name is the label — the subtitle is the fact.
+  ✗ "The universe built something our models say it couldn't." (too philosophical, echoes the name)
+  ✗ "When politics discovers the drug everyone's on anyway" (joke structure)
+  ✓ "Astronomers find a 1.3 billion light-year ring the math forbids"
+  ✓ "Medicare extends coverage to GLP-1 drugs starting July 2026"
+  ✓ "Perseverance rover crosses 42 kilometers on Martian surface"
+
 - category: exactly one of Technology | Finance | Science | Culture | Sports | Politics
 - rarity: exactly one of Common | Rare | Epic | Legendary | Mythic | Ultimate
 
@@ -155,16 +181,37 @@ SCHEMA AND LIMITS:
   Ultimate:  foil=true, glow="#ff0080", shimmer=true, particles="cinematic", borderLight=true
 
 - attributes: influence/innovation/controversy/longevity/reach — all 1-100
+
 - abilities: 1-2 items, name ≤25 chars, description ≤120 chars
-  IMPORTANT: abilities are NOT game mechanics with numbers. They are witty, cynical observations about what this thing actually does in the world. No "+X to Y". Write like a sarcastic encyclopedia — punchy name (2-4 words), punchline description.
-  Example for a Podcast card: name "Open Mic Night" / desc "Grants anyone with a microphone and 40 minutes the ability to become an expert on anything."
+  What this card DOES to the world around it — stated as a capability, as if it could activate.
+  Imagine two players facing each other: one plays this card. What actually happens? What does this thing inflict, produce, or make impossible for the other side?
+  The humor comes from the thing being accurately described, not from wordplay.
+  Think: what is the real-world power of this subject, stated plainly?
+
+  ✗ "Forces cosmologists to revise equations they've taught as gospel" — describes effect on abstractions
+  ✗ "Theoretical Collapse — Makes the models wrong" — too vague, card-gamey
+  ✓ Big Ring: name "Unmapped Territory" / desc "Every star atlas published before 2022 now has a footnote. Every cosmologist who said it was impossible still has tenure."
+  ✓ ICE card: name "Jurisdiction Expansion" / desc "Can detain anyone within 100 miles of a border, which is where 2/3 of Americans live."
+  ✓ Podcast: name "Zero Vetting" / desc "Reaches more people than the evening news and requires less fact-checking than a WhatsApp message."
+  ✓ Medicare drug: name "Price Conversion" / desc "The same molecule costs $900 out-of-pocket or $50 with coverage. The molecule doesn't know the difference."
+
 - passive: name ≤25 chars, description ≤120 chars
-  A permanent, irrefutable truth about this thing — written as a dry museum plaque written by someone who has had enough.
-  Example: name "Still Talking" / desc "No crisis, ban, or advertiser boycott has ever successfully shut one down permanently."
-- weakness: max 80 chars — a one-liner so true it's funny. Can mirror an ability and flip it.
-  Example for Podcast: "Lets everyone say whatever they want."
-- flavorText: max 15 words, ironic/cynical/sharp tone ("The future arrived. Apple priced it so you'd know your place in it.")
-- lore: max 300 chars
+  The permanent condition this subject creates that nobody can turn off. Not a buff. The thing that's just true now.
+  ✓ "The price is set by whoever needs to justify the price."
+  ✓ "Podcasters don't need credentials. They need an RSS feed and something to be angry about."
+
+- weakness: max 80 chars. The thing that limits it or makes it absurd. One sentence, no setup.
+  ✓ "Requires the patient to already be inside the system that priced them out."
+  ✓ "Only matters if anyone with funding agrees it should."
+
+- flavorText: max 15 words. A sentence that lands like a verdict, not a punchline. Read it aloud — if it sounds like a tweet, rewrite it.
+  ✗ "Ran a marathon on Mars. Still less annoying than your CrossFit friend."
+  ✓ "The future arrived. Apple priced it so you'd know your place in it."
+
+- lore: max 200 chars. Two sentences maximum. What happened, and what it reveals about the people who let it happen. No Wikipedia summary. No "starting in [year]". Start in the middle.
+  ✗ "After years of pharmaceutical companies perfecting billion-dollar drugs and millions ordering them through telehealth loopholes, the federal government decided to make it official."
+  ✓ "The drug already existed. The coverage arriving now means someone finally ran the numbers on who votes."
+
 - traits: 2-4 items, name ≤15 chars, value ≤20 chars
 - timeline: 2-5 items, date=YYYY-MM-DD, event ≤60 chars
 - references: 1-5 URLs (use the provided URL plus any well-known public references)
@@ -175,8 +222,62 @@ SCHEMA AND LIMITS:
 - artist: "RareLines AI"
 - model: "sd3-large"
 - chosenStyle: the exact string of the art style you selected from the list above
-- prompt: A detailed Stable Diffusion image prompt for this card's illustration. Start with the chosen art style, then describe the scene — dramatic, visually rich, no text, no watermarks, no faces unless stylistically integral.
-- seed: a random 7-digit number as a string
+
+- prompt: Stable Diffusion image prompt. Structure it as: [chosen art style], [dynamic composition], [specific scene], [camera/lens], [lighting], [mood]. No text, no watermarks.
+
+  COMPOSITION RULES — the image must feel alive and specific:
+  • One moment. One character or subject. Not a collage of symbols.
+  • Never center a static object. Static = dead.
+  • Choose one composition: subject caught mid-motion | extreme close-up filling the frame | worm's eye view looking up | bird's eye aerial | Dutch angle 30° | subject at rule-of-thirds edge | foreground element framing distant subject
+  • Choose one lens: macro | wide-angle distortion | telephoto compression | fisheye | tilt-shift | anamorphic cinematic
+
+  THE GOLDEN RULE — never illustrate the phenomenon in the abstract. Anchor it in a specific object or human detail.
+  The Big Ring is not a picture of a ring in space. It's a thermal printout of spectral data being unrolled by weathered hands.
+  A superconductor discovery is not a glowing crystal. It's a strip of gray tape hovering 1cm above a magnet on a steel lab bench.
+  A drug policy is not a pill. It's a rubber stamp mid-descent onto a Medicare approval form.
+
+  SUBJECT VARIETY — each card must feel different from the others. Rotate through these options:
+  • HANDS ONLY: extreme close-up of hands doing something specific — assembling, stamping, holding, writing. No face visible.
+  • OBJECT ALONE: a single specific object, no person, shot with unusual angle or lens. The object must be nameable.
+  • SILHOUETTE FROM BEHIND: a figure seen from behind facing something large — never facing the viewer, never centered.
+  • EXTREME FACE CLOSE-UP: one eye, or mouth, or profile — never a full face centered in frame.
+  • ENVIRONMENT WITHOUT PEOPLE: the room/place where the event happened, specific details, no person present.
+
+  NEVER: a full person standing or sitting centered in the frame looking at the viewer or at something in front of them. That is the most generic AI output possible.
+
+  THE OBJECT MUST BE SPECIFIC AND NAMEABLE:
+  ✓ "skeletal robotic frame with exposed titanium actuator joints"
+  ✓ "strip of gray metallic tape hovering 1cm above a cylindrical neodymium magnet"
+  ✓ "thermal printout of spectral data, edges curling"
+  ✗ "glowing crystalline lattice structure" — draws a generic prism
+  ✗ "impossible cosmic ring bending through space" — draws generic space art
+  ✗ "abstract geometric energy" — meaningless
+
+  FORBIDDEN OUTPUTS — if your prompt contains these words, rewrite it:
+  • "glowing" (unless it literally glows, like neon or fire)
+  • "crystalline", "lattice", "structure", "formation" (too abstract)
+  • "cosmic", "celestial", "galactic", "stellar", "nebula" (space cliché)
+  • "neural network", "circuit board", "binary", "data stream" (tech cliché)
+  • "flowing fabric of spacetime", "bending reality", "impossible geometry" (Dalí cliché)
+  • "abstract", "ethereal", "mystical", "otherworldly"
+
+  FORBIDDEN SUBJECTS BY CATEGORY:
+  • Space events: no starfields, no rocket launches, no floating planets, no cosmic structures
+  • Tech/AI events: no humanoid robots, no circuit boards, no blue glowing networks
+  • Medical events: no pills on tables, no syringes floating, no stethoscopes
+  • Finance events: no stock charts, no falling coins, no suited men at desks
+  • Political events: no flags, no podiums, no handshakes
+
+  STYLE × SUBJECT — pair unexpected styles with subjects. The contrast creates tension:
+  • Space discovery → soviet propaganda poster (not Dalí — Dalí + space = default AI output)
+  • Drug policy → ukiyo-e woodblock
+  • Tech event → watercolor illustration
+  • Financial event → 1950s retrofuturist illustration
+  • Political event → children's crayon or risograph
+
+  THE BENCHMARK: the best card in this batch shows factory worker's hands assembling a skeletal robotic frame from below (worm's eye), soviet poster colors, harsh shadows, movement in the hands. That is the target — specific object, human hands, concrete action, strong composition.
+
+- seed: "{seed}" — use this exact value, do not change it
 
 Return ONLY the JSON object, no markdown fences, no explanation."""
 
@@ -254,6 +355,9 @@ def generate_card(
     collection = f"Weekly Digest {week}"
     release_date = date.today().isoformat()
 
+    # Seed generated here — Claude must not pick it (avoids repeated defaults)
+    seed_int = random.randint(1000000, 9999999)
+
     art_styles_block = "\n".join(f"- {s}" for s in ART_STYLES)
     prompt = METADATA_PROMPT.format(
         title=event["title"],
@@ -265,10 +369,20 @@ def generate_card(
         release_date=release_date,
         url=event.get("url", ""),
         art_styles=art_styles_block,
+        seed=str(seed_int),
     )
 
     raw = _invoke_claude(bedrock, prompt)
     metadata = json.loads(_clean_json(raw))
+
+    # Claude sometimes nests image fields under a "visual" sub-object — flatten it
+    visual = metadata.pop("visual", None)
+    if isinstance(visual, dict):
+        for field in ("prompt", "seed", "chosenStyle", "model"):
+            if field not in metadata or not metadata[field]:
+                if field in visual:
+                    metadata[field] = visual[field]
+        logger.info("Flattened nested 'visual' sub-object from Claude output")
 
     # Guarantee an art style is present (fallback to random if Claude omitted it)
     if not metadata.get("chosenStyle"):
@@ -286,14 +400,11 @@ def generate_card(
     metadata.setdefault("artist", "RareLines AI")
     metadata["model"] = IMAGE_MODEL
 
+    # Enforce seed generated above — ignore whatever Claude put in the JSON
+    metadata["seed"] = str(seed_int)
+
     # Generate illustration
     illustration_prompt = metadata.get("prompt", f"Digital trading card art for {event['title']}, cinematic, dramatic lighting, no text")
-    seed_str = metadata.get("seed", str(random.randint(1000000, 9999999)))
-    try:
-        seed_int = int(seed_str)
-    except (ValueError, TypeError):
-        seed_int = random.randint(1000000, 9999999)
-        metadata["seed"] = str(seed_int)
 
     logger.info(f"Generating illustration for: {metadata.get('name', event['title'])}")
     image_bytes = _invoke_stability(illustration_prompt, seed_int, stability_api_key)

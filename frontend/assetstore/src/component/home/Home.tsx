@@ -8,7 +8,7 @@ import { API_URL } from "../../config";
 import { authHeader } from "../../auth";
 import {useNavigate} from "react-router-dom";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
-import {ArtifactCardThumb, ArtifactCardDetail, type CardMetadata} from "../artifact/ArtifactCard.tsx";
+import {ArtifactCardThumb, ArtifactCardFullscreen, type CardMetadata} from "../artifact/ArtifactCard.tsx";
 
 /* ===================== TYPES ===================== */
 
@@ -317,69 +317,52 @@ export default function Home() {
             {/* ===================== MODAL ===================== */}
 
             {selectedAsset && (
+                <ArtifactCardFullscreen
+                    metadata={selectedAsset.metadata ?? {}}
+                    title="Sell Artifact"
+                    onClose={() => setSelectedAsset(null)}
+                >
+                    <div className="p-5 space-y-4">
 
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
-
-                        {/* Scrollable body */}
-                        <div className="overflow-y-auto flex-1 p-6 space-y-4">
-
-                            <h2 className="text-xl font-bold">Sell Artifact</h2>
-
-                            {selectedAsset.metadata && Object.keys(selectedAsset.metadata).length > 0 ? (
-                                <ArtifactCardDetail metadata={selectedAsset.metadata} />
-                            ) : (
-                                <div className="text-slate-800 font-semibold">{selectedAsset.artifactName}</div>
-                            )}
-
-                            {/* PRICE HISTORY */}
-                            <div>
-                                <h3 className="text-sm font-semibold mb-2">Price History</h3>
-                                {loadingHistory && <p className="text-sm text-slate-500">Loading...</p>}
-                                <PriceHistoryChart priceHistory={priceHistory} />
-                            </div>
-
+                        {/* PRICE HISTORY */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-2">Price History</h3>
+                            {loadingHistory && <p className="text-sm text-slate-500">Loading...</p>}
+                            <PriceHistoryChart priceHistory={priceHistory} />
                         </div>
 
-                        {/* STICKY FOOTER */}
-                        <div className="border-t border-slate-100 p-4 space-y-3 shrink-0">
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                placeholder="Price"
-                                value={price}
-                                onChange={(e) => setPrice(e.target.value)}
-                                className="w-full border rounded-lg p-2 text-sm"
-                            />
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            placeholder="Price"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className="w-full border rounded-lg p-2 text-sm"
+                        />
 
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setSelectedAsset(null)}
-                                    className="flex-1 px-4 py-2 border rounded-lg text-sm text-zinc-700 hover:bg-slate-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSell}
-                                    className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    List for sale
-                                </button>
-                            </div>
-
-                            {message && (
-                                <p className={`text-xs text-center ${message.type === "success" ? "text-emerald-600" : "text-red-600"}`}>
-                                    {message.text}
-                                </p>
-                            )}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setSelectedAsset(null)}
+                                className="flex-1 px-4 py-2 border rounded-lg text-sm text-zinc-700 hover:bg-slate-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSell}
+                                className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                List for sale
+                            </button>
                         </div>
 
+                        {message && (
+                            <p className={`text-xs text-center ${message.type === "success" ? "text-emerald-600" : "text-red-600"}`}>
+                                {message.text}
+                            </p>
+                        )}
                     </div>
-
-                </div>
-
+                </ArtifactCardFullscreen>
             )}
 
         </div>

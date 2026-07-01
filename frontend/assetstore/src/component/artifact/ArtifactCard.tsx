@@ -1,6 +1,6 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
-import {useState} from "react";
+import {useEffect, useState, type ReactNode} from "react";
 
 export interface CardMetadata {
     name?: string;
@@ -103,6 +103,126 @@ export function ArtifactCardThumb({
                 {metadata.subtitle && (
                     <p className="text-white/60 text-[10px] leading-tight line-clamp-1 mt-0.5">{metadata.subtitle}</p>
                 )}
+            </div>
+        </div>
+    );
+}
+
+/* Fullscreen "full art" view — image fills the whole card, info overlaid on top (Pokemon-style) */
+export function ArtifactCardFullscreen({
+    metadata,
+    onClose,
+    title,
+    children,
+}: {
+    metadata: CardMetadata;
+    onClose: () => void;
+    title?: string;
+    children?: ReactNode;
+}) {
+    const rarity = metadata.rarity ?? "Common";
+    const s = RARITY_STYLES[rarity] ?? RARITY_STYLES.Common;
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [onClose]);
+
+    return (
+        <div
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] overflow-y-auto"
+            onClick={onClose}
+        >
+            <button
+                onClick={onClose}
+                className="fixed top-4 right-4 text-white/60 hover:text-white text-3xl leading-none transition-colors z-10"
+            >
+                ✕
+            </button>
+
+            <div className="min-h-full flex items-center justify-center p-4 py-12">
+                <div className="w-full max-w-[420px]" onClick={(e) => e.stopPropagation()}>
+
+                    {title && (
+                        <p className="text-white/50 text-xs font-semibold uppercase tracking-widest text-center mb-3">
+                            {title}
+                        </p>
+                    )}
+
+                    {/* Full-art card */}
+                    <div
+                        className={`relative mx-auto rounded-2xl overflow-hidden border-2 ${s.border} ${s.glow ? `shadow-2xl ${s.glow}` : "shadow-2xl"}`}
+                        style={{ height: "min(75vh, 640px)", aspectRatio: "2/3" }}
+                    >
+                        {metadata.illustration ? (
+                            <img
+                                src={metadata.illustration}
+                                alt={metadata.name}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-600" />
+                        )}
+
+                        {/* Top overlay */}
+                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/85 via-black/30 to-transparent" />
+                        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                {metadata.cardNumber && (
+                                    <span className="text-[10px] text-white/80 font-mono bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
+                                        #{metadata.cardNumber}
+                                    </span>
+                                )}
+                                {metadata.category && (
+                                    <span className="text-[10px] text-white/80 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
+                                        {metadata.category}
+                                    </span>
+                                )}
+                            </div>
+                            <RarityBadge rarity={rarity} />
+                        </div>
+
+                        {/* Bottom overlay */}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/85 to-transparent pt-20 pb-4 px-4 space-y-2.5">
+                            <div>
+                                <p className="text-white font-extrabold text-2xl leading-tight drop-shadow-lg">{metadata.name}</p>
+                                {metadata.subtitle && (
+                                    <p className="text-white/70 text-xs mt-0.5">{metadata.subtitle}</p>
+                                )}
+                            </div>
+
+                            {metadata.attributes && Object.keys(metadata.attributes).length > 0 && (
+                                <div className="flex gap-4 flex-wrap pt-0.5">
+                                    {Object.entries(metadata.attributes).map(([key, val]) => (
+                                        <div key={key} className="text-center">
+                                            <p className="text-white font-bold text-sm leading-none">{val}</p>
+                                            <p className="text-white/40 text-[8px] uppercase tracking-wide mt-1">{key.slice(0, 3)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {metadata.abilities && metadata.abilities[0] && (
+                                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
+                                    <p className="text-white text-xs font-bold">{metadata.abilities[0].name}</p>
+                                    <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{metadata.abilities[0].description}</p>
+                                </div>
+                            )}
+
+                            {metadata.flavorText && (
+                                <p className="text-white/50 text-[10px] italic leading-snug pt-0.5">"{metadata.flavorText}"</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Extra content — actions, price history, etc. */}
+                    {children && (
+                        <div className="mt-3 bg-white rounded-2xl shadow-2xl overflow-hidden">
+                            {children}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
