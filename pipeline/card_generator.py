@@ -1,7 +1,13 @@
 """
 AI card generation using Amazon Bedrock (Claude) + Stability AI API (images).
-- Claude Sonnet 4.5: event selection + metadata JSON
+- Claude Sonnet 4.5: event selection + metadata JSON + art direction
 - Stability AI SD3 Large: card illustration
+
+Art Direction v2: every image must feel like an impossible photograph frozen at
+the most important instant of a real story — never like an illustration. Claude
+returns structured creative decisions (moment, protagonist, camera, composition,
+momentum, light, mood, style, medium) and Python assembles the final prompt.
+Style is the LAST decision, never the first.
 """
 
 import json
@@ -58,69 +64,69 @@ Return a JSON array of {n} selected events:
 
 Return ONLY the JSON array, no markdown, no explanation."""
 
-ART_STYLES = [
-    # Illustration & Painting
-    "oil painting, dramatic chiaroscuro lighting, museum quality",
-    "watercolor illustration, loose brushstrokes, paper texture visible",
-    "gouache painting, flat graphic shapes, bold color blocks",
-    "acrylic painting, impasto texture, palette knife strokes",
-    "ink wash painting, sumi-e style, minimalist composition",
-    "colored pencil illustration, soft hatching, dreamy tones",
-    "pastel drawing, soft blending, impressionistic",
-    "crayon illustration, childlike energy, waxy texture, vibrant colors",
-    "charcoal drawing, dramatic shadows, rough texture",
-    "woodblock print, ukiyo-e style, flat perspective, bold outlines",
-    # Digital & 3D
-    "3D render, octane render, cinematic lighting, photorealistic",
-    "3D render, stylized low-poly, flat shading, geometric shapes",
-    "3D render, clay material, matte surface, soft shadows, toy aesthetic",
-    "3D render, glass and chrome materials, reflective surfaces",
-    "unreal engine 5, hyperrealistic, volumetric lighting, film grain",
-    "isometric 3D illustration, flat colors, game asset style",
-    "voxel art, pixelated 3D, colorful, crisp edges",
-    # Comic & Animation
-    "comic book art, Ben-Day dots, bold outlines, Jack Kirby style",
-    "manga illustration, screentone shading, dynamic action lines",
-    "cel-shaded animation, Disney Renaissance style, expressive",
-    "anime key visual, Studio Ghibli aesthetic, painterly backgrounds",
-    "Saturday morning cartoon, retro 80s animation style",
-    "graphic novel, noir atmosphere, high contrast, Frank Miller style",
-    "pop art, Andy Warhol style, flat colors, halftone dots",
-    "sticker illustration, clean outlines, bright palette, glossy",
-    # Photography & Cinema
-    "cinematic photography, anamorphic lens flare, shallow depth of field",
-    "editorial photography, studio lighting, high contrast, magazine cover",
-    "documentary photography, raw, gritty, available light only",
-    "product photography, dramatic shadow, high-end commercial",
-    "infrared photography, surreal tones, glowing highlights",
-    "lomography, film grain, color leaks, vintage saturation",
-    "long exposure photography, light trails, motion blur, night scene",
-    # Historical & Movement
-    "art nouveau, Alphonse Mucha style, ornate borders, floral motifs",
-    "art deco, geometric patterns, gold and black, 1920s glamour",
-    "bauhaus design, primary colors, geometric shapes, functional",
-    "soviet propaganda poster, bold flat colors, heroic composition",
-    "renaissance painting, sfumato technique, classical composition",
-    "impressionist painting, Monet style, broken brushwork, light study",
-    "surrealist painting, Salvador Dalí style, dreamlike impossible geometry",
-    "constructivism, bold diagonals, red and black, avant-garde",
-    # Texture & Material
-    "linocut print, hand-carved texture, two-color, rough edges",
-    "screen print, limited palette, misregistration effect, poster art",
-    "risograph print, grainy texture, overlapping color layers",
-    "embroidery illustration, thread texture, stitched appearance",
-    "stained glass, leaded lines, jewel-toned colors, backlit glow",
-    "mosaic, tesserae texture, Byzantine style, gold background",
-    "paper cut art, layered silhouettes, shadow depth, craft aesthetic",
-    "neon sign aesthetic, glowing tubes, dark background, city night",
-    # Retro & Futuristic
-    "retrofuturism, 1950s sci-fi illustration, chrome robots, atomic age",
-    "synthwave, neon grid, 80s cyberpunk, retrowave sunset",
-    "vaporwave aesthetic, pastel purple and pink, glitch, nostalgia",
-    "steampunk illustration, brass gears, Victorian era, sepia tones",
-    "cassette futurism, analog controls, warm CRT glow, knobs and dials",
-    "Y2K aesthetic, chrome gradients, iridescent, early internet energy",
-    "solarpunk, lush vegetation, community warmth, optimistic future light",
+# ── Art Direction v2 — independent decision modules ──────────────────────────
+# The old monolithic ART_STYLES list is gone. Each category is chosen separately,
+# and style is one of the LAST decisions, never the first.
+
+STORYTELLING_STYLES = [
+    "concept art",
+    "editorial illustration",
+    "movie key art",
+    "splash art",
+    "scientific illustration",
+    "graphic poster",
+    "book cover art",
+    "museum reconstruction",
+]
+
+CAMERA_LANGUAGES = [
+    "handheld documentary",
+    "press photographer",
+    "sports photography",
+    "wildlife photography",
+    "macro photography",
+    "IMAX cinematography",
+    "GoPro action camera",
+    "bodycam footage",
+    "telephoto",
+    "drone",
+    "security camera",
+    "architecture photography",
+    "fashion editorial",
+]
+
+LIGHTING_LANGUAGES = [
+    "golden hour",
+    "storm light",
+    "industrial",
+    "backlight",
+    "firelight",
+    "volumetric",
+    "studio",
+    "moonlight",
+]
+
+MOODS = [
+    "urgent",
+    "hopeful",
+    "industrial",
+    "sacred",
+    "chaotic",
+    "triumphant",
+    "lonely",
+    "dangerous",
+]
+
+MEDIUMS = [
+    "oil painting",
+    "watercolor",
+    "woodblock print",
+    "risograph print",
+    "clay render",
+    "voxel art",
+    "etching",
+    "screen print",
+    "paper cut art",
 ]
 
 METADATA_PROMPT = """You are generating metadata for a premium digital trading card on the RareLines platform.
@@ -135,10 +141,8 @@ Collection: {collection}
 Release date: {release_date}
 Reference URL: {url}
 
-Available art styles (pick exactly ONE that best fits this event's theme and mood):
-{art_styles}
-
 Generate a complete metadata JSON following the schema below EXACTLY. Respect all character limits.
+Do NOT include image-related fields (prompt, chosenStyle, seed, illustration) — the art direction is handled separately.
 
 ━━━ TONE — READ THIS BEFORE WRITING ANYTHING ━━━
 
@@ -220,66 +224,73 @@ WHAT WORKS — the discomfort comes from SPECIFICITY and HONESTY:
 - cardNumber: "{card_number}"
 - releaseDate: "{release_date}"
 - artist: "RareLines AI"
-- model: "sd3-large"
-- chosenStyle: the exact string of the art style you selected from the list above
-
-- prompt: Stable Diffusion image prompt. Structure it as: [chosen art style], [dynamic composition], [specific scene], [camera/lens], [lighting], [mood]. No text, no watermarks.
-
-  COMPOSITION RULES — the image must feel alive and specific:
-  • One moment. One character or subject. Not a collage of symbols.
-  • Never center a static object. Static = dead.
-  • Choose one composition: subject caught mid-motion | extreme close-up filling the frame | worm's eye view looking up | bird's eye aerial | Dutch angle 30° | subject at rule-of-thirds edge | foreground element framing distant subject
-  • Choose one lens: macro | wide-angle distortion | telephoto compression | fisheye | tilt-shift | anamorphic cinematic
-
-  THE GOLDEN RULE — never illustrate the phenomenon in the abstract. Anchor it in a specific object or human detail.
-  The Big Ring is not a picture of a ring in space. It's a thermal printout of spectral data being unrolled by weathered hands.
-  A superconductor discovery is not a glowing crystal. It's a strip of gray tape hovering 1cm above a magnet on a steel lab bench.
-  A drug policy is not a pill. It's a rubber stamp mid-descent onto a Medicare approval form.
-
-  SUBJECT VARIETY — each card must feel different from the others. Rotate through these options:
-  • HANDS ONLY: extreme close-up of hands doing something specific — assembling, stamping, holding, writing. No face visible.
-  • OBJECT ALONE: a single specific object, no person, shot with unusual angle or lens. The object must be nameable.
-  • SILHOUETTE FROM BEHIND: a figure seen from behind facing something large — never facing the viewer, never centered.
-  • EXTREME FACE CLOSE-UP: one eye, or mouth, or profile — never a full face centered in frame.
-  • ENVIRONMENT WITHOUT PEOPLE: the room/place where the event happened, specific details, no person present.
-
-  NEVER: a full person standing or sitting centered in the frame looking at the viewer or at something in front of them. That is the most generic AI output possible.
-
-  THE OBJECT MUST BE SPECIFIC AND NAMEABLE:
-  ✓ "skeletal robotic frame with exposed titanium actuator joints"
-  ✓ "strip of gray metallic tape hovering 1cm above a cylindrical neodymium magnet"
-  ✓ "thermal printout of spectral data, edges curling"
-  ✗ "glowing crystalline lattice structure" — draws a generic prism
-  ✗ "impossible cosmic ring bending through space" — draws generic space art
-  ✗ "abstract geometric energy" — meaningless
-
-  FORBIDDEN OUTPUTS — if your prompt contains these words, rewrite it:
-  • "glowing" (unless it literally glows, like neon or fire)
-  • "crystalline", "lattice", "structure", "formation" (too abstract)
-  • "cosmic", "celestial", "galactic", "stellar", "nebula" (space cliché)
-  • "neural network", "circuit board", "binary", "data stream" (tech cliché)
-  • "flowing fabric of spacetime", "bending reality", "impossible geometry" (Dalí cliché)
-  • "abstract", "ethereal", "mystical", "otherworldly"
-
-  FORBIDDEN SUBJECTS BY CATEGORY:
-  • Space events: no starfields, no rocket launches, no floating planets, no cosmic structures
-  • Tech/AI events: no humanoid robots, no circuit boards, no blue glowing networks
-  • Medical events: no pills on tables, no syringes floating, no stethoscopes
-  • Finance events: no stock charts, no falling coins, no suited men at desks
-  • Political events: no flags, no podiums, no handshakes
-
-  STYLE × SUBJECT — pair unexpected styles with subjects. The contrast creates tension:
-  • Space discovery → soviet propaganda poster (not Dalí — Dalí + space = default AI output)
-  • Drug policy → ukiyo-e woodblock
-  • Tech event → watercolor illustration
-  • Financial event → 1950s retrofuturist illustration
-  • Political event → children's crayon or risograph
-
-  THE BENCHMARK: the best card in this batch shows factory worker's hands assembling a skeletal robotic frame from below (worm's eye), soviet poster colors, harsh shadows, movement in the hands. That is the target — specific object, human hands, concrete action, strong composition.
-
-- seed: "{seed}" — use this exact value, do not change it
 
 Return ONLY the JSON object, no markdown fences, no explanation."""
+
+
+ART_DIRECTION_PROMPT = """You are the art director for RareLines, a premium digital trading card platform.
+
+Your job is NOT to design an illustration.
+Your job is to produce an image that feels like a frozen frame of a real story — an impossible photograph captured at the single most important moment of the event.
+
+The viewer must never feel they are looking at an illustration. They must feel someone managed to record an extraordinary instant. The image must immediately raise two questions: "What happened one second before?" and "What happens one second after?" If those questions exist, the image is alive.
+
+EVENT:
+Title: {title}
+Description: {description}
+Category: {category}
+
+Follow this exact reasoning order. Each decision feeds the next. The prompt is a CONSEQUENCE of these decisions — never the starting point.
+
+STEP 1 — FIND THE MOMENT
+Which single second of this story deserves to become a card? Choose an instant, never a theme.
+✗ "Discovery of a superconductor" → ✓ "the instant the metallic tape finally starts levitating above the magnet"
+✗ "New space mission" → ✓ "the second an engineer holds the first returned fragment for the first time"
+✗ "New political treaty" → ✓ "the pen touches the paper while an aide discreetly tries to swap the last page"
+
+STEP 2 — CHOOSE THE PROTAGONIST
+Not the event — a protagonist: hands, an object, a tool, a machine, an environment, a face, a shadow, a microscopic detail. It must be extremely specific and nameable.
+✗ "computer" → ✓ "a disassembled mechanical keyboard showing a single removed keycap"
+
+STEP 3 — CHOOSE THE CAMERA
+The camera tells half the story. It must feel like a real camera operated by a real person, and you must say WHY it is positioned that way.
+✗ "wide angle" → ✓ "The photographer instinctively dropped to the floor to capture the machine from below."
+Pick ONE camera language: {camera_languages}
+
+STEP 4 — CHOOSE THE COMPOSITION
+The composition must feel accidental. Not perfect, not symmetrical, not centered. The camera may arrive late, be too close, have someone passing in front, have smoke covering part of the lens, cut off an arm, leave half the object out of frame, feel improvised. The goal is a real capture, not a render.
+
+STEP 5 — ADD MOMENTUM (most important step)
+The image must never look still. It must look frozen DURING an action. Always include elements like: dust, flying papers, sparks, hair in the wind, clothes in motion, smoke, water, breaking glass, particles, localized motion blur, objects entering or leaving the frame, foreground blur, depth, natural lens flare. Never a person just "standing".
+
+STEP 6 — CHOOSE ATMOSPHERE AND LIGHT
+Pick ONE lighting language: {lighting_languages}
+Pick ONE mood: {moods}
+
+STEP 7 — CHOOSE THE ARTISTIC LANGUAGE (last creative decision)
+The style must not "match" the subject — it must tell THIS story better. A scientific discovery can work better as a 19th-century etching. A finance story as a constructivist poster. Style exists to reinforce the narrative, never to decorate.
+Pick ONE storytelling style: {storytelling_styles}
+Pick ONE medium: {mediums}
+
+GOLDEN RULE — the image must look like a photographer had exactly one chance to take it. It can be slightly tilted, have blur, have something cutting across the lens, look improvised. It can never look posed.
+
+BENCHMARK — if a viewer thinks "this looks like AI art", you failed. If they think "how did someone capture exactly that instant?", you succeeded.
+
+FORBIDDEN WORDS anywhere in your output (they produce generic AI images): glowing, crystalline, cosmic, neural network, abstract, futuristic, surreal, ethereal, mystical, otherworldly.
+FORBIDDEN SUBJECTS: starfields/planets/rockets for space events; humanoid robots/circuit boards for tech; pills/syringes/stethoscopes for medical; stock charts/coins for finance; flags/podiums/handshakes for politics.
+
+Return ONLY this JSON object (each value in English, no markdown fences):
+{{
+  "cinematicMoment": "the exact instant being frozen — completes the sentence 'the exact instant when ...' (specific, one second of the story)",
+  "protagonist": "the extremely specific, nameable subject of the frame",
+  "cameraLanguage": "one full sentence: which camera language (from the list) and WHY the photographer shot it that way",
+  "composition": "one full sentence describing the accidental-feeling framing",
+  "movement": "one full sentence listing the frozen-mid-action elements in the frame",
+  "lighting": "one full sentence describing the light, using the chosen lighting language",
+  "mood": "the chosen mood word",
+  "storytellingStyle": "the chosen storytelling style from the list",
+  "medium": "the chosen medium from the list"
+}}"""
 
 
 def _invoke_claude(bedrock, prompt: str) -> str:
@@ -308,7 +319,7 @@ def _invoke_stability(prompt: str, seed: int, stability_api_key: str) -> bytes:
         files={"none": ""},
         data={
             "prompt": prompt,
-            "negative_prompt": "text, watermark, signature, blurry, low quality, cartoon, anime, ugly, distorted, faces",
+            "negative_prompt": "text, watermark, signature, logo, frame, border, low quality, posed studio portrait, centered symmetrical composition, sterile render",
             "model": IMAGE_MODEL,
             "output_format": "png",
             "aspect_ratio": "2:3",
@@ -326,6 +337,84 @@ def _clean_json(text: str) -> str:
     text = re.sub(r"^```(?:json)?\s*", "", text.strip())
     text = re.sub(r"\s*```$", "", text.strip())
     return text.strip()
+
+
+def _sentence(text: str) -> str:
+    """Normalize a fragment into a sentence ending with a period."""
+    text = str(text).strip()
+    if text and text[-1] not in ".!?":
+        text += "."
+    return text
+
+
+def _fallback_art_direction(event: dict) -> dict:
+    """Random-but-valid art direction if Claude's response can't be parsed."""
+    return {
+        "cinematicMoment": f"the decisive moment of the story behind '{event['title']}' unfolds in front of an unprepared witness",
+        "protagonist": "a single specific object at the center of the event, shown in concrete physical detail",
+        "cameraLanguage": f"Shot in {random.choice(CAMERA_LANGUAGES)} language, the photographer reacting with no time to frame properly.",
+        "composition": "Off-center, improvised framing with part of the subject cut off by the edge of the frame.",
+        "movement": "Dust and small debris hang mid-air, with localized motion blur on the fastest element.",
+        "lighting": f"Lighting: {random.choice(LIGHTING_LANGUAGES)}, coming from one committed direction.",
+        "mood": random.choice(MOODS),
+        "storytellingStyle": random.choice(STORYTELLING_STYLES),
+        "medium": random.choice(MEDIUMS),
+    }
+
+
+def generate_art_direction(bedrock, event: dict) -> dict:
+    """
+    Art Direction v2 — Claude reasons through moment → protagonist → camera →
+    composition → momentum → light/mood → artistic language, and returns the
+    structured decisions. The final image prompt is assembled in Python.
+    """
+    prompt = ART_DIRECTION_PROMPT.format(
+        title=event["title"],
+        description=event.get("description", event["title"]),
+        category=event.get("category", "Technology"),
+        camera_languages=" | ".join(CAMERA_LANGUAGES),
+        lighting_languages=" | ".join(LIGHTING_LANGUAGES),
+        moods=" | ".join(MOODS),
+        storytelling_styles=" | ".join(STORYTELLING_STYLES),
+        mediums=" | ".join(MEDIUMS),
+    )
+    try:
+        raw = _invoke_claude(bedrock, prompt)
+        direction = json.loads(_clean_json(raw))
+    except Exception as e:
+        logger.warning(f"Art direction generation failed ({e}) — using fallback")
+        return _fallback_art_direction(event)
+
+    # Fill any missing piece from the fallback so assembly never breaks
+    fallback = _fallback_art_direction(event)
+    for key, value in fallback.items():
+        if not direction.get(key):
+            direction[key] = value
+            logger.warning(f"Art direction missing '{key}' — filled with fallback")
+    return direction
+
+
+def assemble_image_prompt(direction: dict) -> str:
+    """
+    The backend is the director of photography: it turns Claude's structured
+    creative decisions into the final image prompt. Order is mandatory —
+    the moment comes first and the artistic style is only the last layer.
+    """
+    moment = str(direction["cinematicMoment"]).strip().rstrip(".")
+    protagonist = str(direction["protagonist"]).strip().rstrip(".")
+    parts = [
+        f"The image captures the exact instant when {moment}.",
+        f"The protagonist of the frame is {protagonist}.",
+        _sentence(direction["cameraLanguage"]),
+        _sentence(direction["composition"]),
+        _sentence(direction["movement"]),
+        _sentence(direction["lighting"]),
+        f"The atmosphere feels {str(direction['mood']).strip().rstrip('.')}.",
+        f"Storytelling style: {str(direction['storytellingStyle']).strip().rstrip('.')}.",
+        f"Artistic medium: {str(direction['medium']).strip().rstrip('.')}.",
+        "Captured in a single chance, slightly imperfect, never posed. No text, no watermarks.",
+    ]
+    return " ".join(parts)
 
 
 def select_events(bedrock, news_items: list[dict], n: int = 10) -> list[dict]:
@@ -355,10 +444,10 @@ def generate_card(
     collection = f"Weekly Digest {week}"
     release_date = date.today().isoformat()
 
-    # Seed generated here — Claude must not pick it (avoids repeated defaults)
+    # Seed generated here — Claude never sees or picks it (avoids repeated defaults)
     seed_int = random.randint(1000000, 9999999)
 
-    art_styles_block = "\n".join(f"- {s}" for s in ART_STYLES)
+    # 1. Card text metadata (no image responsibility)
     prompt = METADATA_PROMPT.format(
         title=event["title"],
         description=event.get("description", event["title"]),
@@ -368,26 +457,9 @@ def generate_card(
         collection=collection,
         release_date=release_date,
         url=event.get("url", ""),
-        art_styles=art_styles_block,
-        seed=str(seed_int),
     )
-
     raw = _invoke_claude(bedrock, prompt)
     metadata = json.loads(_clean_json(raw))
-
-    # Claude sometimes nests image fields under a "visual" sub-object — flatten it
-    visual = metadata.pop("visual", None)
-    if isinstance(visual, dict):
-        for field in ("prompt", "seed", "chosenStyle", "model"):
-            if field not in metadata or not metadata[field]:
-                if field in visual:
-                    metadata[field] = visual[field]
-        logger.info("Flattened nested 'visual' sub-object from Claude output")
-
-    # Guarantee an art style is present (fallback to random if Claude omitted it)
-    if not metadata.get("chosenStyle"):
-        metadata["chosenStyle"] = random.choice(ART_STYLES)
-        logger.warning("Claude did not choose an art style — assigned randomly")
 
     # Enforce effects based on declared rarity (Claude might deviate)
     rarity = metadata.get("rarity", "Rare")
@@ -396,18 +468,19 @@ def generate_card(
         metadata["rarity"] = rarity
     metadata["effects"] = EFFECTS_BY_RARITY[rarity]
 
-    # Ensure artist and model fields
     metadata.setdefault("artist", "RareLines AI")
     metadata["model"] = IMAGE_MODEL
-
-    # Enforce seed generated above — ignore whatever Claude put in the JSON
     metadata["seed"] = str(seed_int)
 
-    # Generate illustration
-    illustration_prompt = metadata.get("prompt", f"Digital trading card art for {event['title']}, cinematic, dramatic lighting, no text")
+    # 2. Art Direction v2 — structured creative decisions, prompt assembled here
+    direction = generate_art_direction(bedrock, event)
+    metadata["artDirection"] = direction
+    metadata["prompt"] = assemble_image_prompt(direction)
+    metadata["chosenStyle"] = f"{direction['medium']}, {direction['storytellingStyle']}"
 
+    # 3. Generate illustration
     logger.info(f"Generating illustration for: {metadata.get('name', event['title'])}")
-    image_bytes = _invoke_stability(illustration_prompt, seed_int, stability_api_key)
+    image_bytes = _invoke_stability(metadata["prompt"], seed_int, stability_api_key)
 
     # Clear placeholder fields (will be filled by image_uploader)
     metadata["illustration"] = ""

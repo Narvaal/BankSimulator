@@ -162,8 +162,10 @@ O `booster_pack` **não contém** `asset_unit`s antecipadamente. As cartas são 
 ```
 Google Trends + NewsAPI + Reddit API (multi-source)
 ↓ Claude via AWS Bedrock seleciona 10 eventos mais relevantes
-↓ Claude via Bedrock gera metadata JSON completo por evento
-  (seed gerado em Python antes da chamada — Claude não escolhe seed)
+↓ Claude via Bedrock gera metadata JSON (texto) por evento
+  (seed gerado em Python — Claude não escolhe seed)
+↓ Claude via Bedrock gera art direction estruturada por evento (ADR-013)
+↓ Python monta o prompt final (assemble_image_prompt — estilo é a última camada)
 ↓ Stability AI SD3 Ultra gera ilustração por carta (REST API)
 ↓ S3 armazena imagens com nome {slug}-{seed}.png (URL única por geração)
 ↓ POST /artifacts/bundles → backend cria bundle + artifacts
@@ -184,26 +186,25 @@ aws lambda update-function-code --function-name rarelines-pipeline --zip-file fi
 
 **Atenção — bundle identifier único por semana:** Re-rodar a pipeline na mesma semana causa `unique constraint violation` em `artifact_bundle_identifier_key`. Solução: deletar o bundle anterior no RDS antes de re-rodar.
 
-### Geração de Imagens — Regras
+### Geração de Imagens — Art Direction v2
 
-**Regra de ouro do prompt:** nunca ilustre o fenômeno. Ilustre o momento em que uma pessoa encontrou ele. O objeto na cena deve ser específico e nomeável.
+**Filosofia:** a imagem nunca deve parecer uma ilustração. Deve parecer uma fotografia impossível congelada no instante mais importante de uma história real. Benchmark: se o usuário pensa "isso é arte de IA", falhou; se pensa "como alguém registrou exatamente esse instante?", funcionou.
 
-**Arcótipos de composição** (Claude escolhe um por carta; evita que todas fiquem parecidas):
-- HANDS ONLY — nenhum rosto, nenhum corpo
-- OBJECT ALONE — sem pessoa
-- SILHOUETTE FROM BEHIND — luz na frente, sombra voltada para o espectador
-- EXTREME FACE CLOSE-UP — olho ou boca preenchendo o frame
-- ENVIRONMENT WITHOUT PEOPLE — escala implícita por objetos cotidianos
+**Ordem obrigatória de raciocínio** (o prompt é consequência, nunca ponto de partida):
+1. Momento cinematográfico (um instante, nunca um tema) → 2. Protagonista (específico e nomeável) → 3. Câmera (linguagem real + porquê) → 4. Composição (acidental, nunca posada) → 5. Momentum (congelada durante ação: poeira, faíscas, motion blur localizado) → 6. Luz + atmosfera → 7. Linguagem artística (última decisão) → 8. Prompt final.
+
+**Arquitetura:** Claude devolve um objeto `artDirection` estruturado (`cinematicMoment`, `protagonist`, `cameraLanguage`, `composition`, `movement`, `lighting`, `mood`, `storytellingStyle`, `medium`) em uma chamada separada da de metadata. O Python (`assemble_image_prompt`) é o "diretor de fotografia" que monta o prompt final a partir dessas peças — o estilo entra apenas como última camada. O objeto inteiro é persistido em `metadata.artDirection`; `chosenStyle` = `"{medium}, {storytellingStyle}"`.
+
+**Módulos independentes** (substituem a antiga lista `ART_STYLES` de 55 estilos): `STORYTELLING_STYLES` (8) · `CAMERA_LANGUAGES` (13) · `LIGHTING_LANGUAGES` (8) · `MOODS` (8) · `MEDIUMS` (9). Cada categoria é escolhida separadamente. Estilo não deve "combinar" com o assunto — deve contar melhor aquela história.
 
 **Proibido por categoria:**
-- Tech → robôs, chips brilhantes, hologramas
+- Tech → robôs humanoides, circuit boards
 - Medical → pílulas, seringas, stethoscopes
-- Space → estrelas genéricas, planetas, nebulosas
-- Finance → gráficos de bolsa, moedas, notas
+- Space → starfields, planetas, foguetes
+- Finance → gráficos de bolsa, moedas
+- Politics → bandeiras, púlpitos, apertos de mão
 
-**Palavras proibidas no prompt:** glowing, crystalline, cosmic, neural network, abstract, futuristic, surreal, ethereal
-
-**Art style:** Claude escolhe 1 estilo de uma lista de 55 (~7 famílias) injetada no prompt. Estilo inesperado para o assunto tende a funcionar melhor (ex: propaganda soviética para carta de tecnologia). Guardado em `metadata.chosenStyle`.
+**Palavras proibidas no prompt:** glowing, crystalline, cosmic, neural network, abstract, futuristic, surreal, ethereal, mystical, otherworldly
 
 ---
 
@@ -290,10 +291,15 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ✅ `CacheControl: immutable` + URL única = browser nunca precisa re-fetch · Sem invalidação de CloudFront necessária · Cada re-geração tem URL diferente  
 ⚠️ Imagens de gerações antigas ficam no S3 indefinidamente (custo desprezível)
 
-### ADR-012: Art Style Selection via Lista Injetada no Prompt (Fase 2)
+### ADR-012: Art Style Selection via Lista Injetada no Prompt (Fase 2) — SUPERSEDED por ADR-013
 **Decisão:** 55 estilos artísticos (7 famílias) são injetados no prompt de metadata. Claude escolhe 1 estilo por carta e retorna em `chosenStyle`. Python atribui estilo aleatório como fallback se Claude omitir. Flattening defensivo do sub-objeto `visual` caso Claude o crie.  
 ✅ Variedade visual sem intervenção manual · `chosenStyle` persistido no metadata = reproduzível · Fallback robusto  
 ⚠️ Claude às vezes aninha `prompt/seed/chosenStyle` em sub-objeto `visual` — código deve fazer flatten
+
+### ADR-013: Art Direction v2 — Objeto Estruturado + Prompt Montado em Python (Fase 2)
+**Decisão:** O `METADATA_PROMPT` perde toda responsabilidade de imagem. Uma segunda chamada ao Claude (`ART_DIRECTION_PROMPT`) segue a ordem obrigatória momento → protagonista → câmera → composição → momentum → luz/mood → linguagem artística e devolve um objeto estruturado. `assemble_image_prompt()` em Python monta o prompt final (estilo é a última camada). A lista `ART_STYLES` foi substituída por 5 módulos independentes (`STORYTELLING_STYLES`, `CAMERA_LANGUAGES`, `LIGHTING_LANGUAGES`, `MOODS`, `MEDIUMS`). Objeto persistido em `metadata.artDirection`.  
+✅ Direção de arte evolui sem reescrever prompt monolítico · Decisões criativas estruturadas e auditáveis · Fallback por campo (nunca quebra a montagem)  
+⚠️ 2 chamadas ao Claude por carta (custo ainda desprezível) · Flatten do sub-objeto `visual` não é mais necessário (campos de imagem saíram do metadata prompt)
 
 ### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
