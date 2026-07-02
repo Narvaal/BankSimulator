@@ -80,19 +80,16 @@ STORYTELLING_STYLES = [
 ]
 
 CAMERA_LANGUAGES = [
-    "handheld documentary",
     "press photographer",
     "sports photography",
     "wildlife photography",
     "macro photography",
     "IMAX cinematography",
-    "GoPro action camera",
-    "bodycam footage",
     "telephoto",
     "drone",
-    "security camera",
     "architecture photography",
     "fashion editorial",
+    "war correspondent photography",
 ]
 
 LIGHTING_LANGUAGES = [
@@ -107,11 +104,11 @@ LIGHTING_LANGUAGES = [
 ]
 
 MOODS = [
+    "epic",
     "urgent",
     "hopeful",
-    "industrial",
+    "awe-inspiring",
     "sacred",
-    "chaotic",
     "triumphant",
     "lonely",
     "dangerous",
@@ -231,9 +228,9 @@ Return ONLY the JSON object, no markdown fences, no explanation."""
 ART_DIRECTION_PROMPT = """You are the art director for RareLines, a premium digital trading card platform.
 
 Your job is NOT to design an illustration.
-Your job is to produce an image that feels like a frozen frame of a real story — an impossible photograph captured at the single most important moment of the event.
+Your job is to produce an image that feels like a frozen frame of a real story — an impossible photograph captured at the single most important moment of the event. It must also look premium and museum-worthy: this is a rare collectible, never a casual snapshot.
 
-The viewer must never feel they are looking at an illustration. They must feel someone managed to record an extraordinary instant. The image must immediately raise two questions: "What happened one second before?" and "What happens one second after?" If those questions exist, the image is alive.
+The viewer must never feel they are looking at a generic AI illustration. They must feel someone managed to record an extraordinary, beautifully composed instant — the kind of photograph that wins press-photography awards, not the kind someone takes by accident with a phone. The image must immediately raise two questions: "What happened one second before?" and "What happens one second after?" If those questions exist, the image is alive.
 
 EVENT:
 Title: {title}
@@ -249,16 +246,17 @@ Which single second of this story deserves to become a card? Choose an instant, 
 ✗ "New political treaty" → ✓ "the pen touches the paper while an aide discreetly tries to swap the last page"
 
 STEP 2 — CHOOSE THE PROTAGONIST
-Not the event — a protagonist: hands, an object, a tool, a machine, an environment, a face, a shadow, a microscopic detail. It must be extremely specific and nameable.
+Not the event — a protagonist: an object, a tool, a machine, an environment, a face, a shadow, a microscopic detail, or hands. It must be extremely specific and nameable.
 ✗ "computer" → ✓ "a disassembled mechanical keyboard showing a single removed keycap"
+IMPORTANT: hands and fingers are the single hardest thing for an image model to render correctly — extra or fused fingers ruin the card. Only choose hands as the protagonist when no object-only or environment-only framing could tell the story as well. When you do use hands, keep them partially obscured, backlit as a silhouette, in motion blur, gloved, or shot from an angle that hides most of the fingers — never a sharp, fully-open palm filling the frame.
 
 STEP 3 — CHOOSE THE CAMERA
-The camera tells half the story. It must feel like a real camera operated by a real person, and you must say WHY it is positioned that way.
+The camera tells half the story. It must feel like a real camera operated by a real photographer on assignment for a major publication — think Pulitzer/World Press Photo, never a bystander's phone. You must say WHY it is positioned that way.
 ✗ "wide angle" → ✓ "The photographer instinctively dropped to the floor to capture the machine from below."
 Pick ONE camera language: {camera_languages}
 
 STEP 4 — CHOOSE THE COMPOSITION
-The composition must feel accidental. Not perfect, not symmetrical, not centered. The camera may arrive late, be too close, have someone passing in front, have smoke covering part of the lens, cut off an arm, leave half the object out of frame, feel improvised. The goal is a real capture, not a render.
+The composition must feel candid rather than posed, but it must still be a striking, well-composed frame — strong use of rule-of-thirds, leading lines, or scale. "Imperfect" means the moment was fleeting and hard to catch, not that the photo is badly framed or ugly. The camera may arrive a beat early or late, favor one side of the frame, or let something in the foreground intrude slightly — always in service of drama, never of sloppiness.
 
 STEP 5 — ADD MOMENTUM (most important step)
 The image must never look still. It must look frozen DURING an action. Always include elements like: dust, flying papers, sparks, hair in the wind, clothes in motion, smoke, water, breaking glass, particles, localized motion blur, objects entering or leaving the frame, foreground blur, depth, natural lens flare. Never a person just "standing".
@@ -266,18 +264,20 @@ The image must never look still. It must look frozen DURING an action. Always in
 STEP 6 — CHOOSE ATMOSPHERE AND LIGHT
 Pick ONE lighting language: {lighting_languages}
 Pick ONE mood: {moods}
+The lighting should feel dramatic and intentional — the kind of light a cinematographer would chase — never flat or accidental.
 
 STEP 7 — CHOOSE THE ARTISTIC LANGUAGE (last creative decision)
 The style must not "match" the subject — it must tell THIS story better. A scientific discovery can work better as a 19th-century etching. A finance story as a constructivist poster. Style exists to reinforce the narrative, never to decorate.
 Pick ONE storytelling style: {storytelling_styles}
 Pick ONE medium: {mediums}
 
-GOLDEN RULE — the image must look like a photographer had exactly one chance to take it. It can be slightly tilted, have blur, have something cutting across the lens, look improvised. It can never look posed.
+GOLDEN RULE — the image must look like an award-winning photographer had exactly one chance to take it, and nailed it. It can be candid, slightly off-center, have a natural lens flare. It can never look posed, and it can never look like a careless, ugly, or low-effort snapshot.
 
-BENCHMARK — if a viewer thinks "this looks like AI art", you failed. If they think "how did someone capture exactly that instant?", you succeeded.
+BENCHMARK — if a viewer thinks "this looks like generic AI art" OR "this looks like someone's random phone photo", you failed. If they think "how did someone capture exactly that instant, and why does it look this good?", you succeeded.
 
 FORBIDDEN WORDS anywhere in your output (they produce generic AI images): glowing, crystalline, cosmic, neural network, abstract, futuristic, surreal, ethereal, mystical, otherworldly.
 FORBIDDEN SUBJECTS: starfields/planets/rockets for space events; humanoid robots/circuit boards for tech; pills/syringes/stethoscopes for medical; stock charts/coins for finance; flags/podiums/handshakes for politics.
+FORBIDDEN QUALITY: shaky, blurry throughout, badly lit, poorly composed, amateur phone photo, ugly, low-effort, deformed hands, extra fingers, fused fingers, mutated hands, bad anatomy.
 
 Return ONLY this JSON object (each value in English, no markdown fences):
 {{
@@ -319,7 +319,7 @@ def _invoke_stability(prompt: str, seed: int, stability_api_key: str) -> bytes:
         files={"none": ""},
         data={
             "prompt": prompt,
-            "negative_prompt": "text, watermark, signature, logo, frame, border, low quality, posed studio portrait, centered symmetrical composition, sterile render",
+            "negative_prompt": "text, watermark, signature, logo, frame, border, low quality, posed studio portrait, centered symmetrical composition, sterile render, deformed hands, extra fingers, fused fingers, missing fingers, mutated hands, bad anatomy, amateur phone photo, ugly, poorly composed, badly lit, out of focus throughout",
             "model": IMAGE_MODEL,
             "output_format": "png",
             "aspect_ratio": "2:3",
