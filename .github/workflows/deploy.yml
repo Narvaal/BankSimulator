@@ -100,7 +100,10 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync frontend/assetstore/dist/ s3://${{ secrets.FRONTEND_BUCKET }} --delete
+          # --exclude "cards/*" is mandatory: the AI pipeline uploads card illustrations
+          # to cards/ in this same bucket. Without the exclude, --delete wipes every
+          # generated card image on every frontend deploy.
+          aws s3 sync frontend/assetstore/dist/ s3://${{ secrets.FRONTEND_BUCKET }} --delete --exclude "cards/*"
 
       - name: Invalidate CloudFront cache
         run: |
