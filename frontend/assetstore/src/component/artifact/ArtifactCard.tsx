@@ -166,7 +166,7 @@ function AttributeRadar({ attributes }: { attributes: Record<string, number> }) 
         .join(" ");
 
     return (
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }}>
             {[1 / 3, 2 / 3, 1].map(f => (
                 <polygon key={f} points={ring(rMax * f)} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
             ))}
@@ -269,25 +269,27 @@ function ArtifactCardFront({ metadata }: { metadata: CardMetadata }) {
                     </span>
                 </div>
 
-                {/* TITLE */}
-                <div className="shrink-0 pt-1 min-w-0">
-                    <p
-                        className="text-white font-extrabold leading-[1.05] drop-shadow-lg line-clamp-3"
-                        style={{ fontSize: "clamp(20px, 6.5vw, 30px)" }}
-                    >
-                        {metadata.name}
-                    </p>
-                    {metadata.subtitle && (
-                        <p className="text-white/70 text-[11px] mt-1 leading-snug line-clamp-1 drop-shadow-md">{metadata.subtitle}</p>
+                {/* TITLE PANEL — glass card: name + flavor quote on the left, radar on the right matching the text height */}
+                <div className="shrink-0 mt-1 rounded-[18px] border px-3 py-2.5 flex items-center gap-2" style={GLASS_STYLE}>
+                    <div className="flex-1 min-w-0">
+                        <p
+                            className="text-white font-extrabold leading-[1.05] drop-shadow-lg line-clamp-3"
+                            style={{ fontSize: "clamp(18px, 5.5vw, 26px)" }}
+                        >
+                            {metadata.name}
+                        </p>
+                        {metadata.flavorText && (
+                            <p className="text-white/60 text-[10px] italic mt-1 leading-snug line-clamp-2">
+                                "{metadata.flavorText}"
+                            </p>
+                        )}
+                    </div>
+                    {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
+                        <div className="shrink-0 self-stretch aspect-square min-h-[72px] max-h-[110px]">
+                            <AttributeRadar attributes={metadata.attributes} />
+                        </div>
                     )}
                 </div>
-
-                {/* RADAR — small, left-aligned, holographic */}
-                {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
-                    <div className="shrink-0 -ml-1">
-                        <AttributeRadar attributes={metadata.attributes} />
-                    </div>
-                )}
 
                 {/* Spacer — pushes the remaining regions toward the bottom third */}
                 <div className="flex-1 min-h-0" />
@@ -352,16 +354,6 @@ function ArtifactCardFront({ metadata }: { metadata: CardMetadata }) {
                     </div>
                 )}
 
-                {/* QUOTE — editorial close, dividers on either side */}
-                {metadata.flavorText && (
-                    <div className="shrink-0 flex items-center gap-2 pt-0.5">
-                        <div className="flex-1 h-px bg-white/15" />
-                        <p className="text-white/50 text-[8.5px] italic text-center leading-snug line-clamp-2 shrink-[3]">
-                            "{metadata.flavorText}"
-                        </p>
-                        <div className="flex-1 h-px bg-white/15" />
-                    </div>
-                )}
             </div>
         </div>
     );
