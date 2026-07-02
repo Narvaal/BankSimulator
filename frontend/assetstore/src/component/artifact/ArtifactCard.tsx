@@ -1,7 +1,11 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
 import {useEffect, useLayoutEffect, useRef, useState, type ReactNode} from "react";
-import {ShieldCheckIcon, BoltIcon, ExclamationTriangleIcon} from "@heroicons/react/24/outline";
+import {
+    ExclamationTriangleIcon, SparklesIcon, TagIcon,
+    CpuChipIcon, BanknotesIcon, BeakerIcon, FilmIcon, TrophyIcon, ScaleIcon,
+} from "@heroicons/react/24/outline";
+import type {ComponentType, CSSProperties, SVGProps} from "react";
 
 export interface CardMetadata {
     name?: string;
@@ -37,6 +41,36 @@ const RARITY_STYLES: Record<string, { badge: string; border: string; glow: strin
     Legendary: { badge: "bg-yellow-100 text-yellow-700", border: "border-yellow-400", glow: "shadow-yellow-200" },
     Mythic:    { badge: "bg-cyan-100 text-cyan-700",     border: "border-cyan-400",   glow: "shadow-cyan-200" },
     Ultimate:  { badge: "bg-pink-100 text-pink-700",     border: "border-pink-400",   glow: "shadow-pink-200" },
+};
+
+/* Front-art card design tokens — thin rarity border + almost-invisible glow, per RareLines TCG front spec */
+const RARITY_ACCENT: Record<string, { border: string; glow: string; text: string }> = {
+    Common:    { border: "#9ca3af", glow: "rgba(156,163,175,0.30)", text: "#d1d5db" },
+    Rare:      { border: "#60a5fa", glow: "rgba(96,165,250,0.35)",  text: "#93c5fd" },
+    Epic:      { border: "#a78bfa", glow: "rgba(168,85,247,0.40)",  text: "#c4b5fd" },
+    Legendary: { border: "#eab308", glow: "rgba(234,179,8,0.40)",   text: "#fde047" },
+    Mythic:    { border: "#22d3ee", glow: "rgba(34,211,238,0.40)",  text: "#67e8f9" },
+    Ultimate:  { border: "#f472b6", glow: "rgba(244,114,182,0.40)", text: "#f9a8d4" },
+};
+
+/* Purple is the one fixed accent hue — radar polygon + tiny micro-labels, independent of rarity */
+const ACCENT_PURPLE = "#c4b5fd";
+
+const CATEGORY_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+    Technology: CpuChipIcon,
+    Finance: BanknotesIcon,
+    Science: BeakerIcon,
+    Culture: FilmIcon,
+    Sports: TrophyIcon,
+    Politics: ScaleIcon,
+};
+
+/* Glassmorphism — the one floating-panel style used everywhere on the front card */
+const GLASS_STYLE: CSSProperties = {
+    background: "rgba(20,20,25,0.35)",
+    borderColor: "rgba(255,255,255,0.12)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
 };
 
 export function RarityBadge({ rarity }: { rarity?: string }) {
@@ -109,15 +143,15 @@ export function ArtifactCardThumb({
     );
 }
 
-/* Tiny radar chart of the card attributes — overlaid on the full-art card */
+/* Tiny holographic-HUD radar chart of the card attributes — transparent, purple filled polygon, white strokes */
 function AttributeRadar({ attributes }: { attributes: Record<string, number> }) {
     const entries = Object.entries(attributes);
     if (entries.length < 3) return null;
 
-    const size = 104;
+    const size = 96;
     const c = size / 2;
-    const rMax = 33;
-    const rLabel = rMax + 11;
+    const rMax = 28;
+    const rLabel = rMax + 10;
 
     const point = (i: number, r: number): [number, number] => {
         const angle = (Math.PI * 2 * i) / entries.length - Math.PI / 2;
@@ -132,15 +166,15 @@ function AttributeRadar({ attributes }: { attributes: Record<string, number> }) 
         .join(" ");
 
     return (
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }}>
             {[1 / 3, 2 / 3, 1].map(f => (
-                <polygon key={f} points={ring(rMax * f)} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.5" />
+                <polygon key={f} points={ring(rMax * f)} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
             ))}
             {entries.map(([k], i) => {
                 const [x, y] = point(i, rMax);
-                return <line key={k} x1={c} y1={c} x2={x} y2={y} stroke="rgba(255,255,255,0.22)" strokeWidth="0.5" />;
+                return <line key={k} x1={c} y1={c} x2={x} y2={y} stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />;
             })}
-            <polygon points={data} fill="rgba(255,255,255,0.3)" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+            <polygon points={data} fill="rgba(168,85,247,0.35)" stroke="rgba(255,255,255,0.9)" strokeWidth="1.25" strokeLinejoin="round" />
             {entries.map(([k], i) => {
                 const [x, y] = point(i, rLabel);
                 return (
@@ -150,8 +184,8 @@ function AttributeRadar({ attributes }: { attributes: Record<string, number> }) 
                         y={y}
                         textAnchor="middle"
                         dominantBaseline="middle"
-                        fill="rgba(255,255,255,0.8)"
-                        fontSize="6.5"
+                        fill="rgba(255,255,255,0.85)"
+                        fontSize="6"
                         fontWeight="600"
                         letterSpacing="0.5"
                     >
@@ -160,6 +194,176 @@ function AttributeRadar({ attributes }: { attributes: Record<string, number> }) 
                 );
             })}
         </svg>
+    );
+}
+
+/* Front-art card — museum-label UI floating over full-bleed artwork. Six regions: header, title, radar, abilities, weakness, metadata, quote. */
+function ArtifactCardFront({ metadata }: { metadata: CardMetadata }) {
+    const rarity = metadata.rarity ?? "Common";
+    const accent = RARITY_ACCENT[rarity] ?? RARITY_ACCENT.Common;
+    const CategoryIcon = (metadata.category && CATEGORY_ICONS[metadata.category]) || SparklesIcon;
+
+    const abilityCards = [
+        ...(metadata.passive ? [{ label: "Passive", name: metadata.passive.name, description: metadata.passive.description }] : []),
+        ...(metadata.abilities ?? []).map(a => ({ label: "Ability", name: a.name, description: a.description })),
+    ].slice(0, 3);
+
+    const traits = (metadata.traits ?? []).slice(0, 4);
+
+    return (
+        <div
+            className="relative shrink-0 overflow-hidden rounded-[24px] flex flex-col"
+            style={{
+                height: "min(75vh, 640px)",
+                aspectRatio: "2/3",
+                border: `1px solid ${accent.border}`,
+                boxShadow: `0 0 28px -8px ${accent.glow}`,
+            }}
+        >
+            {/* Artwork — bleeds to every edge */}
+            {metadata.illustration ? (
+                <img
+                    src={metadata.illustration}
+                    alt={metadata.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-600" />
+            )}
+
+            {/* Soft gradient from the lower third only — readability, not concealment */}
+            <div className="absolute inset-x-0 bottom-0 top-[36%] bg-gradient-to-t from-black/45 via-black/15 to-transparent pointer-events-none" />
+            {/* Gentle top vignette so header + title stay legible over bright artwork */}
+            <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
+
+            {/* Museum-label content column */}
+            <div className="relative flex flex-col h-full p-3 gap-2">
+
+                {/* HEADER */}
+                <div className="shrink-0 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        {metadata.cardNumber && (
+                            <span
+                                className="text-[9px] font-mono text-white/70 px-2 py-1 rounded-full border shrink-0"
+                                style={GLASS_STYLE}
+                            >
+                                #{metadata.cardNumber}
+                            </span>
+                        )}
+                        {metadata.category && (
+                            <span
+                                className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-widest text-white/70 px-2 py-1 rounded-full border min-w-0"
+                                style={GLASS_STYLE}
+                            >
+                                <CategoryIcon className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{metadata.category}</span>
+                            </span>
+                        )}
+                    </div>
+                    <span
+                        className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border shrink-0"
+                        style={{ ...GLASS_STYLE, color: accent.text }}
+                    >
+                        <SparklesIcon className="w-3 h-3" />
+                        {rarity}
+                    </span>
+                </div>
+
+                {/* TITLE */}
+                <div className="shrink-0 pt-1 min-w-0">
+                    <p
+                        className="text-white font-extrabold leading-[1.05] drop-shadow-lg line-clamp-3"
+                        style={{ fontSize: "clamp(20px, 6.5vw, 30px)" }}
+                    >
+                        {metadata.name}
+                    </p>
+                    {metadata.subtitle && (
+                        <p className="text-white/70 text-[11px] mt-1 leading-snug line-clamp-1 drop-shadow-md">{metadata.subtitle}</p>
+                    )}
+                </div>
+
+                {/* RADAR — small, left-aligned, holographic */}
+                {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
+                    <div className="shrink-0 -ml-1">
+                        <AttributeRadar attributes={metadata.attributes} />
+                    </div>
+                )}
+
+                {/* Spacer — pushes the remaining regions toward the bottom third */}
+                <div className="flex-1 min-h-0" />
+
+                {/* ABILITIES — equal glass cards, Apple-feature-card style */}
+                {abilityCards.length > 0 && (
+                    <div
+                        className="shrink-0 grid gap-1.5"
+                        style={{ gridTemplateColumns: `repeat(${abilityCards.length}, minmax(0, 1fr))` }}
+                    >
+                        {abilityCards.map((card, i) => (
+                            <div
+                                key={i}
+                                className="min-w-0 rounded-[18px] border px-2 py-1.5 flex flex-col"
+                                style={GLASS_STYLE}
+                            >
+                                <span
+                                    className="text-[7px] font-bold uppercase tracking-wider"
+                                    style={{ color: ACCENT_PURPLE }}
+                                >
+                                    {card.label}
+                                </span>
+                                <span className="text-white text-[10px] font-bold leading-tight mt-0.5 line-clamp-1">
+                                    {card.name}
+                                </span>
+                                <span className="text-white/60 text-[8px] leading-snug mt-0.5 line-clamp-3">
+                                    {card.description}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* WEAKNESS — single capsule row */}
+                {metadata.weakness && (
+                    <div
+                        className="shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 min-w-0"
+                        style={GLASS_STYLE}
+                    >
+                        <ExclamationTriangleIcon className="w-3 h-3 text-amber-300 shrink-0" />
+                        <span className="text-[7px] font-bold uppercase tracking-wider text-white/50 shrink-0">Weakness</span>
+                        <span className="text-white/85 text-[9.5px] truncate">{metadata.weakness}</span>
+                    </div>
+                )}
+
+                {/* METADATA bar — traits as equal editorial columns, no boxes, just separators */}
+                {traits.length > 0 && (
+                    <div className="shrink-0 flex border-t pt-1.5" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                        {traits.map((t, i) => (
+                            <div
+                                key={i}
+                                className="flex-1 min-w-0 px-1.5 first:pl-0 last:pr-0"
+                                style={i > 0 ? { borderLeft: "1px solid rgba(255,255,255,0.12)" } : undefined}
+                            >
+                                <div className="flex items-center gap-1 text-white/40">
+                                    <TagIcon className="w-2.5 h-2.5 shrink-0" />
+                                    <span className="text-[6.5px] font-semibold uppercase tracking-wider truncate">{t.name}</span>
+                                </div>
+                                <p className="text-white text-[9px] font-medium truncate mt-0.5">{t.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* QUOTE — editorial close, dividers on either side */}
+                {metadata.flavorText && (
+                    <div className="shrink-0 flex items-center gap-2 pt-0.5">
+                        <div className="flex-1 h-px bg-white/15" />
+                        <p className="text-white/50 text-[8.5px] italic text-center leading-snug line-clamp-2 shrink-[3]">
+                            "{metadata.flavorText}"
+                        </p>
+                        <div className="flex-1 h-px bg-white/15" />
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }
 
@@ -208,95 +412,7 @@ export function ArtifactCardFullscreen({
                     <div className="flex flex-wrap gap-4 justify-center items-start">
 
                     {/* Full-art card (front) */}
-                    <div
-                        className={`relative shrink-0 rounded-2xl overflow-hidden border-2 ${s.border} ${s.glow ? `shadow-2xl ${s.glow}` : "shadow-2xl"}`}
-                        style={{ height: "min(75vh, 640px)", aspectRatio: "2/3" }}
-                    >
-                        {metadata.illustration ? (
-                            <img
-                                src={metadata.illustration}
-                                alt={metadata.name}
-                                className="absolute inset-0 w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-600" />
-                        )}
-
-                        {/* Top overlay */}
-                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/85 via-black/30 to-transparent" />
-                        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                {metadata.cardNumber && (
-                                    <span className="text-[10px] text-white/80 font-mono bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                                        #{metadata.cardNumber}
-                                    </span>
-                                )}
-                                {metadata.category && (
-                                    <span className="text-[10px] text-white/80 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                                        {metadata.category}
-                                    </span>
-                                )}
-                            </div>
-                            <RarityBadge rarity={rarity} />
-                        </div>
-
-                        {/* Attribute radar top-right, below the rarity badge */}
-                        {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
-                            <div className="absolute top-11 right-3 bg-black/35 backdrop-blur-sm rounded-xl p-1">
-                                <AttributeRadar attributes={metadata.attributes} />
-                            </div>
-                        )}
-
-                        {/* Bottom overlay */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/85 to-transparent pt-20 pb-4 px-4 space-y-2.5">
-                            <div>
-                                <p className="text-white font-extrabold text-2xl leading-tight drop-shadow-lg">{metadata.name}</p>
-                                {metadata.subtitle && (
-                                    <p className="text-white/70 text-xs mt-0.5">{metadata.subtitle}</p>
-                                )}
-                            </div>
-
-                            {metadata.passive && (
-                                <div className="w-full bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
-                                    <div className="flex items-center gap-1 text-white/50">
-                                        <ShieldCheckIcon className="w-3 h-3" />
-                                        <span className="text-[9px] font-semibold uppercase tracking-widest">Passive</span>
-                                    </div>
-                                    <p className="text-white text-xs font-bold mt-1">{metadata.passive.name}</p>
-                                    <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{metadata.passive.description}</p>
-                                </div>
-                            )}
-
-                            {metadata.abilities && metadata.abilities.length > 0 && (
-                                <div className="space-y-1.5">
-                                    {metadata.abilities.map((ab, i) => (
-                                        <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
-                                            <div className="flex items-center gap-1 text-white/50">
-                                                <BoltIcon className="w-3 h-3" />
-                                                <span className="text-[9px] font-semibold uppercase tracking-widest">Ability</span>
-                                            </div>
-                                            <p className="text-white text-xs font-bold mt-1">{ab.name}</p>
-                                            <p className="text-white/60 text-[10px] mt-0.5 leading-snug">{ab.description}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {metadata.weakness && (
-                                <div className="w-full bg-white/10 backdrop-blur-sm rounded-lg px-2.5 py-2 border border-white/10">
-                                    <div className="flex items-center gap-1 text-white/50">
-                                        <ExclamationTriangleIcon className="w-3 h-3" />
-                                        <span className="text-[9px] font-semibold uppercase tracking-widest">Weakness</span>
-                                    </div>
-                                    <p className="text-white/80 text-[11px] mt-1 leading-snug">{metadata.weakness}</p>
-                                </div>
-                            )}
-
-                            {metadata.flavorText && (
-                                <p className="text-white/50 text-[10px] italic leading-snug pt-0.5">"{metadata.flavorText}"</p>
-                            )}
-                        </div>
-                    </div>
+                    <ArtifactCardFront metadata={metadata} />
 
                     {/* Back — everything not already on the front */}
                     <ArtifactCardBack metadata={metadata} borderClass={s.border} glowClass={s.glow} />
