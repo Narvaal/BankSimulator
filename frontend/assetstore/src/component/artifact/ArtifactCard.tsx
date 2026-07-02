@@ -1,6 +1,6 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
-import {useEffect, type ReactNode} from "react";
+import {useEffect, useLayoutEffect, useRef, useState, type ReactNode} from "react";
 import {ShieldCheckIcon, BoltIcon, ExclamationTriangleIcon} from "@heroicons/react/24/outline";
 
 export interface CardMetadata {
@@ -324,12 +324,29 @@ function ArtifactCardBack({
     borderClass: string;
     glowClass: string;
 }) {
+    const sources = (metadata.references ?? []).filter(u => u && u.trim().length > 0);
+
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [aiCompact, setAiCompact] = useState(false);
+
+    useLayoutEffect(() => {
+        setAiCompact(false);
+    }, [metadata]);
+
+    useLayoutEffect(() => {
+        const el = scrollRef.current;
+        if (!el || aiCompact) return;
+        if (el.scrollHeight > el.clientHeight) {
+            setAiCompact(true);
+        }
+    }, [metadata, aiCompact]);
+
     return (
         <div
             className={`relative shrink-0 rounded-2xl overflow-hidden border-2 bg-white flex flex-col ${borderClass} ${glowClass ? `shadow-2xl ${glowClass}` : "shadow-2xl"}`}
             style={{ height: "min(75vh, 640px)", aspectRatio: "2/3" }}
         >
-            <div className="overflow-y-auto flex-1 p-4 space-y-3">
+            <div ref={scrollRef} className="overflow-y-auto flex-1 p-4 space-y-3">
                 <div className="text-center pb-2 border-b border-slate-100">
                     <p className="text-xs font-bold text-zinc-700">{metadata.name}</p>
                     {(metadata.collection || metadata.cardNumber) && (
@@ -374,11 +391,11 @@ function ArtifactCardBack({
                     </div>
                 )}
 
-                {metadata.references && metadata.references.length > 0 && (
+                {sources.length > 0 && (
                     <div>
                         <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Sources</p>
                         <ul className="space-y-1">
-                            {metadata.references.map((url, i) => {
+                            {sources.map((url, i) => {
                                 let hostname = url;
                                 try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch { /* keep raw url */ }
                                 return (
@@ -399,7 +416,7 @@ function ArtifactCardBack({
                 )}
 
                 {(metadata.prompt || metadata.chosenStyle) && (
-                    <AiInfoPanel metadata={metadata} />
+                    <AiInfoPanel metadata={metadata} compact={aiCompact} />
                 )}
             </div>
 
@@ -425,6 +442,7 @@ const ATTR_COLORS: Record<string, string> = {
 export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
     const rarity = metadata.rarity ?? "Common";
     const s = RARITY_STYLES[rarity] ?? RARITY_STYLES.Common;
+    const sources = (metadata.references ?? []).filter(u => u && u.trim().length > 0);
 
     return (
         <div className="space-y-4">
@@ -567,11 +585,11 @@ export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
             )}
 
             {/* Sources */}
-            {metadata.references && metadata.references.length > 0 && (
+            {sources.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 p-4">
                     <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Sources</p>
                     <ul className="space-y-1.5">
-                        {metadata.references.map((url, i) => {
+                        {sources.map((url, i) => {
                             let hostname = url;
                             try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch {}
                             return (
@@ -593,46 +611,52 @@ export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
 
             {/* AI Info */}
             {(metadata.prompt || metadata.chosenStyle) && (
-                <AiInfoPanel metadata={metadata} />
+                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                    <AiInfoPanel metadata={metadata} />
+                </div>
             )}
         </div>
     );
 }
 
-function AiInfoPanel({ metadata }: { metadata: CardMetadata }) {
+function AiInfoPanel({ metadata, compact = false }: { metadata: CardMetadata; compact?: boolean }) {
+    const label = compact ? "text-[7px]" : "text-[9px]";
+    const value = compact ? "text-[8px]" : "text-[10px]";
+    const gap = compact ? "space-y-1" : "space-y-2";
+
     return (
-        <div className="bg-white rounded-xl border border-slate-200 p-3 min-w-0 overflow-hidden">
-            <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">AI Info</p>
-            <div className="space-y-2 min-w-0">
+        <div className="min-w-0">
+            <p className={`${label} font-semibold text-zinc-400 uppercase tracking-wider mb-1.5`}>AI Info</p>
+            <div className={`${gap} min-w-0`}>
                 {metadata.chosenStyle && (
                     <div className="min-w-0">
-                        <p className="text-[9px] text-zinc-400 uppercase tracking-wider mb-0.5">Art Style</p>
-                        <p className="text-[10px] text-zinc-600 italic leading-snug break-words">{metadata.chosenStyle}</p>
+                        <p className={`${label} text-zinc-400 uppercase tracking-wider mb-0.5`}>Art Style</p>
+                        <p className={`${value} text-zinc-600 italic leading-snug break-words`}>{metadata.chosenStyle}</p>
                     </div>
                 )}
                 {metadata.prompt && (
                     <div className="min-w-0">
-                        <p className="text-[9px] text-zinc-400 uppercase tracking-wider mb-0.5">Image Prompt</p>
-                        <p className="text-[10px] text-zinc-500 leading-snug break-words">{metadata.prompt}</p>
+                        <p className={`${label} text-zinc-400 uppercase tracking-wider mb-0.5`}>Image Prompt</p>
+                        <p className={`${value} text-zinc-500 leading-snug break-words`}>{metadata.prompt}</p>
                     </div>
                 )}
                 <div className="space-y-1 min-w-0">
                     {metadata.model && (
                         <div className="min-w-0 flex items-baseline gap-1.5">
-                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Model</span>
-                            <span className="text-[10px] text-zinc-600 break-all">{metadata.model}</span>
+                            <span className={`${label} text-zinc-400 uppercase tracking-wider shrink-0`}>Model</span>
+                            <span className={`${value} text-zinc-600 break-all`}>{metadata.model}</span>
                         </div>
                     )}
                     {metadata.seed && (
                         <div className="min-w-0 flex items-baseline gap-1.5">
-                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Seed</span>
-                            <span className="text-[10px] font-mono text-zinc-600 break-all">{metadata.seed}</span>
+                            <span className={`${label} text-zinc-400 uppercase tracking-wider shrink-0`}>Seed</span>
+                            <span className={`${value} font-mono text-zinc-600 break-all`}>{metadata.seed}</span>
                         </div>
                     )}
                     {metadata.artist && (
                         <div className="min-w-0 flex items-baseline gap-1.5">
-                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Artist</span>
-                            <span className="text-[10px] text-zinc-600 break-words">{metadata.artist}</span>
+                            <span className={`${label} text-zinc-400 uppercase tracking-wider shrink-0`}>Artist</span>
+                            <span className={`${value} text-zinc-600 break-words`}>{metadata.artist}</span>
                         </div>
                     )}
                 </div>
