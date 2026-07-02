@@ -109,6 +109,60 @@ export function ArtifactCardThumb({
     );
 }
 
+/* Tiny radar chart of the card attributes — overlaid on the full-art card */
+function AttributeRadar({ attributes }: { attributes: Record<string, number> }) {
+    const entries = Object.entries(attributes);
+    if (entries.length < 3) return null;
+
+    const size = 104;
+    const c = size / 2;
+    const rMax = 33;
+    const rLabel = rMax + 11;
+
+    const point = (i: number, r: number): [number, number] => {
+        const angle = (Math.PI * 2 * i) / entries.length - Math.PI / 2;
+        return [c + r * Math.cos(angle), c + r * Math.sin(angle)];
+    };
+
+    const ring = (r: number) =>
+        entries.map((_, i) => point(i, r).map(n => n.toFixed(1)).join(",")).join(" ");
+
+    const data = entries
+        .map(([, v], i) => point(i, (Math.min(Math.max(v, 0), 100) / 100) * rMax).map(n => n.toFixed(1)).join(","))
+        .join(" ");
+
+    return (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {[1 / 3, 2 / 3, 1].map(f => (
+                <polygon key={f} points={ring(rMax * f)} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.5" />
+            ))}
+            {entries.map(([k], i) => {
+                const [x, y] = point(i, rMax);
+                return <line key={k} x1={c} y1={c} x2={x} y2={y} stroke="rgba(255,255,255,0.22)" strokeWidth="0.5" />;
+            })}
+            <polygon points={data} fill="rgba(255,255,255,0.3)" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+            {entries.map(([k], i) => {
+                const [x, y] = point(i, rLabel);
+                return (
+                    <text
+                        key={k}
+                        x={x}
+                        y={y}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="rgba(255,255,255,0.8)"
+                        fontSize="6.5"
+                        fontWeight="600"
+                        letterSpacing="0.5"
+                    >
+                        {k.slice(0, 3).toUpperCase()}
+                    </text>
+                );
+            })}
+        </svg>
+    );
+}
+
 /* Fullscreen "full art" view — image fills the whole card, info overlaid on top (Pokemon-style) */
 export function ArtifactCardFullscreen({
     metadata,
@@ -185,6 +239,13 @@ export function ArtifactCardFullscreen({
                             </div>
                             <RarityBadge rarity={rarity} />
                         </div>
+
+                        {/* Attribute radar top-right, below the rarity badge */}
+                        {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
+                            <div className="absolute top-11 right-3 bg-black/35 backdrop-blur-sm rounded-xl p-1">
+                                <AttributeRadar attributes={metadata.attributes} />
+                            </div>
+                        )}
 
                         {/* Bottom overlay */}
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/85 to-transparent pt-20 pb-4 px-4 space-y-2.5">
