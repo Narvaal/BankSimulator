@@ -1,6 +1,6 @@
 /* Shared card visual component — used in Reward, Marketplace, Inventory, Profile, ArtifactDetail */
 
-import {useEffect, useState, type ReactNode} from "react";
+import {useEffect, type ReactNode} from "react";
 import {ShieldCheckIcon, BoltIcon, ExclamationTriangleIcon} from "@heroicons/react/24/outline";
 
 export interface CardMetadata {
@@ -600,52 +600,43 @@ export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
 }
 
 function AiInfoPanel({ metadata }: { metadata: CardMetadata }) {
-    const [open, setOpen] = useState(false);
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <button
-                onClick={() => setOpen(o => !o)}
-                className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:bg-slate-50 transition-colors"
-            >
-                <span>AI Info</span>
-                <span className="text-zinc-300">{open ? "▲" : "▼"}</span>
-            </button>
-            {open && (
-                <div className="px-4 pb-4 space-y-3 border-t border-slate-100">
-                    {metadata.chosenStyle && (
-                        <div className="pt-3">
-                            <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Art Style</p>
-                            <p className="text-xs text-zinc-600 italic">{metadata.chosenStyle}</p>
-                        </div>
-                    )}
-                    {metadata.prompt && (
-                        <div>
-                            <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Image Prompt</p>
-                            <p className="text-xs text-zinc-500 leading-relaxed">{metadata.prompt}</p>
-                        </div>
-                    )}
-                    <div className="flex gap-4 flex-wrap">
-                        {metadata.model && (
-                            <div>
-                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Model</p>
-                                <p className="text-xs text-zinc-600">{metadata.model}</p>
-                            </div>
-                        )}
-                        {metadata.seed && (
-                            <div>
-                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Seed</p>
-                                <p className="text-xs font-mono text-zinc-600">{metadata.seed}</p>
-                            </div>
-                        )}
-                        {metadata.artist && (
-                            <div>
-                                <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Artist</p>
-                                <p className="text-xs text-zinc-600">{metadata.artist}</p>
-                            </div>
-                        )}
+        <div className="bg-white rounded-xl border border-slate-200 p-3 min-w-0 overflow-hidden">
+            <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">AI Info</p>
+            <div className="space-y-2 min-w-0">
+                {metadata.chosenStyle && (
+                    <div className="min-w-0">
+                        <p className="text-[9px] text-zinc-400 uppercase tracking-wider mb-0.5">Art Style</p>
+                        <p className="text-[10px] text-zinc-600 italic leading-snug break-words">{metadata.chosenStyle}</p>
                     </div>
+                )}
+                {metadata.prompt && (
+                    <div className="min-w-0">
+                        <p className="text-[9px] text-zinc-400 uppercase tracking-wider mb-0.5">Image Prompt</p>
+                        <p className="text-[10px] text-zinc-500 leading-snug break-words">{metadata.prompt}</p>
+                    </div>
+                )}
+                <div className="space-y-1 min-w-0">
+                    {metadata.model && (
+                        <div className="min-w-0 flex items-baseline gap-1.5">
+                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Model</span>
+                            <span className="text-[10px] text-zinc-600 break-all">{metadata.model}</span>
+                        </div>
+                    )}
+                    {metadata.seed && (
+                        <div className="min-w-0 flex items-baseline gap-1.5">
+                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Seed</span>
+                            <span className="text-[10px] font-mono text-zinc-600 break-all">{metadata.seed}</span>
+                        </div>
+                    )}
+                    {metadata.artist && (
+                        <div className="min-w-0 flex items-baseline gap-1.5">
+                            <span className="text-[9px] text-zinc-400 uppercase tracking-wider shrink-0">Artist</span>
+                            <span className="text-[10px] text-zinc-600 break-words">{metadata.artist}</span>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
