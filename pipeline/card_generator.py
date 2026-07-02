@@ -281,7 +281,7 @@ FORBIDDEN SUBJECTS: starfields/planets/rockets for space events; humanoid robots
 
 Return ONLY this JSON object (each value in English, no markdown fences):
 {{
-  "cinematicMoment": "the exact instant being frozen — completes the sentence 'the exact instant when ...' (specific, one second of the story)",
+  "cinematicMoment": "the specific one-second instant being frozen, written as a bare clause with NO leading phrase like 'the instant when' or 'the moment that' — just the action itself, e.g. 'the astronomer's pen completes the final connecting line on the printout'",
   "protagonist": "the extremely specific, nameable subject of the frame",
   "cameraLanguage": "one full sentence: which camera language (from the list) and WHY the photographer shot it that way",
   "composition": "one full sentence describing the accidental-feeling framing",
@@ -401,6 +401,10 @@ def assemble_image_prompt(direction: dict) -> str:
     the moment comes first and the artistic style is only the last layer.
     """
     moment = str(direction["cinematicMoment"]).strip().rstrip(".")
+    # Defensive: strip a redundant leading "the (exact) instant/moment (that/when)" —
+    # the template below already supplies that lead-in.
+    moment = re.sub(r"^(the\s+)?(exact\s+)?(instant|moment|second)\s+(being\s+frozen\s+)?(that|when)\s+",
+                     "", moment, flags=re.IGNORECASE).strip()
     protagonist = str(direction["protagonist"]).strip().rstrip(".")
     parts = [
         f"The image captures the exact instant when {moment}.",
