@@ -215,10 +215,28 @@ aws lambda update-function-code --function-name rarelines-pipeline --zip-file fi
 Glass → Reflection → Foil → Particles → Frame → Illustration → Background
 ```
 
-**Frente:** Illustration · Name · Subtitle · Abilities · Attributes · Rarity · Collection · Card Number  
-**Verso:** Lore · Timeline · Traits · Stats · References · AI Info (prompt, seed, model)
+### Frente da carta — "RareLines TCG" museum-label spec (ADR-014)
 
-**Three.js:** mouse tilt 3D · parallax por camada · foil shader GLSL · glow pulsante · partículas por raridade · iluminação dinâmica · idle float. Cartas Mythic/Ultimate têm shaders exclusivos. Fallback 2D se WebGL indisponível.
+`ArtifactCardFront` (`ArtifactCard.tsx`) segue o princípio "a arte é sempre a heroína, a UI é uma etiqueta de museu flutuando por cima". Seis regiões, sem sobreposição, ritmo vertical de 8px:
+
+1. **Header** — chip glass esquerdo (`#cardNumber` + ícone de categoria via `CATEGORY_ICONS`) e chip de raridade à direita (ícone `SparklesIcon` + cor via `RARITY_ACCENT`).
+2. **Title row** — nome (até 3 linhas, `clamp()` fluido) + `flavorText` em itálico direto sobre a arte (sem caixa); radar de atributos à direita, dentro de um quadrado glass, com altura acompanhando o bloco nome+texto (`self-stretch`).
+3. **Abilities** — três cards glass iguais (Passive + até 2 Abilities), estilo Apple feature card.
+4. **Weakness** — cápsula horizontal única (ícone + label + valor truncado em 1 linha).
+5. **Metadata bar** — `traits` (2-4) como colunas editoriais com separador, sem caixas.
+6. **Quote** — reservado (ver histórico; atualmente o flavorText vive na title row, não há mais quote separada no rodapé).
+
+**Canvas:** cantos de 24px, borda de 1px cuja cor muda por raridade (`RARITY_ACCENT`: cinza/azul/roxo/dourado/ciano/rosa) com glow quase invisível via `boxShadow`. Roxo (`ACCENT_PURPLE`) é a única cor de destaque fixa, usada apenas no polígono do radar e nos micro-labels das abilities — nunca varia por raridade.
+
+**Glassmorphism** (`GLASS_STYLE`, usado em todos os painéis flutuantes): `background: rgba(20,20,25,0.35)`, `border: rgba(255,255,255,0.12)`, `backdropFilter: blur(20px)`.
+
+**Anti-overflow por design:** todo texto variável (título, descrições de ability, weakness, traits, quote) usa `line-clamp`/`truncate` — o card nunca cresce além da altura fixa (`min(75vh, 640px)`), a filosofia é "nunca explicar tudo na frente, o resto fica no verso".
+
+**Verso (`ArtifactCardBack`):** Lore · Traits · Timeline · Sources (oculta se `references` vier vazio/só espaços) · AI Info — sempre expandido, sem botão de toggle, sem caixa própria (seções flat como Lore/Traits). Auto-shrink: `useLayoutEffect` mede `scrollHeight` vs `clientHeight` do container e ativa modo compacto (fonte menor) na seção AI Info se o conteúdo ultrapassar a altura fixa do card, evitando ativar o scroll interno.
+
+**Radar de atributos (`AttributeRadar`):** SVG holográfico transparente, sem fundo opaco quando fora de um painel glass — traços brancos, polígono preenchido em roxo translúcido, `drop-shadow` para legibilidade sobre qualquer imagem de fundo.
+
+**Three.js:** mouse tilt 3D · parallax por camada · foil shader GLSL · glow pulsante · partículas por raridade · iluminação dinâmica · idle float. Cartas Mythic/Ultimate têm shaders exclusivos. Fallback 2D se WebGL indisponível. **Ainda não implementado** (Fase 4).
 
 ---
 
@@ -236,15 +254,18 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 - ✅ Stability AI SD3 Ultra: ilustrações via REST API
 - ✅ AWS Lambda (Python 3.11) + EventBridge Scheduler (toda segunda, 08:00 UTC)
 - ✅ S3 com filenames baseados em seed (URLs imutáveis por geração)
-- ✅ Art style selection: 55 estilos, Claude escolhe por carta, salvo em `chosenStyle`
+- ✅ Art Direction v2 (ADR-013): objeto `artDirection` estruturado, prompt montado em Python, estilo como última camada
 
 ### Fase 3 — Card Rendering Engine (2D) — parcial ✅
-- ✅ `ArtifactCard.tsx`: `ArtifactCardThumb` (grid) + `ArtifactCardDetail` (modal/detalhe) com todos os campos
+- ✅ `ArtifactCard.tsx`: `ArtifactCardThumb` (grid) + `ArtifactCardDetail` (modal/detalhe) + `ArtifactCardFront`/`ArtifactCardBack` (fullscreen) com todos os campos
 - ✅ Variantes visuais por raridade (badge, border, glow)
-- ✅ Seções: ilustração hero, atributos com barras, abilities, passive, weakness, lore, traits, timeline, sources, AI Info (collapsible)
+- ✅ `ArtifactCardFront`: redesign completo "museum-label" (ADR-014) — header, title row (nome+quote+radar), abilities glass cards, weakness capsule, metadata bar, tudo com line-clamp anti-overflow
+- ✅ `ArtifactCardBack`: AI Info sempre expandido com auto-shrink por overflow, Sources oculta se vazia
+- ✅ Seções: ilustração hero, atributos com barras (detail) / radar holográfico (front), abilities, passive, weakness, lore, traits, timeline, sources, AI Info
 - ✅ Integrado em: Inventory, Marketplace, Reward, ArtifactDetail, ProfilePage
 - Animação de flip frente/verso — pendente
 - Composição em camadas com Framer Motion — pendente
+- `ArtifactCardThumb` (grid pequeno) ainda não segue o novo visual "museum-label" — fora de escopo por enquanto (não cabe abilities/weakness/metadata bar num tile pequeno)
 
 ### Fase 4 — Three.js
 - Shaders GLSL: foil, reflection, glow
@@ -299,7 +320,25 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ### ADR-013: Art Direction v2 — Objeto Estruturado + Prompt Montado em Python (Fase 2)
 **Decisão:** O `METADATA_PROMPT` perde toda responsabilidade de imagem. Uma segunda chamada ao Claude (`ART_DIRECTION_PROMPT`) segue a ordem obrigatória momento → protagonista → câmera → composição → momentum → luz/mood → linguagem artística e devolve um objeto estruturado. `assemble_image_prompt()` em Python monta o prompt final (estilo é a última camada). A lista `ART_STYLES` foi substituída por 5 módulos independentes (`STORYTELLING_STYLES`, `CAMERA_LANGUAGES`, `LIGHTING_LANGUAGES`, `MOODS`, `MEDIUMS`). Objeto persistido em `metadata.artDirection`.  
 ✅ Direção de arte evolui sem reescrever prompt monolítico · Decisões criativas estruturadas e auditáveis · Fallback por campo (nunca quebra a montagem)  
-⚠️ 2 chamadas ao Claude por carta (custo ainda desprezível) · Flatten do sub-objeto `visual` não é mais necessário (campos de imagem saíram do metadata prompt)
+⚠️ 2 chamadas ao Claude por carta (custo ainda desprezível) · Flatten do sub-objeto `visual` não é mais necessário (campos de imagem saíram do metadata prompt)  
+⚠️ Bug corrigido: `cinematicMoment` às vezes vinha com "the exact instant when..." já embutido, duplicando a frase no prompt montado (`assemble_image_prompt` agora limpa esse prefixo redundante via regex defensivo, além da instrução ter sido reforçada)
+
+### ADR-015: Art Direction v2 — Correção de Qualidade (mãos deformadas e fotos "de qualquer jeito") (Fase 2)
+**Contexto:** primeiro lote real gerado com a ADR-013 saiu com mãos deformadas (fraqueza conhecida de modelos de difusão em close-ups) e clima de "foto tirada de qualquer jeito" em vez de "fotografia premiada" — o request do usuário para parecer "instante real e imperfeito" foi interpretado longe demais na direção de câmeras mundanas.  
+**Decisão:** Removidas da lista `CAMERA_LANGUAGES` as opções mundanas (`handheld documentary`, `GoPro action camera`, `bodycam footage`, `security camera`); mantidas/priorizadas as cinematográficas (imprensa, editorial, telephoto, drone, war correspondent). Mãos deixam de ser escolha padrão de protagonista — só entram quando nada mais conta a história, e devem ficar parcialmente obscurecidas (desfoque, silhueta, ângulo, luvas). "Imperfeito" agora significa candidamente dramático (nível Pulitzer/World Press Photo), nunca mal composto. Negative prompt do Stability reforçado contra `deformed hands, extra fingers, fused fingers, mutated hands, bad anatomy`. Moods trocaram `industrial`/`chaotic` por `epic`/`awe-inspiring`.  
+✅ Testado localmente antes e depois do fix (Bedrock + Stability reais) — resultado sem mãos deformadas, composição dramática  
+⚠️ Ainda existe risco residual de mãos em cenas onde o protagonista é claramente uma mão (ex: produto sendo desembalado) — mitigado, não eliminado
+
+### ADR-016: `--exclude "cards/*"` no Deploy do Frontend (Fase 2/Fase 8) — bug crítico corrigido
+**Contexto:** o workflow de deploy fazia `aws s3 sync frontend/assetstore/dist/ s3://bucket --delete` no MESMO bucket onde a pipeline salva ilustrações em `cards/`. Sem exclusão, todo deploy do frontend apagava a pasta `cards/` inteira — destruindo as imagens de **todas** as cartas já geradas (incluindo bundles reais da pipeline semanal, não só testes). Descoberto porque imagens pararam de aparecer em produção depois de múltiplos deploys de frontend na mesma sessão.  
+**Decisão:** `.github/workflows/deploy.yml` → `aws s3 sync ... --delete --exclude "cards/*"`. Imagens já perdidas foram restauradas regenerando com o mesmo `prompt`+`seed` já salvos no metadata (mesma URL exata, sem precisar alterar o banco).  
+✅ Deploy de frontend nunca mais apaga imagens de cartas · Recuperação sem downtime nem migração de dados  
+⚠️ Bug pode ter apagado imagens silenciosamente antes desta sessão também, sempre que houve deploy de frontend após geração de cartas — vale monitorar cartas "sem imagem" por precaução
+
+### ADR-014: Front Card Redesign — "RareLines TCG" Museum-Label Spec (Fase 3)
+**Decisão:** `ArtifactCardFront` reescrito do zero seguindo spec fornecida pelo usuário: arte sempre em full-bleed, UI como "etiqueta de museu" flutuando por cima, 6 regiões sem sobreposição (header, title row, abilities, weakness, metadata bar, quote). Borda fina (1px) colorida por raridade com glow quase invisível (`RARITY_ACCENT`), painéis glassmorphism idênticos (`GLASS_STYLE`) para header/abilities/weakness/radar. Roxo é cor de destaque fixa (radar + micro-labels), independente da raridade. Todo texto variável usa `line-clamp`/`truncate` para nunca ultrapassar a altura fixa do card.  
+✅ Validado com Playwright em casos normais, extremos (textos no limite de cada campo) e mínimos, incluindo mobile — `scrollHeight === clientHeight` sempre, garantindo zero overflow por design  
+⚠️ `ArtifactCardThumb` (grid pequeno) não foi atualizado — não cabe abilities/weakness/metadata bar num tile pequeno, fica para decisão futura
 
 ### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
@@ -601,7 +640,7 @@ Testes de integração com H2. Schema de teste idêntico ao de produção.
 Workflow `.github/workflows/deploy.yml`. Dispara em push para branch `prod`.
 
 - **deploy-backend:** Maven build → SCP JAR → SSH restart systemd → health check
-- **deploy-frontend:** `npm ci` + build → S3 sync → CloudFront invalidation
+- **deploy-frontend:** `npm ci` + build → S3 sync (`--delete --exclude "cards/*"` — o exclude é obrigatório, ver ADR-016) → CloudFront invalidation
 
 ---
 
@@ -653,6 +692,9 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | Claude aninha campos em sub-objeto `visual` | `card_generator.py` | Claude às vezes retorna `{ "visual": { "prompt": ..., "seed": ..., "chosenStyle": ... } }`. Fix: flatten defensivo do sub-objeto após parse JSON |
 | Lambda executando código antigo | `pipeline/` | CI/CD não faz deploy da Lambda. Mudanças só chegam com `bash build.sh && aws lambda update-function-code` manual |
 | Unique constraint ao re-rodar pipeline na mesma semana | `lambda_function.py` | Identifier é `weekly-{YYYY-W##}` — reutilizado na mesma semana. Fix: deletar bundle anterior no RDS antes de re-rodar |
+| AI Info cortava texto (letras como "g" decepadas) | `ArtifactCard.tsx` | `line-height` apertado (1.05) + `line-clamp` cortava descenders de glifos. Fix: `leading-[1.15]` + mais espaçamento antes do flavorText |
+| Prompt de imagem duplicava "the exact instant when..." | `card_generator.py` | Claude às vezes já incluía essa frase dentro de `cinematicMoment`, e `assemble_image_prompt` a repetia. Fix: instrução reforçada + limpeza defensiva via regex do prefixo redundante |
+| **Deploy do frontend apagava todas as imagens de cartas** | `.github/workflows/deploy.yml` | `aws s3 sync ... --delete` no mesmo bucket onde a pipeline salva `cards/*.png` — sem exclusão, todo deploy do frontend apagava a pasta inteira. Fix: `--exclude "cards/*"`. Imagens perdidas foram restauradas regenerando com o mesmo prompt+seed salvos no metadata (ver ADR-016) |
 
 ---
 
@@ -665,6 +707,8 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - 106 testes · 19 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
 - Three.js ainda não está no projeto — Fase 4.
 - Pipeline de IA rodando em produção (Fase 2 completa). Deploy da Lambda é manual — CI não atualiza o código.
+- Existem bundles antigos no banco (`identifier` tipo "staff 😘", "colleague 🇷", "luck 🐰") sem `prompt`/`seed`/`illustration` — dados de teste sem imagem de IA real, não são da pipeline. Não confundir com bundles legítimos (`weekly-{YYYY-W##}`) ao investigar problemas de imagem.
+- Monitorar cartas "sem imagem" em produção — o bug do ADR-016 (deploy de frontend apagando `cards/` no S3) pode ter causado perdas silenciosas antes de ser corrigido nesta sessão.
 
 ---
 
