@@ -269,23 +269,26 @@ function ArtifactCardFront({ metadata }: { metadata: CardMetadata }) {
                     </span>
                 </div>
 
-                {/* TITLE PANEL — glass card: name + flavor quote on the left, radar on the right matching the text height */}
-                <div className="shrink-0 mt-1 rounded-[18px] border px-3 py-2.5 flex items-center gap-2" style={GLASS_STYLE}>
+                {/* TITLE row — name + flavor quote straight over the artwork; radar in its own glass square on the right */}
+                <div className="shrink-0 mt-1 flex items-stretch gap-2">
                     <div className="flex-1 min-w-0">
                         <p
-                            className="text-white font-extrabold leading-[1.05] drop-shadow-lg line-clamp-3"
+                            className="text-white font-extrabold leading-[1.15] drop-shadow-lg line-clamp-3"
                             style={{ fontSize: "clamp(18px, 5.5vw, 26px)" }}
                         >
                             {metadata.name}
                         </p>
                         {metadata.flavorText && (
-                            <p className="text-white/60 text-[10px] italic mt-1 leading-snug line-clamp-2">
+                            <p className="text-white/60 text-[10px] italic mt-1.5 leading-snug line-clamp-2 drop-shadow-md">
                                 "{metadata.flavorText}"
                             </p>
                         )}
                     </div>
                     {metadata.attributes && Object.keys(metadata.attributes).length >= 3 && (
-                        <div className="shrink-0 self-stretch aspect-square min-h-[72px] max-h-[110px]">
+                        <div
+                            className="shrink-0 self-stretch aspect-square min-h-[76px] max-h-[110px] rounded-[18px] border p-1"
+                            style={GLASS_STYLE}
+                        >
                             <AttributeRadar attributes={metadata.attributes} />
                         </div>
                     )}
