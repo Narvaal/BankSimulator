@@ -1,0 +1,30 @@
+# Pre-commit: roda verificações apenas das áreas tocadas pelo commit.
+# Bypass consciente: git commit --no-verify
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+# ---- Backend: *.java ou pom.xml staged → Spotless + testes ----
+if echo "$STAGED" | grep -qE '(\.java$|^pom\.xml$)'; then
+    echo "[pre-commit] backend: mvn spotless:check test"
+
+    # mvn da distro pode escolher um JRE sem javac; deriva JAVA_HOME do java do PATH
+    if [ -z "$JAVA_HOME" ] && command -v java >/dev/null 2>&1; then
+        JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+        export JAVA_HOME
+    fi
+
+    mvn -q spotless:check test || {
+        echo "[pre-commit] backend falhou — corrija (ou rode 'mvn spotless:apply' para formatar)"
+        exit 1
+    }
+fi
+
+# ---- Frontend: arquivos em frontend/assetstore/ staged → lint + testes ----
+if echo "$STAGED" | grep -q '^frontend/assetstore/'; then
+    echo "[pre-commit] frontend: npm run lint && npm test"
+    (cd frontend/assetstore && npm run lint && npm run test) || {
+        echo "[pre-commit] frontend falhou"
+        exit 1
+    }
+fi

@@ -77,8 +77,8 @@ export default function SearchPage() {
                 setError(null);
                 const data = await searchAccounts(debouncedQuery.trim(), page, pageSize);
                 if (!cancelled) setResults(data);
-            } catch (e: any) {
-                if (!cancelled) setError(e.message);
+            } catch (e) {
+                if (!cancelled) setError(e instanceof Error ? e.message : String(e));
             } finally {
                 if (!cancelled) setLoading(false);
             }

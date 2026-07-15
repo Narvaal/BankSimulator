@@ -1,0 +1,11 @@
+{
+  "name": "banksimulator-root",
+  "private": true,
+  "description": "Raiz do repositório — apenas tooling (Husky git hooks). Backend é Maven, frontend vive em frontend/assetstore.",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

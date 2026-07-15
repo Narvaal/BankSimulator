@@ -5,4 +5,3 @@ public class InvalidArtifactListingStateException extends BusinessRuleException 
         super("Listing not active [id=" + listingId + "]");
     }
 }
-

@@ -85,8 +85,8 @@ export default function ProfilePage() {
                 setProfile(prof);
                 const inv = await fetchInventory(prof.accountId, page, pageSize);
                 if (!cancelled) setInventory(inv);
-            } catch (e: any) {
-                if (!cancelled) setError(e.message);
+            } catch (e) {
+                if (!cancelled) setError(e instanceof Error ? e.message : String(e));
             } finally {
                 if (!cancelled) setLoading(false);
             }

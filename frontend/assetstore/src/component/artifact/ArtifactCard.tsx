@@ -441,6 +441,8 @@ function ArtifactCardBack({
     const [aiCompact, setAiCompact] = useState(false);
 
     useLayoutEffect(() => {
+        // measure-then-set: precisa rodar antes do paint para o auto-shrink não piscar
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAiCompact(false);
     }, [metadata]);
 
@@ -448,6 +450,7 @@ function ArtifactCardBack({
         const el = scrollRef.current;
         if (!el || aiCompact) return;
         if (el.scrollHeight > el.clientHeight) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setAiCompact(true);
         }
     }, [metadata, aiCompact]);
@@ -702,7 +705,7 @@ export function ArtifactCardDetail({ metadata }: { metadata: CardMetadata }) {
                     <ul className="space-y-1.5">
                         {sources.map((url, i) => {
                             let hostname = url;
-                            try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+                            try { hostname = new URL(url).hostname.replace(/^www\./, ""); } catch { /* URL inválida: exibe a string crua */ }
                             return (
                                 <li key={i}>
                                     <a

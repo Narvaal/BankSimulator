@@ -197,7 +197,7 @@ public class AccountDAO {
                     a.created_at,
                     a.updated_at,
                     a.next_free_artifact_at,
-                
+
                     c.name,
                     c.picture,
                     c.email_verified,

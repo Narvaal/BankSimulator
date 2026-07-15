@@ -73,6 +73,11 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 
 # =========================
+# Husky / tooling raiz
+# =========================
+/node_modules/
+
+# =========================
 # Frontend (React/Vite)
 # =========================
 frontend/assetstore/node_modules/
