@@ -123,6 +123,7 @@ flowchart LR
 | **Frontend** | React 19 · TypeScript 5.9 · Vite · Tailwind CSS 4 · Framer Motion · React Query 5 · Recharts |
 | **AI Pipeline** | Python 3.11 · AWS Bedrock (Claude) · Stability AI SD3 Ultra · pytrends · praw |
 | **Database** | PostgreSQL (prod) · H2 in `MODE=PostgreSQL` (tests/local) |
+| **Quality** | JUnit (backend) · Vitest + React Testing Library (frontend) · ESLint · Spotless · Husky pre-commit hooks |
 | **Infra** | EC2 · RDS · S3 · CloudFront · Route53 · Lambda · EventBridge · SES · SSM Parameter Store |
 | **CI/CD** | GitHub Actions — push to `prod` deploys backend (SSH) and frontend (S3 sync + CloudFront invalidation) |
 
@@ -140,9 +141,21 @@ cd frontend/assetstore && npm install && npm run dev
 # Seed the local database with test data (backend must be running)
 ./seed-local.sh
 
-# Tests (integration tests on H2, schema identical to prod)
+# Backend tests (integration tests on H2, schema identical to prod)
 mvn test
+
+# Frontend tests (Vitest + React Testing Library) and lint
+cd frontend/assetstore && npm run test && npm run lint
+
+# Java whitespace/formatting (Spotless) — check / auto-fix
+mvn spotless:check
+mvn spotless:apply
+
+# Git hooks (Husky) — installed by npm install at the repo root
+npm install
 ```
+
+A Husky pre-commit hook runs the checks for whichever area the commit touches: `spotless:check` + backend tests for Java changes, ESLint + Vitest for frontend changes. Docs-only commits skip everything.
 
 ## 🗺️ Roadmap
 

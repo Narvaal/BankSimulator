@@ -612,10 +612,23 @@ Google OAuth local: adicionar `http://localhost` e `http://localhost:5173` em **
 ## Testes
 
 ```bash
-mvn test
+mvn test                                  # backend — integração com H2, schema idêntico ao de produção
+cd frontend/assetstore && npm run test    # frontend — Vitest + React Testing Library (jsdom)
 ```
 
-Testes de integração com H2. Schema de teste idêntico ao de produção.
+Frontend: config de teste no bloco `test` do `vite.config.ts`, setup em `src/test/setup.ts` (jest-dom + cleanup + clear do sessionStorage). Suites em `*.test.ts(x)` ao lado do código.
+
+**Atenção — Maven vs JAVA_HOME:** o `mvn` da distro pode escolher um JRE sem `javac` (falha com "release version 17 not supported"). Solução: derivar `JAVA_HOME` do `java` do PATH (o hook de pre-commit já faz isso automaticamente):
+
+```bash
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(command -v java))))
+```
+
+## Qualidade de Código — Hooks e Formatação
+
+- **Husky** (`.husky/pre-commit`, instalado via `package.json` raiz + `npm install`): roda verificações **apenas das áreas tocadas** pelo commit — `*.java`/`pom.xml` staged → `mvn spotless:check test`; arquivos em `frontend/assetstore/` staged → `npm run lint && npm test`. Commit só de docs passa direto. Bypass: `git commit --no-verify`.
+- **Spotless** (`spotless-maven-plugin` no `pom.xml`): regras somente-whitespace (trailing whitespace, newline no fim do arquivo, tabs → 4 espaços). `mvn spotless:check` verifica, `mvn spotless:apply` corrige.
+- **ESLint** (`frontend/assetstore`): `npm run lint` — deve ficar em 0 erros (warnings de `exhaustive-deps` tolerados).
 
 ---
 
@@ -704,7 +717,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - Sem rate limiting implementado.
 - Sem logs estruturados / observabilidade.
 - Chaves RSA em `/opt/banksimulator/keys/`. Se o EC2 for recriado, chaves existentes são perdidas.
-- 106 testes · 19 suites · `mvn test` retorna BUILD FAILURE por problema no fork do Surefire JVM (pré-existente, não relacionado a falhas de teste — verificar relatórios XML em `target/surefire-reports/`).
+- 102 testes backend · 21 testes frontend. O antigo BUILD FAILURE do fork do Surefire não se reproduz mais — se `mvn test` falhar com "release version 17 not supported", é o `JAVA_HOME` apontando para JRE sem javac (ver seção Testes).
 - Three.js ainda não está no projeto — Fase 4.
 - Pipeline de IA rodando em produção (Fase 2 completa). Deploy da Lambda é manual — CI não atualiza o código.
 - Existem bundles antigos no banco (`identifier` tipo "staff 😘", "colleague 🇷", "luck 🐰") sem `prompt`/`seed`/`illustration` — dados de teste sem imagem de IA real, não são da pipeline. Não confundir com bundles legítimos (`weekly-{YYYY-W##}`) ao investigar problemas de imagem.
