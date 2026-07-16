@@ -15,26 +15,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/accounts")
 public class AccountTransfersController {
 
-    private final ListTransfersByAccountUseCase listTransfersByAccountUseCase;
+  private final ListTransfersByAccountUseCase listTransfersByAccountUseCase;
 
-    public AccountTransfersController(ListTransfersByAccountUseCase listTransfersByAccountUseCase) {
-        this.listTransfersByAccountUseCase = listTransfersByAccountUseCase;
-    }
+  public AccountTransfersController(ListTransfersByAccountUseCase listTransfersByAccountUseCase) {
+    this.listTransfersByAccountUseCase = listTransfersByAccountUseCase;
+  }
 
-    @GetMapping("/{id}/transfers")
-    public List<Transaction> listTransfers(
-            @PathVariable("id") long accountId,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-            @RequestParam(value = "token", required = false) String tokenParam
-    ) {
-        String token = extractToken(authorization, tokenParam);
-        return listTransfersByAccountUseCase.execute(accountId, token);
-    }
+  @GetMapping("/{id}/transfers")
+  public List<Transaction> listTransfers(
+      @PathVariable("id") long accountId,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+      @RequestParam(value = "token", required = false) String tokenParam) {
+    String token = extractToken(authorization, tokenParam);
+    return listTransfersByAccountUseCase.execute(accountId, token);
+  }
 
-    private String extractToken(String authorization, String fallback) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring("Bearer ".length()).trim();
-        }
-        return fallback;
+  private String extractToken(String authorization, String fallback) {
+    if (authorization != null && authorization.startsWith("Bearer ")) {
+      return authorization.substring("Bearer ".length()).trim();
     }
+    return fallback;
+  }
 }

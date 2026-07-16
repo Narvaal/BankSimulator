@@ -5,13 +5,13 @@ import br.com.ale.service.account.AccountService;
 
 public class GetPublicAccountProfileUseCase {
 
-    private final AccountService accountService;
+  private final AccountService accountService;
 
-    public GetPublicAccountProfileUseCase(AccountService accountService) {
-        this.accountService = accountService;
-    }
+  public GetPublicAccountProfileUseCase(AccountService accountService) {
+    this.accountService = accountService;
+  }
 
-    public PublicProfileResponse execute(long accountId) {
-        return accountService.getPublicProfile(accountId);
-    }
+  public PublicProfileResponse execute(long accountId) {
+    return accountService.getPublicProfile(accountId);
+  }
 }

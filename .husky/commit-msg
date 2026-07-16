@@ -1,0 +1,2 @@
+# Bloqueia mensagens fora do padrão Conventional Commits
+npx --no -- commitlint --edit "$1"

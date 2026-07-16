@@ -10,26 +10,26 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/artifact-units")
 public class ArtifactUnitQueryController {
 
-    private final ListArtifactUnitsByOwnerUseCase listArtifactUnitsByOwnerUseCase;
-    private final GetArtifactUnitByIdUseCase getArtifactUnitByIdUseCase;
+  private final ListArtifactUnitsByOwnerUseCase listArtifactUnitsByOwnerUseCase;
+  private final GetArtifactUnitByIdUseCase getArtifactUnitByIdUseCase;
 
-    public ArtifactUnitQueryController(
-            ListArtifactUnitsByOwnerUseCase listArtifactUnitsByOwnerUseCase,
-            GetArtifactUnitByIdUseCase getArtifactUnitByIdUseCase
-    ) {
-        this.listArtifactUnitsByOwnerUseCase = listArtifactUnitsByOwnerUseCase;
-        this.getArtifactUnitByIdUseCase = getArtifactUnitByIdUseCase;
-    }
+  public ArtifactUnitQueryController(
+      ListArtifactUnitsByOwnerUseCase listArtifactUnitsByOwnerUseCase,
+      GetArtifactUnitByIdUseCase getArtifactUnitByIdUseCase) {
+    this.listArtifactUnitsByOwnerUseCase = listArtifactUnitsByOwnerUseCase;
+    this.getArtifactUnitByIdUseCase = getArtifactUnitByIdUseCase;
+  }
 
-    @GetMapping("/{id}")
-    public ArtifactUnitDetailView getById(@PathVariable("id") long id) {
-        return getArtifactUnitByIdUseCase.execute(id);
-    }
+  @GetMapping("/{id}")
+  public ArtifactUnitDetailView getById(@PathVariable("id") long id) {
+    return getArtifactUnitByIdUseCase.execute(id);
+  }
 
-    @GetMapping
-    public ArtifactUnitPageView listByOwner(@RequestParam("ownerId") long ownerId,
-                                            @RequestParam("page") int page,
-                                            @RequestParam("pageSize") int pageSize) {
-        return listArtifactUnitsByOwnerUseCase.execute(ownerId, page, pageSize);
-    }
+  @GetMapping
+  public ArtifactUnitPageView listByOwner(
+      @RequestParam("ownerId") long ownerId,
+      @RequestParam("page") int page,
+      @RequestParam("pageSize") int pageSize) {
+    return listArtifactUnitsByOwnerUseCase.execute(ownerId, page, pageSize);
+  }
 }

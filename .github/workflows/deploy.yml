@@ -21,8 +21,8 @@ jobs:
           distribution: 'corretto'
           cache: 'maven'
 
-      - name: Build
-        run: mvn clean package -DskipTests
+      - name: Build (tests + 90% coverage gate + package)
+        run: mvn clean spotless:check verify
 
       - name: Deploy to EC2
         env:
@@ -87,6 +87,14 @@ jobs:
       - name: Install dependencies
         working-directory: frontend/assetstore
         run: npm ci
+
+      - name: Lint
+        working-directory: frontend/assetstore
+        run: npm run lint
+
+      - name: Test
+        working-directory: frontend/assetstore
+        run: npm run test
 
       - name: Build
         working-directory: frontend/assetstore

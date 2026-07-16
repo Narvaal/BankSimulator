@@ -90,8 +90,8 @@ function Login() {
             setSuccess("Login successful");
 
             window.location.href = "/inventory";
-        } catch (err: any) {
-            if (err.message === "EMAIL_NOT_VERIFIED") {
+        } catch (err) {
+            if (err instanceof Error && err.message === "EMAIL_NOT_VERIFIED") {
                 setError("EMAIL_NOT_VERIFIED");
             } else {
                 setError("Invalid email or password");

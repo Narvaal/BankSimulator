@@ -9,63 +9,54 @@ import br.com.ale.domain.exception.InvalidCredentialsException;
 import br.com.ale.dto.CreateAuthenticationRequest;
 import br.com.ale.infrastructure.auth.TokenGenerator;
 import br.com.ale.infrastructure.db.ConnectionProvider;
-
 import java.sql.Connection;
 
 public class AuthService {
 
-    private final ConnectionProvider connectionProvider;
-    private final ClientDAO clientDAO = new ClientDAO();
-    private TokenGenerator tokenGenerator;
+  private final ConnectionProvider connectionProvider;
+  private final ClientDAO clientDAO = new ClientDAO();
+  private TokenGenerator tokenGenerator;
 
-    public AuthService(ConnectionProvider connectionProvider) {
-        this.connectionProvider = connectionProvider;
+  public AuthService(ConnectionProvider connectionProvider) {
+    this.connectionProvider = connectionProvider;
+  }
+
+  public AuthService(ConnectionProvider connectionProvider, TokenGenerator tokenGenerator) {
+    this.connectionProvider = connectionProvider;
+    this.tokenGenerator = tokenGenerator;
+  }
+
+  public AuthToken authenticate(CreateAuthenticationRequest request) {
+
+    try (Connection conn = connectionProvider.getConnection()) {
+
+      if (tokenGenerator == null) {
+        throw new IllegalStateException("Token generator not configured");
+      }
+
+      Client client =
+          clientDAO
+              .selectByEmail(conn, request.email())
+              .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+
+      if (!PasswordHasher.matches(request.password(), client.getPassword())) {
+        throw new InvalidCredentialsException("Invalid credentials");
+      }
+
+      return tokenGenerator.generate(client.getId());
+
+    } catch (InvalidCredentialsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "Service error while authentication client " + "[email=" + request.email() + "]", e);
     }
+  }
 
-    public AuthService(
-            ConnectionProvider connectionProvider,
-            TokenGenerator tokenGenerator
-    ) {
-        this.connectionProvider = connectionProvider;
-        this.tokenGenerator = tokenGenerator;
+  public TokenClaims validateToken(String token) {
+    if (tokenGenerator == null) {
+      throw new IllegalStateException("Token generator not configured");
     }
-
-    public AuthToken authenticate(CreateAuthenticationRequest request) {
-
-        try (Connection conn = connectionProvider.getConnection()) {
-
-            if (tokenGenerator == null) {
-                throw new IllegalStateException("Token generator not configured");
-            }
-
-            Client client = clientDAO
-                    .selectByEmail(conn, request.email())
-                    .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
-
-            if (!PasswordHasher.matches(
-                    request.password(),
-                    client.getPassword()
-            )) {
-                throw new InvalidCredentialsException("Invalid credentials");
-            }
-
-            return tokenGenerator.generate(client.getId());
-
-        } catch (InvalidCredentialsException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Service error while authentication client " +
-                            "[email=" + request.email() + "]",
-                    e
-            );
-        }
-    }
-
-    public TokenClaims validateToken(String token) {
-        if (tokenGenerator == null) {
-            throw new IllegalStateException("Token generator not configured");
-        }
-        return tokenGenerator.validate(token);
-    }
+    return tokenGenerator.validate(token);
+  }
 }

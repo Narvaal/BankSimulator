@@ -5,13 +5,13 @@ import br.com.ale.service.artifact.ArtifactListingService;
 
 public class GetArtifactListingByIdUseCase {
 
-    private final ArtifactListingService artifactListingService;
+  private final ArtifactListingService artifactListingService;
 
-    public GetArtifactListingByIdUseCase(ArtifactListingService artifactListingService) {
-        this.artifactListingService = artifactListingService;
-    }
+  public GetArtifactListingByIdUseCase(ArtifactListingService artifactListingService) {
+    this.artifactListingService = artifactListingService;
+  }
 
-    public ArtifactListing execute(long listingId) {
-        return artifactListingService.selectById(listingId);
-    }
+  public ArtifactListing execute(long listingId) {
+    return artifactListingService.selectById(listingId);
+  }
 }

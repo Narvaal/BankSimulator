@@ -19,7 +19,6 @@ import br.com.ale.service.account.AccountService;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.crypto.PrivateKeyStorage;
 import br.com.ale.service.email.EmailVerificationSender;
-
 import java.security.KeyPair;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -27,84 +26,73 @@ import java.util.UUID;
 
 public class CreateAccountUseCase {
 
-    private final AccountService accountService;
-    private final ClientService clientService;
-    private final AccountNumberGenerator accountNumberGenerator;
-    private final EmailVerificationService emailVerificationService;
-    private final EmailVerificationSender emailVerificationSender;
-    private final KeyPairService keyPairService;
-    private final PrivateKeyStorage privateKeyStorage;
+  private final AccountService accountService;
+  private final ClientService clientService;
+  private final AccountNumberGenerator accountNumberGenerator;
+  private final EmailVerificationService emailVerificationService;
+  private final EmailVerificationSender emailVerificationSender;
+  private final KeyPairService keyPairService;
+  private final PrivateKeyStorage privateKeyStorage;
 
-    public CreateAccountUseCase(
-            AccountService accountService,
-            ClientService clientService,
-            AccountNumberGenerator accountNumberGenerator,
-            EmailVerificationService emailVerificationService,
-            EmailVerificationSender emailVerificationSender,
-            KeyPairService keyPairService,
-            PrivateKeyStorage privateKeyStorage
-    ) {
-        this.accountService = accountService;
-        this.accountNumberGenerator = accountNumberGenerator;
-        this.clientService = clientService;
-        this.emailVerificationService = emailVerificationService;
-        this.emailVerificationSender = emailVerificationSender;
-        this.keyPairService = keyPairService;
-        this.privateKeyStorage = privateKeyStorage;
+  public CreateAccountUseCase(
+      AccountService accountService,
+      ClientService clientService,
+      AccountNumberGenerator accountNumberGenerator,
+      EmailVerificationService emailVerificationService,
+      EmailVerificationSender emailVerificationSender,
+      KeyPairService keyPairService,
+      PrivateKeyStorage privateKeyStorage) {
+    this.accountService = accountService;
+    this.accountNumberGenerator = accountNumberGenerator;
+    this.clientService = clientService;
+    this.emailVerificationService = emailVerificationService;
+    this.emailVerificationSender = emailVerificationSender;
+    this.keyPairService = keyPairService;
+    this.privateKeyStorage = privateKeyStorage;
+  }
+
+  public void execute(CreateAccountCommand command) {
+
+    PasswordValidator.validate(command.password());
+
+    Client client =
+        clientService.createClient(
+            new CreateClientRequest(
+                command.name(),
+                command.email(),
+                PasswordHasher.hash(command.password()),
+                Provider.LOCAL,
+                null,
+                false,
+                null));
+
+    String token = UUID.randomUUID().toString();
+
+    try {
+      emailVerificationSender.sendVerificationEmail(client, token);
+
+      emailVerificationService.create(
+          new CreateEmailVerificationRequest(
+              client.getId(),
+              token,
+              EmailVerificationType.EMAIL_VERIFICATION,
+              Instant.now().plus(1, ChronoUnit.DAYS),
+              null));
+
+      String accountNumber = accountNumberGenerator.generate(client);
+
+      Account account =
+          accountService.createAccount(
+              new CreateAccountRequest(
+                  client.getId(), accountNumber, AccountType.DEFAULT, AccountStatus.ACTIVE));
+
+      KeyPair keyPair = keyPairService.generate();
+
+      privateKeyStorage.save(account.getId(), keyPair.getPrivate().getEncoded());
+
+    } catch (Exception e) {
+      clientService.deleteClient(client.getId());
+      throw new RuntimeException("Failed to create account", e);
     }
-
-    public void execute(CreateAccountCommand command) {
-
-        PasswordValidator.validate(command.password());
-
-        Client client = clientService.createClient(
-                new CreateClientRequest(
-                        command.name(),
-                        command.email(),
-                        PasswordHasher.hash(command.password()),
-                        Provider.LOCAL,
-                        null,
-                        false,
-                        null
-                )
-        );
-
-        String token = UUID.randomUUID().toString();
-
-        try {
-            emailVerificationSender.sendVerificationEmail(client, token);
-
-            emailVerificationService.create(
-                    new CreateEmailVerificationRequest(
-                            client.getId(),
-                            token,
-                            EmailVerificationType.EMAIL_VERIFICATION,
-                            Instant.now().plus(1, ChronoUnit.DAYS),
-                            null
-                    )
-            );
-
-            String accountNumber = accountNumberGenerator.generate(client);
-
-            Account account = accountService.createAccount(
-                    new CreateAccountRequest(
-                            client.getId(),
-                            accountNumber,
-                            AccountType.DEFAULT,
-                            AccountStatus.ACTIVE
-                    )
-            );
-
-            KeyPair keyPair = keyPairService.generate();
-
-            privateKeyStorage.save(
-                    account.getId(),
-                    keyPair.getPrivate().getEncoded()
-            );
-
-        } catch (Exception e) {
-            clientService.deleteClient(client.getId());
-            throw new RuntimeException("Failed to create account", e);
-        }
-    }
+  }
 }

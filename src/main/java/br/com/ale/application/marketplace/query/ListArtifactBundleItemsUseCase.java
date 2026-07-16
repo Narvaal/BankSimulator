@@ -6,13 +6,13 @@ import java.util.List;
 
 public class ListArtifactBundleItemsUseCase {
 
-    private final ArtifactBundleService artifactBundleService;
+  private final ArtifactBundleService artifactBundleService;
 
-    public ListArtifactBundleItemsUseCase(ArtifactBundleService artifactBundleService) {
-        this.artifactBundleService = artifactBundleService;
-    }
+  public ListArtifactBundleItemsUseCase(ArtifactBundleService artifactBundleService) {
+    this.artifactBundleService = artifactBundleService;
+  }
 
-    public List<ArtifactBundleItemResponse> execute(long bundleId, int page, int size) {
-        return artifactBundleService.listBundleItems(bundleId, page, size);
-    }
+  public List<ArtifactBundleItemResponse> execute(long bundleId, int page, int size) {
+    return artifactBundleService.listBundleItems(bundleId, page, size);
+  }
 }

@@ -12,16 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin/artifacts")
 public class AdminArtifactGenerationController {
 
-    private final ArtifactGenerationManager assetGenerationManager;
+  private final ArtifactGenerationManager assetGenerationManager;
 
-    public AdminArtifactGenerationController(
-            ArtifactGenerationManager assetGenerationManager
-    ) {
-        this.assetGenerationManager = assetGenerationManager;
-    }
+  public AdminArtifactGenerationController(ArtifactGenerationManager assetGenerationManager) {
+    this.assetGenerationManager = assetGenerationManager;
+  }
 
-    @PostMapping("/generate")
-    public ResponseEntity<List<Artifact>> generate() {
-        return ResponseEntity.ok(assetGenerationManager.generateWeeklyAssets());
-    }
+  @PostMapping("/generate")
+  public ResponseEntity<List<Artifact>> generate() {
+    return ResponseEntity.ok(assetGenerationManager.generateWeeklyAssets());
+  }
 }

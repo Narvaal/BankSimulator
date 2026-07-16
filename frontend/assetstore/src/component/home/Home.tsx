@@ -127,8 +127,8 @@ export default function Home() {
 
                 if (!cancelled) setAssets(units);
 
-            } catch (e: any) {
-                if (!cancelled) setError(e.message);
+            } catch (e) {
+                if (!cancelled) setError(e instanceof Error ? e.message : String(e));
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -225,11 +225,11 @@ export default function Home() {
                 setMessage(null);
             }, 800);
 
-        } catch (e: any) {
+        } catch (e) {
 
             setMessage({
                 type: "error",
-                text: e.message || "Failed to list artifact"
+                text: e instanceof Error && e.message ? e.message : "Failed to list artifact"
             });
 
         }

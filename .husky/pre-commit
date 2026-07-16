@@ -1,0 +1,30 @@
+# Pre-commit: roda verificações apenas das áreas tocadas pelo commit.
+# Bypass consciente: git commit --no-verify
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+# ---- Backend: *.java ou pom.xml staged → Spotless + testes + gate de cobertura ----
+if echo "$STAGED" | grep -qE '(\.java$|^pom\.xml$)'; then
+    echo "[pre-commit] backend: mvn spotless:check test jacoco:check (cobertura mínima: 90% de linhas)"
+
+    # mvn da distro pode escolher um JRE sem javac; deriva JAVA_HOME do java do PATH
+    if [ -z "$JAVA_HOME" ] && command -v java >/dev/null 2>&1; then
+        JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+        export JAVA_HOME
+    fi
+
+    mvn -q spotless:check test jacoco:check || {
+        echo "[pre-commit] backend falhou — testes, formatação ('mvn spotless:apply') ou cobertura <90% (relatório: target/site/jacoco/index.html)"
+        exit 1
+    }
+fi
+
+# ---- Frontend: arquivos em frontend/assetstore/ staged → lint + testes ----
+if echo "$STAGED" | grep -q '^frontend/assetstore/'; then
+    echo "[pre-commit] frontend: npm run lint && npm test"
+    (cd frontend/assetstore && npm run lint && npm run test) || {
+        echo "[pre-commit] frontend falhou"
+        exit 1
+    }
+fi

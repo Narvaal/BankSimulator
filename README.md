@@ -123,6 +123,7 @@ flowchart LR
 | **Frontend** | React 19 · TypeScript 5.9 · Vite · Tailwind CSS 4 · Framer Motion · React Query 5 · Recharts |
 | **AI Pipeline** | Python 3.11 · AWS Bedrock (Claude) · Stability AI SD3 Ultra · pytrends · praw |
 | **Database** | PostgreSQL (prod) · H2 in `MODE=PostgreSQL` (tests/local) |
+| **Quality** | JUnit + JaCoCo (**90% line-coverage gate**) · Vitest + React Testing Library · ESLint · Spotless (google-java-format) · Husky hooks · commitlint (Conventional Commits) |
 | **Infra** | EC2 · RDS · S3 · CloudFront · Route53 · Lambda · EventBridge · SES · SSM Parameter Store |
 | **CI/CD** | GitHub Actions — push to `prod` deploys backend (SSH) and frontend (S3 sync + CloudFront invalidation) |
 
@@ -140,9 +141,27 @@ cd frontend/assetstore && npm install && npm run dev
 # Seed the local database with test data (backend must be running)
 ./seed-local.sh
 
-# Tests (integration tests on H2, schema identical to prod)
+# Backend tests (integration tests on H2, schema identical to prod)
 mvn test
+
+# Frontend tests (Vitest + React Testing Library) and lint
+cd frontend/assetstore && npm run test && npm run lint
+
+# Java formatting (Spotless + google-java-format) — check / auto-fix
+mvn spotless:check
+mvn spotless:apply
+
+# Backend coverage report + 90% line-coverage gate (JaCoCo)
+mvn test jacoco:report jacoco:check   # report: target/site/jacoco/index.html
+
+# Frontend coverage report (no gate)
+cd frontend/assetstore && npm run test:coverage
+
+# Git hooks (Husky) — installed by npm install at the repo root
+npm install
 ```
+
+A Husky pre-commit hook runs the checks for whichever area the commit touches: Spotless + backend tests + the JaCoCo 90% coverage gate for Java changes, ESLint + Vitest for frontend changes. Docs-only commits skip everything. A commit-msg hook (commitlint) rejects messages that don't follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## 🗺️ Roadmap
 

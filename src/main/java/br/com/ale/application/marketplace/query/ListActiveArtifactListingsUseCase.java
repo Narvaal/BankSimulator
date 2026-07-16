@@ -9,29 +9,29 @@ import br.com.ale.service.auth.JwtService;
 
 public class ListActiveArtifactListingsUseCase {
 
-    private final AccountService accountService;
-    private final ArtifactListingService artifactListingService;
-    private final JwtService jwtService;
+  private final AccountService accountService;
+  private final ArtifactListingService artifactListingService;
+  private final JwtService jwtService;
 
-    public ListActiveArtifactListingsUseCase(AccountService accountService,
-                                          ArtifactListingService artifactListingService,
-                                          JwtService jwtService) {
-        this.accountService = accountService;
-        this.artifactListingService = artifactListingService;
-        this.jwtService = jwtService;
+  public ListActiveArtifactListingsUseCase(
+      AccountService accountService,
+      ArtifactListingService artifactListingService,
+      JwtService jwtService) {
+    this.accountService = accountService;
+    this.artifactListingService = artifactListingService;
+    this.jwtService = jwtService;
+  }
+
+  public ArtifactListingPageView execute(
+      String token, ArtifactListingFilter filter, int page, int pageSize) {
+
+    long accountId = -1;
+
+    if (jwtService.isTokenValid(token)) {
+      long clientId = jwtService.extractClientId(token);
+      accountId = accountService.getAccountByClientId(clientId).map(Account::getId).orElse(-1L);
     }
 
-    public ArtifactListingPageView execute(String token, ArtifactListingFilter filter, int page, int pageSize) {
-
-        long accountId = -1;
-
-        if (jwtService.isTokenValid(token)) {
-            long clientId = jwtService.extractClientId(token);
-            accountId = accountService.getAccountByClientId(clientId)
-                    .map(Account::getId)
-                    .orElse(-1L);
-        }
-
-        return artifactListingService.selectActiveByActiveStatus(accountId, filter, page, pageSize);
-    }
+    return artifactListingService.selectActiveByActiveStatus(accountId, filter, page, pageSize);
+  }
 }

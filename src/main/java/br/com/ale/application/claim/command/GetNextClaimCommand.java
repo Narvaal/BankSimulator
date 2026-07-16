@@ -1,6 +1,3 @@
 package br.com.ale.application.claim.command;
 
-public record GetNextClaimCommand(
-        String token
-) {
-}
+public record GetNextClaimCommand(String token) {}

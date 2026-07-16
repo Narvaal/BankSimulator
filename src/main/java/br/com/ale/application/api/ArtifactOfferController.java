@@ -18,47 +18,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/artifact-offers")
 public class ArtifactOfferController {
 
-    private final CancelArtifactOfferUseCase cancelArtifactOfferUseCase;
-    private final CreateArtifactOfferUseCase createArtifactOfferUseCase;
-    private final AuthCookieService authCookieService;
+  private final CancelArtifactOfferUseCase cancelArtifactOfferUseCase;
+  private final CreateArtifactOfferUseCase createArtifactOfferUseCase;
+  private final AuthCookieService authCookieService;
 
-    public ArtifactOfferController(CancelArtifactOfferUseCase cancelArtifactOfferUseCase,
-                                CreateArtifactOfferUseCase createArtifactOfferUseCase,
-                                AuthCookieService authCookieService) {
-        this.cancelArtifactOfferUseCase = cancelArtifactOfferUseCase;
-        this.createArtifactOfferUseCase = createArtifactOfferUseCase;
-        this.authCookieService = authCookieService;
-    }
+  public ArtifactOfferController(
+      CancelArtifactOfferUseCase cancelArtifactOfferUseCase,
+      CreateArtifactOfferUseCase createArtifactOfferUseCase,
+      AuthCookieService authCookieService) {
+    this.cancelArtifactOfferUseCase = cancelArtifactOfferUseCase;
+    this.createArtifactOfferUseCase = createArtifactOfferUseCase;
+    this.authCookieService = authCookieService;
+  }
 
-    @PostMapping
-    public ArtifactListing create(
-            @RequestBody CreateArtifactOfferApiRequest body,
-            HttpServletRequest httpRequest
-    ) {
-        String token = authCookieService.extractToken(httpRequest);
+  @PostMapping
+  public ArtifactListing create(
+      @RequestBody CreateArtifactOfferApiRequest body, HttpServletRequest httpRequest) {
+    String token = authCookieService.extractToken(httpRequest);
 
-        CreateArtifactOfferCommand command =
-                new CreateArtifactOfferCommand(
-                        body.artifactUnitId(),
-                        body.price(),
-                        token
-                );
+    CreateArtifactOfferCommand command =
+        new CreateArtifactOfferCommand(body.artifactUnitId(), body.price(), token);
 
-        return createArtifactOfferUseCase.execute(command);
-    }
+    return createArtifactOfferUseCase.execute(command);
+  }
 
-    @PostMapping("/cancel")
-    public void cancel(
-            @RequestBody CancelArtifactOfferApiRequest body,
-            HttpServletRequest httpRequest
-    ) {
-        String token = authCookieService.extractToken(httpRequest);
+  @PostMapping("/cancel")
+  public void cancel(
+      @RequestBody CancelArtifactOfferApiRequest body, HttpServletRequest httpRequest) {
+    String token = authCookieService.extractToken(httpRequest);
 
-        cancelArtifactOfferUseCase.execute(
-                new CancelArtifactCommand(
-                        body.artifactListingId(),
-                        token
-                )
-        );
-    }
+    cancelArtifactOfferUseCase.execute(new CancelArtifactCommand(body.artifactListingId(), token));
+  }
 }

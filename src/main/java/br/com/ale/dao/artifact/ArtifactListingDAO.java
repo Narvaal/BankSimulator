@@ -7,84 +7,84 @@ import br.com.ale.dto.ArtifactListingPageView;
 import br.com.ale.dto.ArtifactListingView;
 import br.com.ale.dto.CreateArtifactListingRequest;
 import br.com.ale.infrastructure.json.JsonUtils;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ArtifactListingDAO {
-    private static ArtifactListing mapRow(ResultSet rs) throws SQLException {
+  private static ArtifactListing mapRow(ResultSet rs) throws SQLException {
 
-        Timestamp updatedAt = rs.getTimestamp("updated_at");
+    Timestamp updatedAt = rs.getTimestamp("updated_at");
 
-        return new ArtifactListing(
-                rs.getLong("id"),
-                rs.getLong("artifact_unit_id"),
-                rs.getLong("seller_account_id"),
-                rs.getBigDecimal("price"),
-                ArtifactListingStatus.valueOf(
-                        rs.getString("status").toUpperCase()
-                ),
-                rs.getTimestamp("created_at").toInstant(),
-                updatedAt != null ? updatedAt.toInstant() : null
-        );
-    }
+    return new ArtifactListing(
+        rs.getLong("id"),
+        rs.getLong("artifact_unit_id"),
+        rs.getLong("seller_account_id"),
+        rs.getBigDecimal("price"),
+        ArtifactListingStatus.valueOf(rs.getString("status").toUpperCase()),
+        rs.getTimestamp("created_at").toInstant(),
+        updatedAt != null ? updatedAt.toInstant() : null);
+  }
 
-    public ArtifactListing insert(Connection conn, CreateArtifactListingRequest request) {
+  public ArtifactListing insert(Connection conn, CreateArtifactListingRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 INSERT INTO artifact_listing (artifact_unit_id, seller_account_id, price, status)
                 VALUES (?, ?, ?, ?)
                 """;
 
-        try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setLong(1, request.artifactUnitId());
-            stmt.setLong(2, request.sellerAccountId());
-            stmt.setBigDecimal(3, request.price());
-            stmt.setString(4, request.status().name());
+      stmt.setLong(1, request.artifactUnitId());
+      stmt.setLong(2, request.sellerAccountId());
+      stmt.setBigDecimal(3, request.price());
+      stmt.setString(4, request.status().name());
 
-            int rowsAffected = stmt.executeUpdate();
+      int rowsAffected = stmt.executeUpdate();
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException("Failed to insert artifact listing");
-            }
+      if (rowsAffected == 0) {
+        throw new RuntimeException("Failed to insert artifact listing");
+      }
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
+      try (ResultSet rs = stmt.getGeneratedKeys()) {
 
-                if (!rs.next()) {
-                    throw new RuntimeException("Failed to retrieve generated artifact listing id");
-                }
-
-                long artifactListingId = rs.getLong(1);
-
-                return selectById(conn, artifactListingId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Artifact listing inserted but not found [id=" + artifactListingId + "]"
-                                )
-                        );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while inserting artifact listing " +
-                            "[artifactUnitId=" + request.artifactUnitId() +
-                            ", sellerAccountId=" + request.sellerAccountId() +
-                            ", price=" + request.price() +
-                            ", status=" + request.status().name() + "]",
-                    e
-            );
+        if (!rs.next()) {
+          throw new RuntimeException("Failed to retrieve generated artifact listing id");
         }
+
+        long artifactListingId = rs.getLong(1);
+
+        return selectById(conn, artifactListingId)
+            .orElseThrow(
+                () ->
+                    new RuntimeException(
+                        "Artifact listing inserted but not found [id=" + artifactListingId + "]"));
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while inserting artifact listing "
+              + "[artifactUnitId="
+              + request.artifactUnitId()
+              + ", sellerAccountId="
+              + request.sellerAccountId()
+              + ", price="
+              + request.price()
+              + ", status="
+              + request.status().name()
+              + "]",
+          e);
     }
+  }
 
-    public Optional<ArtifactListing> selectById(Connection conn, long artifactListingId) {
+  public Optional<ArtifactListing> selectById(Connection conn, long artifactListingId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        artifact_unit_id,
                        seller_account_id,
@@ -96,31 +96,33 @@ public class ArtifactListingDAO {
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactListingId);
+      stmt.setLong(1, artifactListingId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact listing " +
-                            "[artifactListingId=" + artifactListingId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact listing "
+              + "[artifactListingId="
+              + artifactListingId
+              + "]",
+          e);
     }
+  }
 
-    public List<ArtifactListing> selectByStatus(Connection conn, ArtifactListingStatus status) {
+  public List<ArtifactListing> selectByStatus(Connection conn, ArtifactListingStatus status) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        artifact_unit_id,
                        seller_account_id,
@@ -132,84 +134,92 @@ public class ArtifactListingDAO {
                  WHERE status = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, status.name());
+      stmt.setString(1, status.name());
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                List<ArtifactListing> listings = new ArrayList<>();
+        List<ArtifactListing> listings = new ArrayList<>();
 
-                while (rs.next()) {
-                    listings.add(mapRow(rs));
-                }
-
-                return listings;
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact listings " +
-                            "[status=" + status.name() + "]",
-                    e
-            );
+        while (rs.next()) {
+          listings.add(mapRow(rs));
         }
+
+        return listings;
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact listings " + "[status=" + status.name() + "]",
+          e);
     }
+  }
 
-    public int updateStatus(Connection conn, long artifactId, ArtifactListingStatus status) {
+  public int updateStatus(Connection conn, long artifactId, ArtifactListingStatus status) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE artifact_listing
                 SET status = ?
                 WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, status.name());
-            stmt.setLong(2, artifactId);
+      stmt.setString(1, status.name());
+      stmt.setLong(2, artifactId);
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while updating artifact listing status " +
-                            "[artifactId=" + artifactId + ", "
-                            + "[status=" + status.name() + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while updating artifact listing status "
+              + "[artifactId="
+              + artifactId
+              + ", "
+              + "[status="
+              + status.name()
+              + "]",
+          e);
     }
+  }
 
+  public int updatePrice(Connection conn, long artifactListingId, BigDecimal price) {
 
-    public int updatePrice(Connection conn, long artifactListingId, BigDecimal price) {
-
-        String sql = """
+    String sql =
+        """
                 UPDATE artifact_listing
                 SET price = ?
                 WHERE id = ?;
                 """;
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setBigDecimal(1, price);
-            stmt.setLong(2, artifactListingId);
+      stmt.setBigDecimal(1, price);
+      stmt.setLong(2, artifactListingId);
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while updating artifact listing price " +
-                            "[price=" + price + ", "
-                            + "[artifactListingId=" + artifactListingId + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while updating artifact listing price "
+              + "[price="
+              + price
+              + ", "
+              + "[artifactListingId="
+              + artifactListingId
+              + "]",
+          e);
     }
+  }
 
-    public ArtifactListingPageView selectActiveByActiveStatus(Connection conn, long accountId, ArtifactListingFilter filter, int page, int pageSize) {
+  public ArtifactListingPageView selectActiveByActiveStatus(
+      Connection conn, long accountId, ArtifactListingFilter filter, int page, int pageSize) {
 
-        List<Object> params = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("""
+    List<Object> params = new ArrayList<>();
+    StringBuilder sql =
+        new StringBuilder(
+            """
                 SELECT
                     l.id,
                     l.artifact_unit_id,
@@ -224,102 +234,103 @@ public class ArtifactListingDAO {
                 JOIN artifact a ON a.id = u.artifact_id
                 WHERE l.status = 'ACTIVE' AND l.seller_account_id != ?
                 """);
-        params.add(accountId);
+    params.add(accountId);
 
-        if (filter.artifactId() != null) {
-            sql.append("AND u.artifact_id = ?\n");
-            params.add(filter.artifactId());
-        }
-        if (filter.search() != null && !filter.search().isBlank()) {
-            sql.append("AND LOWER(JSON_VALUE(a.metadata, '$.name')) LIKE LOWER(?)\n");
-            params.add("%" + filter.search() + "%");
-        }
-        if (filter.minPrice() != null) {
-            sql.append("AND l.price >= ?\n");
-            params.add(filter.minPrice());
-        }
-        if (filter.maxPrice() != null) {
-            sql.append("AND l.price <= ?\n");
-            params.add(filter.maxPrice());
-        }
-
-        String orderBy = switch (Objects.toString(filter.sort(), "newest")) {
-            case "price_asc"  -> "l.price ASC";
-            case "price_desc" -> "l.price DESC";
-            default           -> "l.created_at DESC";
-        };
-        sql.append("ORDER BY ").append(orderBy).append("\nLIMIT ? OFFSET ?");
-        params.add(pageSize);
-        params.add(page * pageSize);
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-
-            for (int i = 0; i < params.size(); i++) {
-                Object p = params.get(i);
-                if (p instanceof Long l)        stmt.setLong(i + 1, l);
-                else if (p instanceof Integer n) stmt.setInt(i + 1, n);
-                else if (p instanceof String s)  stmt.setString(i + 1, s);
-                else if (p instanceof BigDecimal bd) stmt.setBigDecimal(i + 1, bd);
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-
-                ArrayList<ArtifactListingView> items = new ArrayList<>();
-                long totalItems = 0;
-
-                while (rs.next()) {
-                    if (totalItems == 0) totalItems = rs.getLong("total_items");
-                    items.add(new ArtifactListingView(
-                            rs.getLong("id"),
-                            rs.getLong("artifact_unit_id"),
-                            rs.getLong("artifact_id"),
-                            rs.getString("artifact_name"),
-                            JsonUtils.fromJson(rs.getString("metadata")),
-                            rs.getBigDecimal("price"),
-                            rs.getTimestamp("created_at").toInstant()
-                    ));
-                }
-
-                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-                return new ArtifactListingPageView(items, page, pageSize, totalPages, totalItems);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Database error while selecting active artifact listings", e);
-        }
+    if (filter.artifactId() != null) {
+      sql.append("AND u.artifact_id = ?\n");
+      params.add(filter.artifactId());
+    }
+    if (filter.search() != null && !filter.search().isBlank()) {
+      sql.append("AND LOWER(JSON_VALUE(a.metadata, '$.name')) LIKE LOWER(?)\n");
+      params.add("%" + filter.search() + "%");
+    }
+    if (filter.minPrice() != null) {
+      sql.append("AND l.price >= ?\n");
+      params.add(filter.minPrice());
+    }
+    if (filter.maxPrice() != null) {
+      sql.append("AND l.price <= ?\n");
+      params.add(filter.maxPrice());
     }
 
-    public Optional<ArtifactListing> selectByIdForUpdate(Connection conn, long artifactListingId) {
+    String orderBy =
+        switch (Objects.toString(filter.sort(), "newest")) {
+          case "price_asc" -> "l.price ASC";
+          case "price_desc" -> "l.price DESC";
+          default -> "l.created_at DESC";
+        };
+    sql.append("ORDER BY ").append(orderBy).append("\nLIMIT ? OFFSET ?");
+    params.add(pageSize);
+    params.add(page * pageSize);
 
-        String sql = """
+    try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+      for (int i = 0; i < params.size(); i++) {
+        Object p = params.get(i);
+        if (p instanceof Long l) stmt.setLong(i + 1, l);
+        else if (p instanceof Integer n) stmt.setInt(i + 1, n);
+        else if (p instanceof String s) stmt.setString(i + 1, s);
+        else if (p instanceof BigDecimal bd) stmt.setBigDecimal(i + 1, bd);
+      }
+
+      try (ResultSet rs = stmt.executeQuery()) {
+
+        ArrayList<ArtifactListingView> items = new ArrayList<>();
+        long totalItems = 0;
+
+        while (rs.next()) {
+          if (totalItems == 0) totalItems = rs.getLong("total_items");
+          items.add(
+              new ArtifactListingView(
+                  rs.getLong("id"),
+                  rs.getLong("artifact_unit_id"),
+                  rs.getLong("artifact_id"),
+                  rs.getString("artifact_name"),
+                  JsonUtils.fromJson(rs.getString("metadata")),
+                  rs.getBigDecimal("price"),
+                  rs.getTimestamp("created_at").toInstant()));
+        }
+
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        return new ArtifactListingPageView(items, page, pageSize, totalPages, totalItems);
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException("Database error while selecting active artifact listings", e);
+    }
+  }
+
+  public Optional<ArtifactListing> selectByIdForUpdate(Connection conn, long artifactListingId) {
+
+    String sql =
+        """
                 SELECT * FROM artifact_listing
                 WHERE id = ?
                 FOR UPDATE;
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactListingId);
+      stmt.setLong(1, artifactListingId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact listings " +
-                            "[id=" + artifactListingId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
-    }
 
-    public Optional<ArtifactListing> selectByArtifactUnitId(Connection conn, long artifactUnitId) {
-        String sql = """
+        return Optional.empty();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact listings " + "[id=" + artifactListingId + "]",
+          e);
+    }
+  }
+
+  public Optional<ArtifactListing> selectByArtifactUnitId(Connection conn, long artifactUnitId) {
+    String sql =
+        """
                 SELECT id,
                        artifact_unit_id,
                        seller_account_id,
@@ -331,35 +342,33 @@ public class ArtifactListingDAO {
                  WHERE artifact_unit_id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactUnitId);
+      stmt.setLong(1, artifactUnitId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact listings " +
-                            "[artifactUnitId=" + artifactUnitId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact listings "
+              + "[artifactUnitId="
+              + artifactUnitId
+              + "]",
+          e);
     }
+  }
 
-    public ArtifactListingPageView selectByOwnerAccount(
-            Connection conn,
-            long accountId,
-            int page,
-            int pageSize
-    ) {
+  public ArtifactListingPageView selectByOwnerAccount(
+      Connection conn, long accountId, int page, int pageSize) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT
                     l.id,
                     l.artifact_unit_id,
@@ -379,52 +388,42 @@ public class ArtifactListingDAO {
                 LIMIT ? OFFSET ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, accountId);
-            stmt.setInt(2, pageSize);
-            stmt.setInt(3, page * pageSize);
+      stmt.setLong(1, accountId);
+      stmt.setInt(2, pageSize);
+      stmt.setInt(3, page * pageSize);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                ArrayList<ArtifactListingView> items = new ArrayList<>();
-                long totalItems = 0;
+        ArrayList<ArtifactListingView> items = new ArrayList<>();
+        long totalItems = 0;
 
-                while (rs.next()) {
+        while (rs.next()) {
 
-                    if (totalItems == 0) {
-                        totalItems = rs.getLong("total_items");
-                    }
+          if (totalItems == 0) {
+            totalItems = rs.getLong("total_items");
+          }
 
-                    items.add(
-                            new ArtifactListingView(
-                                    rs.getLong("id"),
-                                    rs.getLong("artifact_unit_id"),
-                                    rs.getLong("artifact_id"),
-                                    rs.getString("artifact_name"),
-                                    JsonUtils.fromJson(rs.getString("metadata")),
-                                    rs.getBigDecimal("price"),
-                                    rs.getTimestamp("created_at").toInstant()
-                            )
-                    );
-                }
-
-                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-
-                return new ArtifactListingPageView(
-                        items,
-                        page,
-                        pageSize,
-                        totalPages,
-                        totalItems
-                );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact listings [accountId=" + accountId + "]",
-                    e
-            );
+          items.add(
+              new ArtifactListingView(
+                  rs.getLong("id"),
+                  rs.getLong("artifact_unit_id"),
+                  rs.getLong("artifact_id"),
+                  rs.getString("artifact_name"),
+                  JsonUtils.fromJson(rs.getString("metadata")),
+                  rs.getBigDecimal("price"),
+                  rs.getTimestamp("created_at").toInstant()));
         }
+
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+        return new ArtifactListingPageView(items, page, pageSize, totalPages, totalItems);
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact listings [accountId=" + accountId + "]", e);
     }
+  }
 }

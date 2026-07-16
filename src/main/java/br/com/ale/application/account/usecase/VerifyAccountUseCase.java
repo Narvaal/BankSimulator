@@ -7,37 +7,33 @@ import br.com.ale.domain.emailVerification.EmailVerificationType;
 import br.com.ale.service.ClientService;
 import br.com.ale.service.EmailVerificationService;
 import br.com.ale.service.auth.JwtService;
-
 import java.time.Instant;
 
 public class VerifyAccountUseCase {
 
-    private final EmailVerificationService emailVerificationService;
-    private final ClientService clientService;
-    private final JwtService jwtService;
+  private final EmailVerificationService emailVerificationService;
+  private final ClientService clientService;
+  private final JwtService jwtService;
 
-    public VerifyAccountUseCase(
-            EmailVerificationService emailVerificationService,
-            ClientService clientService,
-            JwtService jwtService
-    ) {
-        this.emailVerificationService = emailVerificationService;
-        this.clientService = clientService;
-        this.jwtService = jwtService;
-    }
+  public VerifyAccountUseCase(
+      EmailVerificationService emailVerificationService,
+      ClientService clientService,
+      JwtService jwtService) {
+    this.emailVerificationService = emailVerificationService;
+    this.clientService = clientService;
+    this.jwtService = jwtService;
+  }
 
-    public AuthToken execute(VerifyAccountCommand command) {
+  public AuthToken execute(VerifyAccountCommand command) {
 
-        EmailVerification verification =
-                emailVerificationService.confirmToken(
-                        command.token(),
-                        EmailVerificationType.EMAIL_VERIFICATION
-                );
+    EmailVerification verification =
+        emailVerificationService.confirmToken(
+            command.token(), EmailVerificationType.EMAIL_VERIFICATION);
 
-        clientService.activate(verification.getClientId());
+    clientService.activate(verification.getClientId());
 
-        String token = jwtService.generateToken(verification.getClientId());
+    String token = jwtService.generateToken(verification.getClientId());
 
-        return new AuthToken(verification.getClientId(), token, Instant.now());
-    }
+    return new AuthToken(verification.getClientId(), token, Instant.now());
+  }
 }

@@ -13,25 +13,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/clients")
 public class ClientController {
 
-    private final GetClientProfileUseCase getClientProfileUseCase;
+  private final GetClientProfileUseCase getClientProfileUseCase;
 
-    public ClientController(GetClientProfileUseCase getClientProfileUseCase) {
-        this.getClientProfileUseCase = getClientProfileUseCase;
-    }
+  public ClientController(GetClientProfileUseCase getClientProfileUseCase) {
+    this.getClientProfileUseCase = getClientProfileUseCase;
+  }
 
-    @GetMapping("/me")
-    public ClientProfileResponse me(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-            @RequestParam(value = "token", required = false) String tokenParam
-    ) {
-        String token = extractToken(authorization, tokenParam);
-        return getClientProfileUseCase.execute(token);
-    }
+  @GetMapping("/me")
+  public ClientProfileResponse me(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+      @RequestParam(value = "token", required = false) String tokenParam) {
+    String token = extractToken(authorization, tokenParam);
+    return getClientProfileUseCase.execute(token);
+  }
 
-    private String extractToken(String authorization, String fallback) {
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring("Bearer ".length()).trim();
-        }
-        return fallback;
+  private String extractToken(String authorization, String fallback) {
+    if (authorization != null && authorization.startsWith("Bearer ")) {
+      return authorization.substring("Bearer ".length()).trim();
     }
+    return fallback;
+  }
 }

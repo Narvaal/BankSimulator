@@ -8,44 +8,41 @@ import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactTransferService;
 import br.com.ale.service.artifact.ArtifactUnitService;
 import br.com.ale.service.marketplace.ArtifactPriceHistoryService;
-
 import java.util.List;
 
 public class GetArtifactUnitByIdUseCase {
 
-    private final ArtifactUnitService artifactUnitService;
-    private final ArtifactService artifactService;
-    private final ArtifactPriceHistoryService priceHistoryService;
-    private final ArtifactTransferService transferService;
+  private final ArtifactUnitService artifactUnitService;
+  private final ArtifactService artifactService;
+  private final ArtifactPriceHistoryService priceHistoryService;
+  private final ArtifactTransferService transferService;
 
-    public GetArtifactUnitByIdUseCase(
-            ArtifactUnitService artifactUnitService,
-            ArtifactService artifactService,
-            ArtifactPriceHistoryService priceHistoryService,
-            ArtifactTransferService transferService
-    ) {
-        this.artifactUnitService = artifactUnitService;
-        this.artifactService = artifactService;
-        this.priceHistoryService = priceHistoryService;
-        this.transferService = transferService;
-    }
+  public GetArtifactUnitByIdUseCase(
+      ArtifactUnitService artifactUnitService,
+      ArtifactService artifactService,
+      ArtifactPriceHistoryService priceHistoryService,
+      ArtifactTransferService transferService) {
+    this.artifactUnitService = artifactUnitService;
+    this.artifactService = artifactService;
+    this.priceHistoryService = priceHistoryService;
+    this.transferService = transferService;
+  }
 
-    public ArtifactUnitDetailView execute(long unitId) {
-        ArtifactUnit unit = artifactUnitService.selectById(unitId);
-        var artifact = artifactService.selectById(unit.getArtifactId());
-        List<ArtifactPriceHistory> priceHistory = priceHistoryService.listByArtifactId(unitId);
-        List<ArtifactUnitTransferView> transfers = transferService.selectByUnitId(unitId);
+  public ArtifactUnitDetailView execute(long unitId) {
+    ArtifactUnit unit = artifactUnitService.selectById(unitId);
+    var artifact = artifactService.selectById(unit.getArtifactId());
+    List<ArtifactPriceHistory> priceHistory = priceHistoryService.listByArtifactId(unitId);
+    List<ArtifactUnitTransferView> transfers = transferService.selectByUnitId(unitId);
 
-        return new ArtifactUnitDetailView(
-                unit.getId(),
-                unit.getArtifactId(),
-                artifact.getName(),
-                artifact.getMetadata(),
-                unit.getOwnerAccountId(),
-                unit.getStatus().name(),
-                unit.getCreatedAt(),
-                priceHistory,
-                transfers
-        );
-    }
+    return new ArtifactUnitDetailView(
+        unit.getId(),
+        unit.getArtifactId(),
+        artifact.getName(),
+        artifact.getMetadata(),
+        unit.getOwnerAccountId(),
+        unit.getStatus().name(),
+        unit.getCreatedAt(),
+        priceHistory,
+        transfers);
+  }
 }

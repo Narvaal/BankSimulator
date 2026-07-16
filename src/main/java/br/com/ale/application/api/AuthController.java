@@ -16,122 +16,99 @@ import br.com.ale.dto.ResendVerificationRequest;
 import br.com.ale.infrastructure.auth.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final LocalLoginUseCase localLoginUseCase;
-    private final GoogleLoginUseCase googleLoginUseCase;
-    private final AuthCookieService authCookieService;
-    private final VerifyAccountUseCase verifyAccountUseCase;
-    private final ResendVerificationUseCase resendVerificationUseCase;
+  private final LocalLoginUseCase localLoginUseCase;
+  private final GoogleLoginUseCase googleLoginUseCase;
+  private final AuthCookieService authCookieService;
+  private final VerifyAccountUseCase verifyAccountUseCase;
+  private final ResendVerificationUseCase resendVerificationUseCase;
 
-    public AuthController(LocalLoginUseCase localLoginUseCase,
-                          GoogleLoginUseCase googleLoginUseCase,
-                          AuthCookieService authCookieService,
-                          VerifyAccountUseCase verifyAccountUseCase,
-                          ResendVerificationUseCase resendVerificationUseCase
+  public AuthController(
+      LocalLoginUseCase localLoginUseCase,
+      GoogleLoginUseCase googleLoginUseCase,
+      AuthCookieService authCookieService,
+      VerifyAccountUseCase verifyAccountUseCase,
+      ResendVerificationUseCase resendVerificationUseCase) {
 
-    ) {
-        this.localLoginUseCase = localLoginUseCase;
-        this.googleLoginUseCase = googleLoginUseCase;
-        this.authCookieService = authCookieService;
-        this.verifyAccountUseCase = verifyAccountUseCase;
-        this.resendVerificationUseCase = resendVerificationUseCase;
+    this.localLoginUseCase = localLoginUseCase;
+    this.googleLoginUseCase = googleLoginUseCase;
+    this.authCookieService = authCookieService;
+    this.verifyAccountUseCase = verifyAccountUseCase;
+    this.resendVerificationUseCase = resendVerificationUseCase;
+  }
+
+  @GetMapping("/verify")
+  public void verifyEmail(@RequestParam("token") String token, HttpServletResponse response)
+      throws IOException {
+
+    AuthToken authToken = verifyAccountUseCase.execute(new VerifyAccountCommand(token));
+
+    authCookieService.addAuthCookie(response, authToken.getToken());
+
+    response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
+  }
+
+  @GetMapping("/session")
+  public ResponseEntity<?> session(HttpServletRequest request) {
+    try {
+      String token = authCookieService.extractToken(request);
+      return ResponseEntity.ok(Map.of("token", token));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+  }
 
-    @GetMapping("/verify")
-    public void verifyEmail(@RequestParam("token") String token,
-                            HttpServletResponse response) throws IOException {
+  @PostMapping("/resend-verification")
+  public void resend(@RequestBody ResendVerificationRequest request) {
+    resendVerificationUseCase.execute(new ResendVerificationCommand(request.email()));
+  }
 
-        AuthToken authToken = verifyAccountUseCase.execute(
-                new VerifyAccountCommand(token)
-        );
+  @PostMapping("/login")
+  public ResponseEntity<?> login(
+      @RequestBody CreateAuthenticationRequest request, HttpServletResponse response) {
 
-        authCookieService.addAuthCookie(response, authToken.getToken());
+    try {
 
-        response.sendRedirect("https://app.alessandro-bezerra.me/inventory");
+      AuthToken authToken =
+          localLoginUseCase.execute(new LocalLoginCommand(request.email(), request.password()));
+
+      authCookieService.addAuthCookie(response, authToken.getToken());
+
+      return ResponseEntity.ok(
+          new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken()));
+
+    } catch (IllegalArgumentException e) {
+
+      String message = e.getMessage();
+
+      if ("Email not verified".equals(message)) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("code", "EMAIL_NOT_VERIFIED", "message", message));
+      }
+
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("code", "INVALID_CREDENTIALS", "message", message));
     }
+  }
 
-    @GetMapping("/session")
-    public ResponseEntity<?> session(HttpServletRequest request) {
-        try {
-            String token = authCookieService.extractToken(request);
-            return ResponseEntity.ok(Map.of("token", token));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
+  @PostMapping("/google")
+  public AuthResponse login(
+      @RequestBody CreateGoogleAuthenticationRequest request, HttpServletResponse response)
+      throws IOException {
 
-    @PostMapping("/resend-verification")
-    public void resend(@RequestBody ResendVerificationRequest request) {
-        resendVerificationUseCase.execute(
-                new ResendVerificationCommand(
-                        request.email()
-                )
-        );
-    }
+    AuthToken authToken = googleLoginUseCase.execute(new GoogleLoginCommand(request.token()));
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody CreateAuthenticationRequest request,
-            HttpServletResponse response
-    ) {
+    authCookieService.addAuthCookie(response, authToken.getToken());
 
-        try {
-
-            AuthToken authToken = localLoginUseCase.execute(
-                    new LocalLoginCommand(
-                            request.email(),
-                            request.password()
-                    )
-            );
-
-            authCookieService.addAuthCookie(response, authToken.getToken());
-
-            return ResponseEntity.ok(
-                    new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken())
-            );
-
-        } catch (IllegalArgumentException e) {
-
-            String message = e.getMessage();
-
-            if ("Email not verified".equals(message)) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of(
-                                "code", "EMAIL_NOT_VERIFIED",
-                                "message", message
-                        ));
-            }
-
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                            "code", "INVALID_CREDENTIALS",
-                            "message", message
-                    ));
-        }
-    }
-
-    @PostMapping("/google")
-    public AuthResponse login(@RequestBody CreateGoogleAuthenticationRequest request,
-                              HttpServletResponse response) throws IOException {
-
-        AuthToken authToken = googleLoginUseCase.execute(
-                new GoogleLoginCommand(request.token())
-        );
-
-        authCookieService.addAuthCookie(response, authToken.getToken());
-
-        return new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken());
-    }
+    return new AuthResponse(authToken.getClientId(), "Authenticated", authToken.getToken());
+  }
 }

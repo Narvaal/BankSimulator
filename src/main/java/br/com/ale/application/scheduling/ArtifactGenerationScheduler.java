@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ArtifactGenerationScheduler {
 
-    private final ArtifactGenerationManager assetGenerationManager;
+  private final ArtifactGenerationManager assetGenerationManager;
 
-    public ArtifactGenerationScheduler(ArtifactGenerationManager assetGenerationManager) {
-        this.assetGenerationManager = assetGenerationManager;
-    }
+  public ArtifactGenerationScheduler(ArtifactGenerationManager assetGenerationManager) {
+    this.assetGenerationManager = assetGenerationManager;
+  }
 
-    @Scheduled(cron = "0 0 8 * * ?", zone = "UTC")
-    public void generateDailyAssets() {
-        assetGenerationManager.generateWeeklyAssets();
-    }
+  @Scheduled(cron = "0 0 8 * * ?", zone = "UTC")
+  public void generateDailyAssets() {
+    assetGenerationManager.generateWeeklyAssets();
+  }
 }
