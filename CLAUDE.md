@@ -688,6 +688,7 @@ export JAVA_HOME=$(dirname $(dirname $(readlink -f $(command -v java))))
 
 Workflow `.github/workflows/deploy.yml`. Dispara em push para branch `prod`.
 
+- **docker-smoke:** `./docker-smoke.sh` — sobe o stack do compose (imagem + Postgres 17) e exercita endpoints JSONB/`JSON_VALUE` contra Postgres real; **gateia o deploy-backend** (pega bugs de dialeto H2×Postgres antes do deploy). Roda localmente também (atenção: zera o volume `pgdata`)
 - **deploy-backend:** Maven build → SCP JAR → SSH restart systemd → health check
 - **deploy-frontend:** `npm ci` + build → S3 sync (`--delete --exclude "cards/*"` — o exclude é obrigatório, ver ADR-016) → CloudFront invalidation
 
