@@ -92,9 +92,9 @@ jobs:
         working-directory: frontend/assetstore
         run: npm run lint
 
-      - name: Test
+      - name: Test (90% coverage gate)
         working-directory: frontend/assetstore
-        run: npm run test
+        run: npm run test:coverage
 
       - name: Build
         working-directory: frontend/assetstore
