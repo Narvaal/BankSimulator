@@ -10,25 +10,25 @@ import br.com.ale.service.ClientService;
 import br.com.ale.service.EmailVerificationService;
 
 public class ChangePasswordUseCase {
-    private final ClientService clientService;
-    private final EmailVerificationService emailVerificationService;
+  private final ClientService clientService;
+  private final EmailVerificationService emailVerificationService;
 
-    public ChangePasswordUseCase(ClientService clientService,
-                                 EmailVerificationService emailVerificationService) {
-        this.clientService = clientService;
-        this.emailVerificationService = emailVerificationService;
-    }
+  public ChangePasswordUseCase(
+      ClientService clientService, EmailVerificationService emailVerificationService) {
+    this.clientService = clientService;
+    this.emailVerificationService = emailVerificationService;
+  }
 
-    public void execute(ChangePasswordCommand command) {
+  public void execute(ChangePasswordCommand command) {
 
-        EmailVerification verification = emailVerificationService.confirmToken(
-                command.token(), EmailVerificationType.PASSWORD_RESET
-        );
+    EmailVerification verification =
+        emailVerificationService.confirmToken(
+            command.token(), EmailVerificationType.PASSWORD_RESET);
 
-        PasswordValidator.validate(command.password());
+    PasswordValidator.validate(command.password());
 
-        clientService.updateClient(new UpdateClientRequest(verification.getClientId(),
-                PasswordHasher.hash(command.password()))
-        );
-    }
+    clientService.updateClient(
+        new UpdateClientRequest(
+            verification.getClientId(), PasswordHasher.hash(command.password())));
+  }
 }

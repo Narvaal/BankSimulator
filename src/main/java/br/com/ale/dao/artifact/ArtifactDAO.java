@@ -4,7 +4,6 @@ import br.com.ale.domain.artifact.Artifact;
 import br.com.ale.dto.ArtifactSummaryResponse;
 import br.com.ale.dto.CreateArtifactRequest;
 import br.com.ale.infrastructure.json.JsonUtils;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,55 +15,51 @@ import java.util.Optional;
 
 public class ArtifactDAO {
 
-    public Artifact insert(Connection conn, CreateArtifactRequest request) {
+  public Artifact insert(Connection conn, CreateArtifactRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 INSERT INTO artifact (metadata, total_supply)
                 VALUES (?, ?)
                 """;
 
-        try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, new String[]{"id"})) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql, new String[] {"id"})) {
 
-            stmt.setObject(1, JsonUtils.toJson(request.metadata()), Types.OTHER);
-            stmt.setInt(2, request.totalSupply());
+      stmt.setObject(1, JsonUtils.toJson(request.metadata()), Types.OTHER);
+      stmt.setInt(2, request.totalSupply());
 
-            int rowsAffected = stmt.executeUpdate();
+      int rowsAffected = stmt.executeUpdate();
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Failed to insert artifact [totalSupply=" + request.totalSupply() + "]"
-                );
-            }
+      if (rowsAffected == 0) {
+        throw new RuntimeException(
+            "Failed to insert artifact [totalSupply=" + request.totalSupply() + "]");
+      }
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (!rs.next()) {
-                    throw new RuntimeException(
-                            "Failed to retrieve artifact id [totalSupply=" + request.totalSupply() + "]"
-                    );
-                }
-
-                long artifactId = rs.getLong("id");
-
-                return selectById(conn, artifactId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Artifact inserted but not found [id=" + artifactId + "]"
-                                )
-                        );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while inserting artifact [totalSupply=" + request.totalSupply() + "]",
-                    e
-            );
+      try (ResultSet rs = stmt.getGeneratedKeys()) {
+        if (!rs.next()) {
+          throw new RuntimeException(
+              "Failed to retrieve artifact id [totalSupply=" + request.totalSupply() + "]");
         }
+
+        long artifactId = rs.getLong("id");
+
+        return selectById(conn, artifactId)
+            .orElseThrow(
+                () ->
+                    new RuntimeException(
+                        "Artifact inserted but not found [id=" + artifactId + "]"));
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while inserting artifact [totalSupply=" + request.totalSupply() + "]", e);
     }
+  }
 
-    public Optional<Artifact> selectById(Connection conn, long artifactId) {
+  public Optional<Artifact> selectById(Connection conn, long artifactId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        metadata,
                        total_supply,
@@ -73,38 +68,36 @@ public class ArtifactDAO {
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactId);
+      stmt.setLong(1, artifactId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact [artifactId=" + artifactId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
-    }
 
-    private static Artifact mapRow(ResultSet rs) throws SQLException {
-        return new Artifact(
-                rs.getLong("id"),
-                JsonUtils.fromJson(rs.getString("metadata")),
-                rs.getInt("total_supply"),
-                rs.getTimestamp("created_at").toInstant()
-        );
-    }
+        return Optional.empty();
+      }
 
-    public List<ArtifactSummaryResponse> selectAllSummaries(Connection conn) {
-        String sql = """
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact [artifactId=" + artifactId + "]", e);
+    }
+  }
+
+  private static Artifact mapRow(ResultSet rs) throws SQLException {
+    return new Artifact(
+        rs.getLong("id"),
+        JsonUtils.fromJson(rs.getString("metadata")),
+        rs.getInt("total_supply"),
+        rs.getTimestamp("created_at").toInstant());
+  }
+
+  public List<ArtifactSummaryResponse> selectAllSummaries(Connection conn) {
+    String sql =
+        """
                 SELECT metadata,
                        total_supply,
                        created_at
@@ -112,44 +105,43 @@ public class ArtifactDAO {
                  ORDER BY created_at DESC
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<ArtifactSummaryResponse> assets = new ArrayList<>();
-                while (rs.next()) {
-                    assets.add(new ArtifactSummaryResponse(
-                            JsonUtils.fromJson(rs.getString("metadata")),
-                            rs.getInt("total_supply"),
-                            rs.getTimestamp("created_at").toInstant()
-                    ));
-                }
-                return assets;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Database error while selecting artifacts", e);
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+      try (ResultSet rs = stmt.executeQuery()) {
+        List<ArtifactSummaryResponse> assets = new ArrayList<>();
+        while (rs.next()) {
+          assets.add(
+              new ArtifactSummaryResponse(
+                  JsonUtils.fromJson(rs.getString("metadata")),
+                  rs.getInt("total_supply"),
+                  rs.getTimestamp("created_at").toInstant()));
         }
+        return assets;
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Database error while selecting artifacts", e);
     }
+  }
 
-    public int updateTotalSupply(Connection conn, long artifactId, int supplyUsed) {
+  public int updateTotalSupply(Connection conn, long artifactId, int supplyUsed) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE artifact
                 SET total_supply = total_supply - ?
                 WHERE id = ? AND total_supply >= ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, supplyUsed);
-            stmt.setLong(2, artifactId);
-            stmt.setInt(3, supplyUsed);
+      stmt.setInt(1, supplyUsed);
+      stmt.setLong(2, artifactId);
+      stmt.setInt(3, supplyUsed);
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while updating artifact supply [artifactId=" + artifactId + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while updating artifact supply [artifactId=" + artifactId + "]", e);
     }
+  }
 }

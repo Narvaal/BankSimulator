@@ -5,7 +5,6 @@ import br.com.ale.dto.ArtifactTransferLogPageView;
 import br.com.ale.dto.ArtifactTransferLogView;
 import br.com.ale.dto.ArtifactUnitTransferView;
 import br.com.ale.dto.CreateArtifactTransferRequest;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,62 +14,76 @@ import java.util.List;
 import java.util.Optional;
 
 public class ArtifactTransferDAO {
-    public ArtifactTransfer insert(Connection conn, CreateArtifactTransferRequest request) {
+  public ArtifactTransfer insert(Connection conn, CreateArtifactTransferRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 INSERT INTO artifact_transfer (artifact_unit_id, from_account_id, to_account_id)
                 VALUES (?, ?, ?)
                 """;
 
-        try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, new String[]{"id"})) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql, new String[] {"id"})) {
 
-            stmt.setLong(1, request.artifactUnitId());
-            stmt.setLong(2, request.fromAccountId());
-            stmt.setLong(3, request.toAccountId());
+      stmt.setLong(1, request.artifactUnitId());
+      stmt.setLong(2, request.fromAccountId());
+      stmt.setLong(3, request.toAccountId());
 
-            int rowsAffected = stmt.executeUpdate();
+      int rowsAffected = stmt.executeUpdate();
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Failed to insert artifact transfer [artifactUnitId=" + request.artifactUnitId() +
-                                ", fromAccountId=" + request.fromAccountId() + ", " +
-                                ", toAccountId=" + request.toAccountId() + "]"
-                );
-            }
+      if (rowsAffected == 0) {
+        throw new RuntimeException(
+            "Failed to insert artifact transfer [artifactUnitId="
+                + request.artifactUnitId()
+                + ", fromAccountId="
+                + request.fromAccountId()
+                + ", "
+                + ", toAccountId="
+                + request.toAccountId()
+                + "]");
+      }
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (!rs.next()) {
-                    throw new RuntimeException(
-                            "Failed to retrieve artifact transfer id [artifactUnitId=" + request.artifactUnitId() +
-                                    ", fromAccountId=" + request.fromAccountId() + ", " +
-                                    ", toAccountId=" + request.toAccountId() + "]"
-                    );
-                }
-
-                long artifactTransferId = rs.getLong("id");
-
-                return selectById(conn, artifactTransferId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Artifact transfer inserted but not found [id=" + artifactTransferId + "]"
-                                )
-                        );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while inserting artifact transfer [artifactUnitId=" + request.artifactUnitId() +
-                            ", fromAccountId=" + request.fromAccountId() + ", " +
-                            ", toAccountId=" + request.toAccountId() + "]",
-                    e
-            );
+      try (ResultSet rs = stmt.getGeneratedKeys()) {
+        if (!rs.next()) {
+          throw new RuntimeException(
+              "Failed to retrieve artifact transfer id [artifactUnitId="
+                  + request.artifactUnitId()
+                  + ", fromAccountId="
+                  + request.fromAccountId()
+                  + ", "
+                  + ", toAccountId="
+                  + request.toAccountId()
+                  + "]");
         }
+
+        long artifactTransferId = rs.getLong("id");
+
+        return selectById(conn, artifactTransferId)
+            .orElseThrow(
+                () ->
+                    new RuntimeException(
+                        "Artifact transfer inserted but not found [id="
+                            + artifactTransferId
+                            + "]"));
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while inserting artifact transfer [artifactUnitId="
+              + request.artifactUnitId()
+              + ", fromAccountId="
+              + request.fromAccountId()
+              + ", "
+              + ", toAccountId="
+              + request.toAccountId()
+              + "]",
+          e);
     }
+  }
 
-    public Optional<ArtifactTransfer> selectById(Connection conn, long artifactTransferId) {
+  public Optional<ArtifactTransfer> selectById(Connection conn, long artifactTransferId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        artifact_unit_id,
                        from_account_id,
@@ -80,35 +93,33 @@ public class ArtifactTransferDAO {
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactTransferId);
+      stmt.setLong(1, artifactTransferId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            mapRow(rs)
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting artifact " +
-                            "[artifactId=" + artifactTransferId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting artifact " + "[artifactId=" + artifactTransferId + "]",
+          e);
     }
+  }
 
-    public ArtifactTransferLogPageView selectPublicFeed(Connection conn, Long artifactId, int page, int pageSize) {
+  public ArtifactTransferLogPageView selectPublicFeed(
+      Connection conn, Long artifactId, int page, int pageSize) {
 
-        String artifactFilter = artifactId != null ? "WHERE au.artifact_id = ?" : "";
+    String artifactFilter = artifactId != null ? "WHERE au.artifact_id = ?" : "";
 
-        String sql = """
+    String sql =
+        """
                 WITH ranked_transfers AS (
                     SELECT
                         t.id,
@@ -142,48 +153,51 @@ public class ArtifactTransferDAO {
                 LEFT JOIN ranked_prices rp
                     ON rp.artifact_unit_id = rt.artifact_unit_id
                    AND rp.price_rank       = rt.transfer_rank
-                """ + artifactFilter + """
+                """
+            + artifactFilter
+            + """
                 ORDER BY rt.created_at DESC
                 LIMIT ? OFFSET ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            int idx = 1;
-            if (artifactId != null) stmt.setLong(idx++, artifactId);
-            stmt.setInt(idx++, pageSize);
-            stmt.setInt(idx,   page * pageSize);
+      int idx = 1;
+      if (artifactId != null) stmt.setLong(idx++, artifactId);
+      stmt.setInt(idx++, pageSize);
+      stmt.setInt(idx, page * pageSize);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                List<ArtifactTransferLogView> items = new ArrayList<>();
-                long totalItems = 0;
+        List<ArtifactTransferLogView> items = new ArrayList<>();
+        long totalItems = 0;
 
-                while (rs.next()) {
-                    if (totalItems == 0) totalItems = rs.getLong("total_items");
-                    items.add(new ArtifactTransferLogView(
-                            rs.getLong("id"),
-                            rs.getString("artifact_name"),
-                            rs.getLong("artifact_unit_id"),
-                            rs.getBigDecimal("sale_price"),
-                            rs.getLong("from_account_id"),
-                            rs.getLong("to_account_id"),
-                            rs.getTimestamp("created_at").toInstant()
-                    ));
-                }
-
-                int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-                return new ArtifactTransferLogPageView(items, page, pageSize, totalPages, totalItems);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Database error while selecting artifact transfer feed", e);
+        while (rs.next()) {
+          if (totalItems == 0) totalItems = rs.getLong("total_items");
+          items.add(
+              new ArtifactTransferLogView(
+                  rs.getLong("id"),
+                  rs.getString("artifact_name"),
+                  rs.getLong("artifact_unit_id"),
+                  rs.getBigDecimal("sale_price"),
+                  rs.getLong("from_account_id"),
+                  rs.getLong("to_account_id"),
+                  rs.getTimestamp("created_at").toInstant()));
         }
+
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        return new ArtifactTransferLogPageView(items, page, pageSize, totalPages, totalItems);
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException("Database error while selecting artifact transfer feed", e);
     }
+  }
 
-    public List<ArtifactUnitTransferView> selectByUnitId(Connection conn, long artifactUnitId) {
+  public List<ArtifactUnitTransferView> selectByUnitId(Connection conn, long artifactUnitId) {
 
-        String sql = """
+    String sql =
+        """
                 WITH ranked_transfers AS (
                     SELECT t.id, t.from_account_id, t.to_account_id, t.created_at,
                            (ROW_NUMBER() OVER (ORDER BY t.id ASC) - 1) AS transfer_rank
@@ -204,42 +218,43 @@ public class ArtifactTransferDAO {
                 ORDER BY rt.created_at ASC
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, artifactUnitId);
-            stmt.setLong(2, artifactUnitId);
+      stmt.setLong(1, artifactUnitId);
+      stmt.setLong(2, artifactUnitId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                List<ArtifactUnitTransferView> result = new ArrayList<>();
+        List<ArtifactUnitTransferView> result = new ArrayList<>();
 
-                while (rs.next()) {
-                    result.add(new ArtifactUnitTransferView(
-                            rs.getLong("id"),
-                            rs.getLong("from_account_id"),
-                            rs.getLong("to_account_id"),
-                            rs.getBigDecimal("sale_price"),
-                            rs.getTimestamp("created_at").toInstant()
-                    ));
-                }
-
-                return result;
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting transfer chain for unit [artifactUnitId=" + artifactUnitId + "]", e
-            );
+        while (rs.next()) {
+          result.add(
+              new ArtifactUnitTransferView(
+                  rs.getLong("id"),
+                  rs.getLong("from_account_id"),
+                  rs.getLong("to_account_id"),
+                  rs.getBigDecimal("sale_price"),
+                  rs.getTimestamp("created_at").toInstant()));
         }
-    }
 
-    private static ArtifactTransfer mapRow(ResultSet rs) throws SQLException {
-        return new ArtifactTransfer(
-                rs.getLong("id"),
-                rs.getLong("artifact_unit_id"),
-                rs.getLong("from_account_id"),
-                rs.getLong("to_account_id"),
-                rs.getTimestamp("created_at").toInstant()
-        );
+        return result;
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting transfer chain for unit [artifactUnitId="
+              + artifactUnitId
+              + "]",
+          e);
     }
+  }
+
+  private static ArtifactTransfer mapRow(ResultSet rs) throws SQLException {
+    return new ArtifactTransfer(
+        rs.getLong("id"),
+        rs.getLong("artifact_unit_id"),
+        rs.getLong("from_account_id"),
+        rs.getLong("to_account_id"),
+        rs.getTimestamp("created_at").toInstant());
+  }
 }

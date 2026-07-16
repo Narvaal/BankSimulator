@@ -13,38 +13,37 @@ import br.com.ale.service.auth.JwtService;
 
 public class CreateArtifactOfferUseCase {
 
-    private final ArtifactListingService artifactListingService;
-    private final AccountService accountService;
-    private final JwtService jwtService;
+  private final ArtifactListingService artifactListingService;
+  private final AccountService accountService;
+  private final JwtService jwtService;
 
-    public CreateArtifactOfferUseCase(
-            ArtifactListingService artifactListingService,
-            AccountService accountService,
-            JwtService jwtService
-    ) {
-        this.artifactListingService = artifactListingService;
-        this.accountService = accountService;
-        this.jwtService = jwtService;
+  public CreateArtifactOfferUseCase(
+      ArtifactListingService artifactListingService,
+      AccountService accountService,
+      JwtService jwtService) {
+    this.artifactListingService = artifactListingService;
+    this.accountService = accountService;
+    this.jwtService = jwtService;
+  }
+
+  public ArtifactListing execute(CreateArtifactOfferCommand command) {
+
+    if (!jwtService.isTokenValid(command.token())) {
+      throw new UnauthorizedOperationException("Invalid or expired token");
     }
 
-    public ArtifactListing execute(CreateArtifactOfferCommand command) {
+    long clientId = jwtService.extractClientId(command.token());
 
-        if (!jwtService.isTokenValid(command.token())) {
-            throw new UnauthorizedOperationException("Invalid or expired token");
-        }
+    Account account =
+        accountService
+            .getAccountByClientId(clientId)
+            .orElseThrow(() -> new InvalidCredentialsException("Client not found"));
 
-        long clientId = jwtService.extractClientId(command.token());
-
-        Account account = accountService.getAccountByClientId(clientId)
-                .orElseThrow(() -> new InvalidCredentialsException("Client not found"));
-
-        return artifactListingService.createArtifactOffer(
-                new CreateArtifactListingRequest(
-                        command.artifactUnitId(),
-                        account.getId(),
-                        command.price(),
-                        ArtifactListingStatus.ACTIVE
-                )
-        );
-    }
+    return artifactListingService.createArtifactOffer(
+        new CreateArtifactListingRequest(
+            command.artifactUnitId(),
+            account.getId(),
+            command.price(),
+            ArtifactListingStatus.ACTIVE));
+  }
 }

@@ -19,84 +19,71 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/accounts")
 public class AccountController {
 
-    private final AuthCookieService authCookieService;
-    private final CreateAccountUseCase createAccountUseCase;
-    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
-    private final ChangePasswordUseCase changePasswordUseCase;
-    private final GetAccountDetailsUseCase getAccountDetailsUseCase;
-    private final GetPublicAccountProfileUseCase getPublicAccountProfileUseCase;
-    private final SearchAccountsByNameUseCase searchAccountsByNameUseCase;
+  private final AuthCookieService authCookieService;
+  private final CreateAccountUseCase createAccountUseCase;
+  private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+  private final ChangePasswordUseCase changePasswordUseCase;
+  private final GetAccountDetailsUseCase getAccountDetailsUseCase;
+  private final GetPublicAccountProfileUseCase getPublicAccountProfileUseCase;
+  private final SearchAccountsByNameUseCase searchAccountsByNameUseCase;
 
-    public AccountController(
-            AuthCookieService authCookieService,
-            CreateAccountUseCase createAccountUseCase,
-            RequestPasswordResetUseCase requestPasswordResetUseCase,
-            ChangePasswordUseCase changePasswordUseCase,
-            GetAccountDetailsUseCase getAccountDetailsUseCase,
-            GetPublicAccountProfileUseCase getPublicAccountProfileUseCase,
-            SearchAccountsByNameUseCase searchAccountsByNameUseCase
-    ) {
-        this.authCookieService = authCookieService;
-        this.createAccountUseCase = createAccountUseCase;
-        this.requestPasswordResetUseCase = requestPasswordResetUseCase;
-        this.changePasswordUseCase = changePasswordUseCase;
-        this.getAccountDetailsUseCase = getAccountDetailsUseCase;
-        this.getPublicAccountProfileUseCase = getPublicAccountProfileUseCase;
-        this.searchAccountsByNameUseCase = searchAccountsByNameUseCase;
-    }
+  public AccountController(
+      AuthCookieService authCookieService,
+      CreateAccountUseCase createAccountUseCase,
+      RequestPasswordResetUseCase requestPasswordResetUseCase,
+      ChangePasswordUseCase changePasswordUseCase,
+      GetAccountDetailsUseCase getAccountDetailsUseCase,
+      GetPublicAccountProfileUseCase getPublicAccountProfileUseCase,
+      SearchAccountsByNameUseCase searchAccountsByNameUseCase) {
+    this.authCookieService = authCookieService;
+    this.createAccountUseCase = createAccountUseCase;
+    this.requestPasswordResetUseCase = requestPasswordResetUseCase;
+    this.changePasswordUseCase = changePasswordUseCase;
+    this.getAccountDetailsUseCase = getAccountDetailsUseCase;
+    this.getPublicAccountProfileUseCase = getPublicAccountProfileUseCase;
+    this.searchAccountsByNameUseCase = searchAccountsByNameUseCase;
+  }
 
-    @PostMapping
-    public CreateAccountResponse create(@RequestBody CreateAccountApiRequest request) {
+  @PostMapping
+  public CreateAccountResponse create(@RequestBody CreateAccountApiRequest request) {
 
-        createAccountUseCase.execute(
-                new CreateAccountCommand(
-                        request.name(),
-                        request.email(),
-                        request.password()
-                )
-        );
+    createAccountUseCase.execute(
+        new CreateAccountCommand(request.name(), request.email(), request.password()));
 
-        return new CreateAccountResponse(
-                "Account created. Check your email to activate your account."
-        );
-    }
+    return new CreateAccountResponse("Account created. Check your email to activate your account.");
+  }
 
-    @GetMapping("/me")
-    public AccountDetailsResponse me(HttpServletRequest request) {
-        String token = authCookieService.extractToken(request);
-        return getAccountDetailsUseCase.execute(token);
-    }
+  @GetMapping("/me")
+  public AccountDetailsResponse me(HttpServletRequest request) {
+    String token = authCookieService.extractToken(request);
+    return getAccountDetailsUseCase.execute(token);
+  }
 
-    @PostMapping("/password/reset-request")
-    public ResponseEntity<?> requestReset(@RequestBody EmailRequest request) {
+  @PostMapping("/password/reset-request")
+  public ResponseEntity<?> requestReset(@RequestBody EmailRequest request) {
 
-        requestPasswordResetUseCase.execute(
-                new ChangePasswordSenderCommand(request.email())
-        );
+    requestPasswordResetUseCase.execute(new ChangePasswordSenderCommand(request.email()));
 
-        return ResponseEntity.ok("Reset email sent");
-    }
+    return ResponseEntity.ok("Reset email sent");
+  }
 
-    @PostMapping("/password/reset")
-    public ResponseEntity<?> resetPassword(@RequestBody CreateResetPasswordRequest request) {
-        changePasswordUseCase.execute(
-                new ChangePasswordCommand(request.password(), request.token())
-        );
+  @PostMapping("/password/reset")
+  public ResponseEntity<?> resetPassword(@RequestBody CreateResetPasswordRequest request) {
+    changePasswordUseCase.execute(new ChangePasswordCommand(request.password(), request.token()));
 
-        return ResponseEntity.ok("Password reset");
-    }
+    return ResponseEntity.ok("Password reset");
+  }
 
-    @GetMapping("/{accountId}/profile")
-    public PublicProfileResponse profile(@PathVariable("accountId") long accountId) {
-        return getPublicAccountProfileUseCase.execute(accountId);
-    }
+  @GetMapping("/{accountId}/profile")
+  public PublicProfileResponse profile(@PathVariable("accountId") long accountId) {
+    return getPublicAccountProfileUseCase.execute(accountId);
+  }
 
-    @GetMapping("/search")
-    public PublicProfilePageView search(
-            @RequestParam("q") String q,
-            @RequestParam("page") int page,
-            @RequestParam("pageSize") int pageSize
-    ) {
-        return searchAccountsByNameUseCase.execute(q, page, pageSize);
-    }
+  @GetMapping("/search")
+  public PublicProfilePageView search(
+      @RequestParam("q") String q,
+      @RequestParam("page") int page,
+      @RequestParam("pageSize") int pageSize) {
+    return searchAccountsByNameUseCase.execute(q, page, pageSize);
+  }
 }

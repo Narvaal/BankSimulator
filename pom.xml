@@ -159,12 +159,10 @@
                             <include>src/main/java/**/*.java</include>
                             <include>src/test/java/**/*.java</include>
                         </includes>
-                        <trimTrailingWhitespace/>
-                        <endWithNewline/>
-                        <indent>
-                            <spaces>true</spaces>
-                            <spacesPerTab>4</spacesPerTab>
-                        </indent>
+                        <googleJavaFormat>
+                            <version>1.25.2</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
                     </java>
                 </configuration>
             </plugin>

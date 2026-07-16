@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/artifact-transfers")
 public class ArtifactTransferLogController {
 
-    private final ListArtifactTransferLogUseCase listArtifactTransferLogUseCase;
+  private final ListArtifactTransferLogUseCase listArtifactTransferLogUseCase;
 
-    public ArtifactTransferLogController(ListArtifactTransferLogUseCase listArtifactTransferLogUseCase) {
-        this.listArtifactTransferLogUseCase = listArtifactTransferLogUseCase;
-    }
+  public ArtifactTransferLogController(
+      ListArtifactTransferLogUseCase listArtifactTransferLogUseCase) {
+    this.listArtifactTransferLogUseCase = listArtifactTransferLogUseCase;
+  }
 
-    @GetMapping("")
-    public ArtifactTransferLogPageView list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int pageSize,
-            @RequestParam(required = false) Long artifactId
-    ) {
-        return listArtifactTransferLogUseCase.execute(artifactId, page, pageSize);
-    }
+  @GetMapping("")
+  public ArtifactTransferLogPageView list(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "30") int pageSize,
+      @RequestParam(required = false) Long artifactId) {
+    return listArtifactTransferLogUseCase.execute(artifactId, page, pageSize);
+  }
 }

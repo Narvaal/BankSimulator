@@ -5,17 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record KofiWebHookResponse(
-        @JsonProperty("verification_token")
-        String token,
-
-        @JsonProperty("email")
-        String email,
-
-        @JsonProperty("amount")
-        String amount,
-
-        @JsonProperty("currency")
-        String currency
-
-) {
-}
+    @JsonProperty("verification_token") String token,
+    @JsonProperty("email") String email,
+    @JsonProperty("amount") String amount,
+    @JsonProperty("currency") String currency) {}

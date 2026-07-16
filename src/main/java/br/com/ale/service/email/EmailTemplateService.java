@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailTemplateService {
 
-    public String buildVerifyEmailTemplate(String name, String link) {
+  public String buildVerifyEmailTemplate(String name, String link) {
 
-        return """
+    return """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #1f2937;">
 
                     <h2 style="color: #111827;">Confirm your email address</h2>
@@ -39,12 +39,13 @@ public class EmailTemplateService {
                     </p>
 
                 </div>
-                """.formatted(name, link);
-    }
+                """
+        .formatted(name, link);
+  }
 
-    public String buildResetPasswordTemplate(String name, String link) {
+  public String buildResetPasswordTemplate(String name, String link) {
 
-        return """
+    return """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #1f2937;">
 
                     <h2 style="color: #111827;">Reset your password</h2>
@@ -76,6 +77,7 @@ public class EmailTemplateService {
                     </p>
 
                 </div>
-                """.formatted(name, link);
-    }
+                """
+        .formatted(name, link);
+  }
 }

@@ -7,7 +7,6 @@ import br.com.ale.domain.client.Client;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.CreateClientRequest;
 import br.com.ale.dto.UpdateClientRequest;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,9 +17,10 @@ import java.util.Optional;
 
 public class ClientDAO {
 
-    public long insert(Connection conn, CreateClientRequest request) {
+  public long insert(Connection conn, CreateClientRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 INSERT INTO client (
                     name,
                     email,
@@ -33,122 +33,123 @@ public class ClientDAO {
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, new String[]{"id"})) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql, new String[] {"id"})) {
 
-            stmt.setString(1, request.name());
-            stmt.setString(2, request.email());
-            stmt.setString(3, request.password());
-            stmt.setString(4, String.valueOf(request.provider()));
-            stmt.setString(5, request.providerId());
-            stmt.setBoolean(6, request.emailVerified());
-            stmt.setString(7, request.picture());
+      stmt.setString(1, request.name());
+      stmt.setString(2, request.email());
+      stmt.setString(3, request.password());
+      stmt.setString(4, String.valueOf(request.provider()));
+      stmt.setString(5, request.providerId());
+      stmt.setBoolean(6, request.emailVerified());
+      stmt.setString(7, request.picture());
 
-            int rowsAffected = stmt.executeUpdate();
+      int rowsAffected = stmt.executeUpdate();
 
-            if (rowsAffected == 0) {
+      if (rowsAffected == 0) {
 
-                throw new RuntimeException(
-                        "Failed to insert client [name=" + request.name() +
-                                ", email=" + request.email() + "]"
-                );
-            }
+        throw new RuntimeException(
+            "Failed to insert client [name=" + request.name() + ", email=" + request.email() + "]");
+      }
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getLong("id");
-                }
-
-                throw new RuntimeException(
-                        "Failed to retrieve client id [name=" + request.name() +
-                                ", email=" + request.email() + "]"
-                );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while inserting client " +
-                            "[name=" + request.name() +
-                            ", email=" + request.email() + "]",
-                    e
-            );
+      try (ResultSet rs = stmt.getGeneratedKeys()) {
+        if (rs.next()) {
+          return rs.getLong("id");
         }
+
+        throw new RuntimeException(
+            "Failed to retrieve client id [name="
+                + request.name()
+                + ", email="
+                + request.email()
+                + "]");
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while inserting client "
+              + "[name="
+              + request.name()
+              + ", email="
+              + request.email()
+              + "]",
+          e);
     }
+  }
 
-    public int update(Connection conn, UpdateClientRequest request) {
+  public int update(Connection conn, UpdateClientRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE client
                    SET password = ?
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, request.password());
-            stmt.setLong(2, request.id());
+      stmt.setString(1, request.password());
+      stmt.setLong(2, request.id());
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while updating client " +
-                            "[clientId=" + request.id() +
-                            ", password=" + request.password() + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while updating client "
+              + "[clientId="
+              + request.id()
+              + ", password="
+              + request.password()
+              + "]",
+          e);
     }
+  }
 
-    public int activate(Connection conn, Long clientId) {
+  public int activate(Connection conn, Long clientId) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE client
                    SET email_verified = TRUE
                  WHERE id = ?
                    AND email_verified = FALSE
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, clientId);
+      stmt.setLong(1, clientId);
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while activating client " +
-                            "[clientId=" + clientId + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while activating client " + "[clientId=" + clientId + "]", e);
     }
+  }
 
-    public int deleteById(Connection conn, long id) {
+  public int deleteById(Connection conn, long id) {
 
-        String sql = """
+    String sql =
+        """
                 DELETE FROM client
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, id);
+      stmt.setLong(1, id);
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while deleting client " +
-                            "[clientId=" + id + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while deleting client " + "[clientId=" + id + "]", e);
     }
+  }
 
-    public Optional<Client> selectById(Connection conn, long id) {
+  public Optional<Client> selectById(Connection conn, long id) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT  id,
                         name,
                         email,
@@ -160,42 +161,38 @@ public class ClientDAO {
                 FROM client WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, id);
+      stmt.setLong(1, id);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            new Client(
-                                    rs.getLong("id"),
-                                    rs.getString("name"),
-                                    rs.getString("email"),
-                                    rs.getString("password"),
-                                    Provider.valueOf(rs.getString("provider")),
-                                    rs.getString("provider_id"),
-                                    rs.getBoolean("email_verified"),
-                                    rs.getString("picture")
-                            )
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting client " +
-                            "[clientId=" + id + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(
+              new Client(
+                  rs.getLong("id"),
+                  rs.getString("name"),
+                  rs.getString("email"),
+                  rs.getString("password"),
+                  Provider.valueOf(rs.getString("provider")),
+                  rs.getString("provider_id"),
+                  rs.getBoolean("email_verified"),
+                  rs.getString("picture")));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting client " + "[clientId=" + id + "]", e);
     }
+  }
 
-    public Optional<Client> selectByEmail(Connection conn, String email) {
+  public Optional<Client> selectByEmail(Connection conn, String email) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT  id,
                         name,
                         email,
@@ -207,42 +204,39 @@ public class ClientDAO {
                 FROM client WHERE email = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, email);
+      stmt.setString(1, email);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            new Client(
-                                    rs.getLong("id"),
-                                    rs.getString("name"),
-                                    rs.getString("email"),
-                                    rs.getString("password"),
-                                    Provider.valueOf(rs.getString("provider")),
-                                    rs.getString("provider_id"),
-                                    rs.getBoolean("email_verified"),
-                                    rs.getString("picture")
-                            )
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting client " +
-                            "[clientEmail=" + email + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(
+              new Client(
+                  rs.getLong("id"),
+                  rs.getString("name"),
+                  rs.getString("email"),
+                  rs.getString("password"),
+                  Provider.valueOf(rs.getString("provider")),
+                  rs.getString("provider_id"),
+                  rs.getBoolean("email_verified"),
+                  rs.getString("picture")));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting client " + "[clientEmail=" + email + "]", e);
     }
+  }
 
-    public Optional<Client> selectByProviderAndId(Connection conn, Provider provider, String providerId) {
+  public Optional<Client> selectByProviderAndId(
+      Connection conn, Provider provider, String providerId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT  id,
                         name,
                         email,
@@ -254,44 +248,46 @@ public class ClientDAO {
                 FROM client WHERE provider = ? AND provider_id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, String.valueOf(provider));
-            stmt.setString(2, providerId);
+      stmt.setString(1, String.valueOf(provider));
+      stmt.setString(2, providerId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            new Client(
-                                    rs.getLong("id"),
-                                    rs.getString("name"),
-                                    rs.getString("email"),
-                                    rs.getString("password"),
-                                    Provider.valueOf(rs.getString("provider")),
-                                    rs.getString("provider_id"),
-                                    rs.getBoolean("email_verified"),
-                                    rs.getString("picture")
-                            )
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting client " +
-                            "[provider=" + String.valueOf(provider) + ", "
-                            + "providerId=" + providerId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(
+              new Client(
+                  rs.getLong("id"),
+                  rs.getString("name"),
+                  rs.getString("email"),
+                  rs.getString("password"),
+                  Provider.valueOf(rs.getString("provider")),
+                  rs.getString("provider_id"),
+                  rs.getBoolean("email_verified"),
+                  rs.getString("picture")));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting client "
+              + "[provider="
+              + String.valueOf(provider)
+              + ", "
+              + "providerId="
+              + providerId
+              + "]",
+          e);
     }
+  }
 
-    public List<Account> selectAccountsByClientId(Connection conn, long clientId) {
+  public List<Account> selectAccountsByClientId(Connection conn, long clientId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        client_id,
                        account_number,
@@ -304,40 +300,33 @@ public class ClientDAO {
                  WHERE client_id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, clientId);
+      stmt.setLong(1, clientId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                List<Account> accounts = new ArrayList<>();
+        List<Account> accounts = new ArrayList<>();
 
-                while (rs.next()) {
-                    accounts.add(
-                            new Account(
-                                    rs.getLong("id"),
-                                    rs.getLong("client_id"),
-                                    rs.getString("account_number"),
-                                    AccountType.valueOf(rs.getString("account_type")),
-                                    rs.getBigDecimal("balance"),
-                                    AccountStatus.valueOf(rs.getString("status")),
-                                    rs.getString("public_key"),
-                                    rs.getTimestamp("next_free_artifact_at").toInstant()
-                            )
-                    );
-                }
-
-                return accounts;
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting account " +
-                            "[clientId=" + clientId + "]",
-                    e
-            );
+        while (rs.next()) {
+          accounts.add(
+              new Account(
+                  rs.getLong("id"),
+                  rs.getLong("client_id"),
+                  rs.getString("account_number"),
+                  AccountType.valueOf(rs.getString("account_type")),
+                  rs.getBigDecimal("balance"),
+                  AccountStatus.valueOf(rs.getString("status")),
+                  rs.getString("public_key"),
+                  rs.getTimestamp("next_free_artifact_at").toInstant()));
         }
+
+        return accounts;
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting account " + "[clientId=" + clientId + "]", e);
     }
-
-
+  }
 }

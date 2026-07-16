@@ -12,16 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/artifact-listings")
 public class ArtifactPriceHistoryController {
 
-    private final ListArtifactPriceHistoryByListingUseCase listArtifactPriceHistoryByListingUseCase;
+  private final ListArtifactPriceHistoryByListingUseCase listArtifactPriceHistoryByListingUseCase;
 
-    public ArtifactPriceHistoryController(
-            ListArtifactPriceHistoryByListingUseCase listArtifactPriceHistoryByListingUseCase
-    ) {
-        this.listArtifactPriceHistoryByListingUseCase = listArtifactPriceHistoryByListingUseCase;
-    }
+  public ArtifactPriceHistoryController(
+      ListArtifactPriceHistoryByListingUseCase listArtifactPriceHistoryByListingUseCase) {
+    this.listArtifactPriceHistoryByListingUseCase = listArtifactPriceHistoryByListingUseCase;
+  }
 
-    @GetMapping("/{id}/price-history")
-    public List<ArtifactPriceHistory> listByListing(@PathVariable("id") long id) {
-        return listArtifactPriceHistoryByListingUseCase.execute(id);
-    }
+  @GetMapping("/{id}/price-history")
+  public List<ArtifactPriceHistory> listByListing(@PathVariable("id") long id) {
+    return listArtifactPriceHistoryByListingUseCase.execute(id);
+  }
 }

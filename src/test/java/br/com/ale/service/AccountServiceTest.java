@@ -1,5 +1,7 @@
 package br.com.ale.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import br.com.ale.domain.account.Account;
 import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
@@ -12,321 +14,263 @@ import br.com.ale.infrastructure.db.TestConnectionProvider;
 import br.com.ale.service.account.AccountService;
 import br.com.ale.service.crypto.InMemoryPrivateKeyStorage;
 import br.com.ale.service.crypto.SpyPrivateKeyStorage;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class AccountServiceTest {
 
-    private static final String VALID_NAME = "John Doe";
-    private static final String VALID_DOCUMENT = "123456789";
+  private static final String VALID_NAME = "John Doe";
+  private static final String VALID_DOCUMENT = "123456789";
 
-    private static final String ACCOUNT_NUMBER = "999-999-999";
-    private static final String UPDATED_ACCOUNT_NUMBER = "777-777-777";
-    private static final AccountType ACCOUNT_TYPE = AccountType.DEFAULT;
-    private static final AccountType UPDATED_ACCOUNT_TYPE = AccountType.DEV;
-    private static final AccountStatus STATUS = AccountStatus.ACTIVE;
-    private static final AccountStatus UPDATED_STATUS = AccountStatus.INACTIVE;
+  private static final String ACCOUNT_NUMBER = "999-999-999";
+  private static final String UPDATED_ACCOUNT_NUMBER = "777-777-777";
+  private static final AccountType ACCOUNT_TYPE = AccountType.DEFAULT;
+  private static final AccountType UPDATED_ACCOUNT_TYPE = AccountType.DEV;
+  private static final AccountStatus STATUS = AccountStatus.ACTIVE;
+  private static final AccountStatus UPDATED_STATUS = AccountStatus.INACTIVE;
 
-    private TestConnectionProvider provider;
-    private ClientService clientService;
-    private AccountService accountService;
+  private TestConnectionProvider provider;
+  private ClientService clientService;
+  private AccountService accountService;
 
-    @BeforeEach
-    void setup() {
-        provider = new TestConnectionProvider();
+  @BeforeEach
+  void setup() {
+    provider = new TestConnectionProvider();
 
-        clientService = new ClientService(provider);
-        accountService = new AccountService(
-                provider,
-                new InMemoryPrivateKeyStorage()
-        );
+    clientService = new ClientService(provider);
+    accountService = new AccountService(provider, new InMemoryPrivateKeyStorage());
 
-        cleanDatabase();
+    cleanDatabase();
+  }
+
+  private void cleanDatabase() {
+    try (var conn = provider.getConnection();
+        var stmt = conn.createStatement()) {
+
+      stmt.execute("DELETE FROM artifact_price_history");
+      stmt.execute("DELETE FROM artifact_transfer");
+      stmt.execute("DELETE FROM artifact_listing");
+      stmt.execute("DELETE FROM artifact_unit");
+      stmt.execute("DELETE FROM artifact");
+      stmt.execute("DELETE FROM transactions");
+      stmt.execute("DELETE FROM account");
+      stmt.execute("DELETE FROM credential");
+      stmt.execute("DELETE FROM client");
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    private void cleanDatabase() {
-        try (var conn = provider.getConnection();
-             var stmt = conn.createStatement()) {
+  @Test
+  void shouldCreateAnAccount() {
+    Account account = accountService.createAccount(validAccount());
 
-            stmt.execute("DELETE FROM artifact_price_history");
-            stmt.execute("DELETE FROM artifact_transfer");
-            stmt.execute("DELETE FROM artifact_listing");
-            stmt.execute("DELETE FROM artifact_unit");
-            stmt.execute("DELETE FROM artifact");
-            stmt.execute("DELETE FROM transactions");
-            stmt.execute("DELETE FROM account");
-            stmt.execute("DELETE FROM credential");
-            stmt.execute("DELETE FROM client");
+    assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
+    assertEquals(ACCOUNT_TYPE, account.getAccountType());
+    assertEquals(STATUS, account.getStatus());
+  }
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+  @Test
+  void shouldSelectAccountByNumber() {
+    accountService.createAccount(validAccount());
 
-    @Test
-    void shouldCreateAnAccount() {
-        Account account = accountService.createAccount(validAccount());
+    Account account = accountService.getAccountByNumber(ACCOUNT_NUMBER);
 
-        assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
-        assertEquals(ACCOUNT_TYPE, account.getAccountType());
-        assertEquals(STATUS, account.getStatus());
-    }
+    assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
+    assertEquals(ACCOUNT_TYPE, account.getAccountType());
+    assertEquals(STATUS, account.getStatus());
+  }
 
-    @Test
-    void shouldSelectAccountByNumber() {
-        accountService.createAccount(validAccount());
+  @Test
+  void shouldUpdateAccount() {
+    Account account = accountService.createAccount(validAccount());
 
-        Account account = accountService.getAccountByNumber(ACCOUNT_NUMBER);
+    accountService.updateAccount(validUpdate(account));
 
-        assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
-        assertEquals(ACCOUNT_TYPE, account.getAccountType());
-        assertEquals(STATUS, account.getStatus());
-    }
+    Account updatedAccount = accountService.getAccountByNumber(UPDATED_ACCOUNT_NUMBER);
 
-    @Test
-    void shouldUpdateAccount() {
-        Account account = accountService.createAccount(validAccount());
+    assertEquals(UPDATED_ACCOUNT_NUMBER, updatedAccount.getAccountNumber());
+    assertEquals(UPDATED_ACCOUNT_TYPE, updatedAccount.getAccountType());
+    assertEquals(UPDATED_STATUS, updatedAccount.getStatus());
+  }
 
-        accountService.updateAccount(validUpdate(account));
+  @Test
+  void shouldCreateAccountAndReturnId() {
 
-        Account updatedAccount =
-                accountService.getAccountByNumber(UPDATED_ACCOUNT_NUMBER);
+    clientService.createClient(
+        new CreateClientRequest(
+            VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL, null, false, null));
 
-        assertEquals(UPDATED_ACCOUNT_NUMBER, updatedAccount.getAccountNumber());
-        assertEquals(UPDATED_ACCOUNT_TYPE, updatedAccount.getAccountType());
-        assertEquals(UPDATED_STATUS, updatedAccount.getStatus());
-    }
+    Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-    @Test
-    void shouldCreateAccountAndReturnId() {
+    CreateAccountRequest request =
+        new CreateAccountRequest(client.getId(), ACCOUNT_NUMBER, ACCOUNT_TYPE, STATUS);
 
-        clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
-                        null, false, null)
-        );
+    Account account = accountService.createAccount(request);
+    assertNotNull(account);
+    assertTrue(account.getId() > 0);
+    assertEquals(client.getId(), account.getClientId());
+    assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
+    assertEquals(ACCOUNT_TYPE, account.getAccountType());
+    assertEquals(STATUS, account.getStatus());
+  }
 
-        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
+  @Test
+  void shouldGenerateAndStorePrivateKey() {
 
-        CreateAccountRequest request = new CreateAccountRequest(
-                client.getId(),
-                ACCOUNT_NUMBER,
-                ACCOUNT_TYPE,
-                STATUS
-        );
+    SpyPrivateKeyStorage spyStorage = new SpyPrivateKeyStorage();
 
-        Account account = accountService.createAccount(request);
-        assertNotNull(account);
-        assertTrue(account.getId() > 0);
-        assertEquals(client.getId(), account.getClientId());
-        assertEquals(ACCOUNT_NUMBER, account.getAccountNumber());
-        assertEquals(ACCOUNT_TYPE, account.getAccountType());
-        assertEquals(STATUS, account.getStatus());
-    }
+    clientService = new ClientService(provider);
+    accountService = new AccountService(provider, spyStorage);
 
-    @Test
-    void shouldGenerateAndStorePrivateKey() {
+    cleanDatabase();
 
-        SpyPrivateKeyStorage spyStorage = new SpyPrivateKeyStorage();
+    clientService.createClient(
+        new CreateClientRequest(
+            VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL, null, false, null));
 
-        clientService = new ClientService(provider);
-        accountService = new AccountService(provider, spyStorage);
+    Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-        cleanDatabase();
+    CreateAccountRequest request =
+        new CreateAccountRequest(client.getId(), ACCOUNT_NUMBER, ACCOUNT_TYPE, STATUS);
 
-        clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
-                        null, false, null)
-        );
+    Account account = accountService.createAccount(request);
 
-        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
+    assertTrue(spyStorage.wasSaveCalled());
+    assertEquals(account.getId(), spyStorage.getSavedAccountId());
+    assertNotNull(spyStorage.getSavedPrivateKey());
+    assertTrue(spyStorage.getSavedPrivateKey().length > 0);
+  }
 
-        CreateAccountRequest request = new CreateAccountRequest(
-                client.getId(),
-                ACCOUNT_NUMBER,
-                ACCOUNT_TYPE,
-                STATUS
-        );
+  @Test
+  void shouldPersistPublicKeyInDatabase() {
 
-        Account account = accountService.createAccount(request);
+    clientService.createClient(
+        new CreateClientRequest(
+            VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL, null, false, null));
 
-        assertTrue(spyStorage.wasSaveCalled());
-        assertEquals(account.getId(), spyStorage.getSavedAccountId());
-        assertNotNull(spyStorage.getSavedPrivateKey());
-        assertTrue(spyStorage.getSavedPrivateKey().length > 0);
-    }
+    Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-    @Test
-    void shouldPersistPublicKeyInDatabase() {
+    accountService.createAccount(
+        new CreateAccountRequest(client.getId(), ACCOUNT_NUMBER, ACCOUNT_TYPE, STATUS));
 
-        clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
-                        null, false, null)
-        );
+    Account persisted = accountService.getAccountByNumber(ACCOUNT_NUMBER);
 
-        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
+    assertNotNull(persisted.getPublicKey());
+    assertTrue(
+        persisted.getPublicKey().startsWith("-----BEGIN PUBLIC KEY-----")
+            || persisted.getPublicKey().length() > 100);
+  }
 
+  @Test
+  void shouldTransferAmountBetweenAccounts() {
+
+    Account from = accountService.createAccount(validAccount());
+    Account to =
         accountService.createAccount(
-                new CreateAccountRequest(
-                        client.getId(),
-                        ACCOUNT_NUMBER,
-                        ACCOUNT_TYPE,
-                        STATUS
-                )
-        );
+            new CreateAccountRequest(from.getClientId(), "888-888-888", ACCOUNT_TYPE, STATUS));
 
-        Account persisted =
-                accountService.getAccountByNumber(ACCOUNT_NUMBER);
+    accountService.credit(from.getAccountNumber(), new BigDecimal("100.00"));
 
-        assertNotNull(persisted.getPublicKey());
-        assertTrue(persisted.getPublicKey().startsWith("-----BEGIN PUBLIC KEY-----")
-                || persisted.getPublicKey().length() > 100);
-    }
+    accountService.transfer(from.getId(), to.getId(), new BigDecimal("40.00"));
 
-    @Test
-    void shouldTransferAmountBetweenAccounts() {
+    Account updatedFrom = accountService.getAccountByNumber(from.getAccountNumber());
+    Account updatedTo = accountService.getAccountByNumber(to.getAccountNumber());
 
-        Account from = accountService.createAccount(validAccount());
-        Account to = accountService.createAccount(
-                new CreateAccountRequest(
-                        from.getClientId(),
-                        "888-888-888",
-                        ACCOUNT_TYPE,
-                        STATUS
-                )
-        );
+    assertEquals(0, updatedFrom.getBalance().compareTo(new BigDecimal("60.00")));
+    assertEquals(0, updatedTo.getBalance().compareTo(new BigDecimal("40.00")));
+  }
 
-        accountService.credit(from.getAccountNumber(), new BigDecimal("100.00"));
+  @Test
+  void shouldNotAllowTransferToSameAccount() {
 
-        accountService.transfer(
-                from.getId(),
-                to.getId(),
-                new BigDecimal("40.00")
-        );
+    Account account = accountService.createAccount(validAccount());
 
-        Account updatedFrom = accountService.getAccountByNumber(from.getAccountNumber());
-        Account updatedTo = accountService.getAccountByNumber(to.getAccountNumber());
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                accountService.transfer(account.getId(), account.getId(), new BigDecimal("10.00")));
 
-        assertEquals(0, updatedFrom.getBalance().compareTo(new BigDecimal("60.00")));
-        assertEquals(0, updatedTo.getBalance().compareTo(new BigDecimal("40.00")));
-    }
+    assertTrue(
+        exception.getMessage().contains("Not allowed transfer to the same account"),
+        exception.getMessage());
+  }
 
-    @Test
-    void shouldNotAllowTransferToSameAccount() {
+  @Test
+  void shouldFailTransferWhenInsufficientBalance() {
 
-        Account account = accountService.createAccount(validAccount());
+    Account from = accountService.createAccount(validAccount());
+    Account to =
+        accountService.createAccount(
+            new CreateAccountRequest(from.getClientId(), "888-888-888", ACCOUNT_TYPE, STATUS));
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> accountService.transfer(
-                        account.getId(),
-                        account.getId(),
-                        new BigDecimal("10.00")
-                )
-        );
+    RuntimeException ex =
+        assertThrows(
+            RuntimeException.class,
+            () -> accountService.transfer(from.getId(), to.getId(), new BigDecimal("50.00")));
 
-        assertTrue(exception.getMessage().contains("Not allowed transfer to the same account"), exception.getMessage());
-    }
+    assertNotNull(ex.getCause());
+    assertTrue(
+        ex.getCause().getMessage().contains("Insufficient balance"),
+        "Expected insufficient balance exception");
+  }
 
-    @Test
-    void shouldFailTransferWhenInsufficientBalance() {
+  @Test
+  void shouldCreditAccount() {
 
-        Account from = accountService.createAccount(validAccount());
-        Account to = accountService.createAccount(
-                new CreateAccountRequest(
-                        from.getClientId(),
-                        "888-888-888",
-                        ACCOUNT_TYPE,
-                        STATUS
-                )
-        );
+    Account account = accountService.createAccount(validAccount());
 
-        RuntimeException ex = assertThrows(
-                RuntimeException.class,
-                () -> accountService.transfer(
-                        from.getId(),
-                        to.getId(),
-                        new BigDecimal("50.00")
-                )
-        );
+    accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
 
-        assertNotNull(ex.getCause());
-        assertTrue(
-                ex.getCause().getMessage().contains("Insufficient balance"),
-                "Expected insufficient balance exception"
-        );
-    }
+    Account updated = accountService.getAccountByNumber(account.getAccountNumber());
 
-    @Test
-    void shouldCreditAccount() {
+    assertEquals(0, updated.getBalance().compareTo(new BigDecimal("100.00")));
+  }
 
-        Account account = accountService.createAccount(validAccount());
+  @Test
+  void shouldDebitAccount() {
 
-        accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
+    Account account = accountService.createAccount(validAccount());
+    accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
 
-        Account updated = accountService.getAccountByNumber(account.getAccountNumber());
+    accountService.debit(account.getAccountNumber(), new BigDecimal("30.00"));
 
-        assertEquals(0, updated.getBalance().compareTo(new BigDecimal("100.00")));
-    }
+    Account updated = accountService.getAccountByNumber(account.getAccountNumber());
 
-    @Test
-    void shouldDebitAccount() {
+    assertEquals(0, updated.getBalance().compareTo(new BigDecimal("70.00")));
+  }
 
-        Account account = accountService.createAccount(validAccount());
-        accountService.credit(account.getAccountNumber(), new BigDecimal("100.00"));
+  @Test
+  void shouldFailDebitWhenInsufficientBalance() {
 
-        accountService.debit(account.getAccountNumber(), new BigDecimal("30.00"));
+    Account account = accountService.createAccount(validAccount());
 
-        Account updated = accountService.getAccountByNumber(account.getAccountNumber());
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () -> accountService.debit(account.getAccountNumber(), new BigDecimal("10.00")));
 
-        assertEquals(0, updated.getBalance().compareTo(new BigDecimal("70.00")));
-    }
+    assertNotNull(exception.getCause());
+    assertTrue(
+        exception.getCause().getMessage().contains("Insufficient balance"),
+        "Expected insufficient balance exception");
+  }
 
-    @Test
-    void shouldFailDebitWhenInsufficientBalance() {
+  private CreateAccountRequest validAccount() {
+    clientService.createClient(
+        new CreateClientRequest(
+            VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL, null, false, null));
 
-        Account account = accountService.createAccount(validAccount());
+    Client client = clientService.getClientByEmail(VALID_DOCUMENT);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> accountService.debit(
-                        account.getAccountNumber(),
-                        new BigDecimal("10.00")
-                )
-        );
+    return new CreateAccountRequest(client.getId(), ACCOUNT_NUMBER, ACCOUNT_TYPE, STATUS);
+  }
 
-        assertNotNull(exception.getCause());
-        assertTrue(
-                exception.getCause().getMessage().contains("Insufficient balance"),
-                "Expected insufficient balance exception"
-        );
-    }
-
-    private CreateAccountRequest validAccount() {
-        clientService.createClient(
-                new CreateClientRequest(VALID_NAME, VALID_DOCUMENT, "pass", Provider.LOCAL,
-                        null, false, null)
-        );
-
-        Client client = clientService.getClientByEmail(VALID_DOCUMENT);
-
-        return new CreateAccountRequest(
-                client.getId(),
-                ACCOUNT_NUMBER,
-                ACCOUNT_TYPE,
-                STATUS
-        );
-    }
-
-    private UpdateAccountRequest validUpdate(Account account) {
-        return new UpdateAccountRequest(
-                account.getId(),
-                UPDATED_ACCOUNT_NUMBER,
-                UPDATED_ACCOUNT_TYPE,
-                UPDATED_STATUS
-        );
-    }
+  private UpdateAccountRequest validUpdate(Account account) {
+    return new UpdateAccountRequest(
+        account.getId(), UPDATED_ACCOUNT_NUMBER, UPDATED_ACCOUNT_TYPE, UPDATED_STATUS);
+  }
 }

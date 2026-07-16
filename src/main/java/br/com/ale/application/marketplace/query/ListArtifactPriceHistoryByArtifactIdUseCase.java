@@ -6,15 +6,14 @@ import java.util.List;
 
 public class ListArtifactPriceHistoryByArtifactIdUseCase {
 
-    private final ArtifactPriceHistoryService artifactPriceHistoryService;
+  private final ArtifactPriceHistoryService artifactPriceHistoryService;
 
-    public ListArtifactPriceHistoryByArtifactIdUseCase(
-            ArtifactPriceHistoryService artifactPriceHistoryService
-    ) {
-        this.artifactPriceHistoryService = artifactPriceHistoryService;
-    }
+  public ListArtifactPriceHistoryByArtifactIdUseCase(
+      ArtifactPriceHistoryService artifactPriceHistoryService) {
+    this.artifactPriceHistoryService = artifactPriceHistoryService;
+  }
 
-    public List<ArtifactPriceHistory> execute(long artifactId) {
-        return artifactPriceHistoryService.listByArtifactId(artifactId);
-    }
+  public List<ArtifactPriceHistory> execute(long artifactId) {
+    return artifactPriceHistoryService.listByArtifactId(artifactId);
+  }
 }

@@ -16,7 +16,6 @@ import br.com.ale.service.auth.GoogleTokenVerifier;
 import br.com.ale.service.auth.JwtService;
 import br.com.ale.service.crypto.KeyPairService;
 import br.com.ale.service.crypto.PrivateKeyStorage;
-
 import java.security.KeyPair;
 import java.time.Instant;
 import java.util.Map;
@@ -24,120 +23,98 @@ import java.util.Optional;
 
 public class GoogleLoginUseCase {
 
-    private final AccountNumberGenerator accountNumberGenerator;
-    private final AccountService accountService;
-    private final ClientService clientService;
-    private final JwtService jwtService;
-    private final GoogleTokenVerifier googleTokenVerifier;
-    private final String googleClientId;
-    private final KeyPairService keyPairService;
-    private final PrivateKeyStorage privateKeyStorage;
+  private final AccountNumberGenerator accountNumberGenerator;
+  private final AccountService accountService;
+  private final ClientService clientService;
+  private final JwtService jwtService;
+  private final GoogleTokenVerifier googleTokenVerifier;
+  private final String googleClientId;
+  private final KeyPairService keyPairService;
+  private final PrivateKeyStorage privateKeyStorage;
 
-    public GoogleLoginUseCase(
-            AccountNumberGenerator accountNumberGenerator,
-            AccountService accountService,
-            ClientService clientService,
-            JwtService jwtService,
-            GoogleTokenVerifier googleTokenVerifier,
-            String googleClientId,
-            KeyPairService keyPairService,
-            PrivateKeyStorage privateKeyStorage
-    ) {
-        this.accountNumberGenerator = accountNumberGenerator;
-        this.accountService = accountService;
-        this.clientService = clientService;
-        this.jwtService = jwtService;
-        this.googleTokenVerifier = googleTokenVerifier;
-        this.googleClientId = googleClientId;
-        this.keyPairService = keyPairService;
-        this.privateKeyStorage = privateKeyStorage;
-    }
+  public GoogleLoginUseCase(
+      AccountNumberGenerator accountNumberGenerator,
+      AccountService accountService,
+      ClientService clientService,
+      JwtService jwtService,
+      GoogleTokenVerifier googleTokenVerifier,
+      String googleClientId,
+      KeyPairService keyPairService,
+      PrivateKeyStorage privateKeyStorage) {
+    this.accountNumberGenerator = accountNumberGenerator;
+    this.accountService = accountService;
+    this.clientService = clientService;
+    this.jwtService = jwtService;
+    this.googleTokenVerifier = googleTokenVerifier;
+    this.googleClientId = googleClientId;
+    this.keyPairService = keyPairService;
+    this.privateKeyStorage = privateKeyStorage;
+  }
 
-    private Client findOrCreateGoogleClient(
-            String name,
-            String email,
-            String googleId,
-            boolean emailVerified,
-            String picture
-    ) {
+  private Client findOrCreateGoogleClient(
+      String name, String email, String googleId, boolean emailVerified, String picture) {
 
-        Optional<Client> existing =
-                clientService.getClientByProviderAndId(Provider.GOOGLE, googleId);
+    Optional<Client> existing = clientService.getClientByProviderAndId(Provider.GOOGLE, googleId);
 
-        return existing.orElseGet(() -> clientService.createClient(new CreateClientRequest(
-                name,
-                email,
-                null,
-                Provider.GOOGLE,
-                googleId,
-                emailVerified,
-                picture
-        )));
-    }
+    return existing.orElseGet(
+        () ->
+            clientService.createClient(
+                new CreateClientRequest(
+                    name, email, null, Provider.GOOGLE, googleId, emailVerified, picture)));
+  }
 
-    private Account findOrCreateAccount(Client client) {
+  private Account findOrCreateAccount(Client client) {
 
-        Optional<Account> existing = accountService.getAccountByClientId(client.getId());
+    Optional<Account> existing = accountService.getAccountByClientId(client.getId());
 
-        return existing.orElseGet(() -> {
+    return existing.orElseGet(
+        () -> {
+          Account account =
+              accountService.createAccount(
+                  new CreateAccountRequest(
+                      client.getId(),
+                      accountNumberGenerator.generate(client),
+                      AccountType.DEFAULT,
+                      AccountStatus.ACTIVE));
 
-            Account account = accountService.createAccount(
-                    new CreateAccountRequest(
-                            client.getId(),
-                            accountNumberGenerator.generate(client),
-                            AccountType.DEFAULT,
-                            AccountStatus.ACTIVE
-                    )
-            );
+          KeyPair keyPair = keyPairService.generate();
 
-            KeyPair keyPair = keyPairService.generate();
+          privateKeyStorage.save(account.getId(), keyPair.getPrivate().getEncoded());
 
-            privateKeyStorage.save(
-                    account.getId(),
-                    keyPair.getPrivate().getEncoded()
-            );
-
-            return account;
+          return account;
         });
+  }
+
+  public AuthToken execute(GoogleLoginCommand command) {
+
+    Map<String, Object> payload = googleTokenVerifier.verify(command.idToken());
+
+    if (payload == null || payload.isEmpty()) {
+      throw new SecurityException("Invalid Google token");
     }
 
-    public AuthToken execute(GoogleLoginCommand command) {
+    String googleId = (String) payload.get("sub");
+    String email = (String) payload.get("email");
+    String name = (String) payload.get("name");
+    String picture = (String) payload.get("picture");
 
-        Map<String, Object> payload = googleTokenVerifier.verify(command.idToken());
+    boolean emailVerified = Boolean.parseBoolean(String.valueOf(payload.get("email_verified")));
 
-        if (payload == null || payload.isEmpty()) {
-            throw new SecurityException("Invalid Google token");
-        }
-
-        String googleId = (String) payload.get("sub");
-        String email = (String) payload.get("email");
-        String name = (String) payload.get("name");
-        String picture = (String) payload.get("picture");
-
-        boolean emailVerified = Boolean.parseBoolean(
-                String.valueOf(payload.get("email_verified"))
-        );
-
-        if (!emailVerified) {
-            throw new SecurityException("Google email not verified");
-        }
-
-        String aud = (String) payload.get("aud");
-        if (!googleClientId.equals(aud)) {
-            throw new SecurityException(
-                "Invalid Google token audience. expected=" + googleClientId + " got=" + aud
-            );
-        }
-
-        Client client = findOrCreateGoogleClient(name, email, googleId, emailVerified, picture);
-        Account account = findOrCreateAccount(client);
-
-        String jwt = jwtService.generateToken(client.getId());
-
-        return new AuthToken(
-                client.getId(),
-                jwt,
-                Instant.now()
-        );
+    if (!emailVerified) {
+      throw new SecurityException("Google email not verified");
     }
+
+    String aud = (String) payload.get("aud");
+    if (!googleClientId.equals(aud)) {
+      throw new SecurityException(
+          "Invalid Google token audience. expected=" + googleClientId + " got=" + aud);
+    }
+
+    Client client = findOrCreateGoogleClient(name, email, googleId, emailVerified, picture);
+    Account account = findOrCreateAccount(client);
+
+    String jwt = jwtService.generateToken(client.getId());
+
+    return new AuthToken(client.getId(), jwt, Instant.now());
+  }
 }

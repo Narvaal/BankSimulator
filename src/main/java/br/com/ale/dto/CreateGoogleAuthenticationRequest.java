@@ -1,6 +1,3 @@
 package br.com.ale.dto;
 
-public record CreateGoogleAuthenticationRequest(
-        String token
-) {
-}
+public record CreateGoogleAuthenticationRequest(String token) {}

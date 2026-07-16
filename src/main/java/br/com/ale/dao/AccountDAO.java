@@ -5,81 +5,85 @@ import br.com.ale.domain.account.AccountStatus;
 import br.com.ale.domain.account.AccountType;
 import br.com.ale.domain.client.Provider;
 import br.com.ale.dto.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class AccountDAO {
 
-    private static Account mapRow(ResultSet rs) throws SQLException {
+  private static Account mapRow(ResultSet rs) throws SQLException {
 
-        return new Account(
-                rs.getLong("id"),
-                rs.getLong("client_id"),
-                rs.getString("account_number"),
-                AccountType.valueOf(rs.getString("account_type")),
-                rs.getBigDecimal("balance"),
-                AccountStatus.valueOf(rs.getString("status")),
-                rs.getString("public_key"),
-                rs.getTimestamp("next_free_artifact_at").toInstant()
-        );
-    }
+    return new Account(
+        rs.getLong("id"),
+        rs.getLong("client_id"),
+        rs.getString("account_number"),
+        AccountType.valueOf(rs.getString("account_type")),
+        rs.getBigDecimal("balance"),
+        AccountStatus.valueOf(rs.getString("status")),
+        rs.getString("public_key"),
+        rs.getTimestamp("next_free_artifact_at").toInstant());
+  }
 
-    public long insert(Connection conn, CreateAccountRequest request, String publicKey) {
+  public long insert(Connection conn, CreateAccountRequest request, String publicKey) {
 
-        String sql = """
+    String sql =
+        """
                 INSERT INTO account (client_id, account_number, account_type, status, public_key)
                 VALUES (?, ?, ?, ?, ?)
                 """;
 
-        try (PreparedStatement stmt =
-                     conn.prepareStatement(sql, new String[]{"id"})) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql, new String[] {"id"})) {
 
-            stmt.setLong(1, request.clientId());
-            stmt.setString(2, request.accountNumber());
-            stmt.setString(3, request.accountType().name());
-            stmt.setString(4, request.status().name());
-            stmt.setString(5, publicKey);
+      stmt.setLong(1, request.clientId());
+      stmt.setString(2, request.accountNumber());
+      stmt.setString(3, request.accountType().name());
+      stmt.setString(4, request.status().name());
+      stmt.setString(5, publicKey);
 
-            int rowsAffected = stmt.executeUpdate();
+      int rowsAffected = stmt.executeUpdate();
 
-            if (rowsAffected == 0) {
-                throw new RuntimeException(
-                        "Failed to insert account [clientId=" + request.clientId() +
-                                ", accountNumber=" + request.accountNumber() + "]"
-                );
-            }
+      if (rowsAffected == 0) {
+        throw new RuntimeException(
+            "Failed to insert account [clientId="
+                + request.clientId()
+                + ", accountNumber="
+                + request.accountNumber()
+                + "]");
+      }
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getLong("id");
-                }
-                throw new RuntimeException(
-                        "Failed to retrieve account id [clientId=" + request.clientId() +
-                                ", accountNumber=" + request.accountNumber() + "]"
-                );
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while inserting account " +
-                            "[clientId=" + request.clientId() +
-                            ", accountNumber=" + request.accountNumber() + "]",
-                    e
-            );
+      try (ResultSet rs = stmt.getGeneratedKeys()) {
+        if (rs.next()) {
+          return rs.getLong("id");
         }
+        throw new RuntimeException(
+            "Failed to retrieve account id [clientId="
+                + request.clientId()
+                + ", accountNumber="
+                + request.accountNumber()
+                + "]");
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while inserting account "
+              + "[clientId="
+              + request.clientId()
+              + ", accountNumber="
+              + request.accountNumber()
+              + "]",
+          e);
     }
+  }
 
-    public int update(Connection conn, UpdateAccountRequest request) {
+  public int update(Connection conn, UpdateAccountRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE account
                    SET account_number = ?,
                        account_type   = ?,
@@ -87,29 +91,32 @@ public class AccountDAO {
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, request.accountNumber());
-            stmt.setString(2, request.accountType().name());
-            stmt.setString(3, request.status().name());
-            stmt.setLong(4, request.id());
+      stmt.setString(1, request.accountNumber());
+      stmt.setString(2, request.accountType().name());
+      stmt.setString(3, request.status().name());
+      stmt.setLong(4, request.id());
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
+    } catch (SQLException e) {
 
-            throw new RuntimeException(
-                    "Database error while updating account " +
-                            "[accountId=" + request.id() +
-                            ", accountNumber=" + request.accountNumber() + "]",
-                    e
-            );
-        }
+      throw new RuntimeException(
+          "Database error while updating account "
+              + "[accountId="
+              + request.id()
+              + ", accountNumber="
+              + request.accountNumber()
+              + "]",
+          e);
     }
+  }
 
-    public Optional<Account> selectById(Connection conn, long accountId) {
+  public Optional<Account> selectById(Connection conn, long accountId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        client_id,
                        account_number,
@@ -122,33 +129,29 @@ public class AccountDAO {
                  WHERE id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, accountId);
+      stmt.setLong(1, accountId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            mapRow(rs)
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting account " +
-                            "[accountId=" + accountId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting account " + "[accountId=" + accountId + "]", e);
     }
+  }
 
-    public Optional<Account> selectByClientId(Connection conn, long clientId) {
+  public Optional<Account> selectByClientId(Connection conn, long clientId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        client_id,
                        account_number,
@@ -161,31 +164,29 @@ public class AccountDAO {
                  WHERE client_id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, clientId);
+      stmt.setLong(1, clientId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting account " +
-                            "[clientId=" + clientId + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting account " + "[clientId=" + clientId + "]", e);
     }
+  }
 
-    public Optional<AccountDetailsResponse> selectDetailsById(Connection conn, long accountId) {
+  public Optional<AccountDetailsResponse> selectDetailsById(Connection conn, long accountId) {
 
-        String sql = """
+    String sql =
+        """
                     SELECT
                     a.id,
                     a.client_id,
@@ -207,47 +208,42 @@ public class AccountDAO {
                 WHERE a.id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, accountId);
+      stmt.setLong(1, accountId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(
-                            new AccountDetailsResponse(
-                                    rs.getLong("id"),
-                                    rs.getLong("client_id"),
-                                    rs.getString("account_number"),
-                                    AccountType.valueOf(rs.getString("account_type")),
-                                    rs.getBigDecimal("balance"),
-                                    AccountStatus.valueOf(rs.getString("status")),
-                                    rs.getString("public_key"),
-                                    rs.getTimestamp("created_at").toInstant(),
-                                    rs.getTimestamp("updated_at").toInstant(),
-                                    rs.getTimestamp("next_free_artifact_at").toInstant(),
-
-                                    rs.getString("name"),
-                                    rs.getString("picture"),
-                                    rs.getBoolean("email_verified"),
-                                    Provider.valueOf(rs.getString("provider"))
-                            )
-                    );
-                }
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting account details " +
-                            "[accountId=" + accountId + "]",
-                    e
-            );
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          return Optional.of(
+              new AccountDetailsResponse(
+                  rs.getLong("id"),
+                  rs.getLong("client_id"),
+                  rs.getString("account_number"),
+                  AccountType.valueOf(rs.getString("account_type")),
+                  rs.getBigDecimal("balance"),
+                  AccountStatus.valueOf(rs.getString("status")),
+                  rs.getString("public_key"),
+                  rs.getTimestamp("created_at").toInstant(),
+                  rs.getTimestamp("updated_at").toInstant(),
+                  rs.getTimestamp("next_free_artifact_at").toInstant(),
+                  rs.getString("name"),
+                  rs.getString("picture"),
+                  rs.getBoolean("email_verified"),
+                  Provider.valueOf(rs.getString("provider"))));
         }
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting account details " + "[accountId=" + accountId + "]", e);
     }
+  }
 
-    public Optional<Account> selectByNumber(Connection conn, String accountNumber) {
+  public Optional<Account> selectByNumber(Connection conn, String accountNumber) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT id,
                        client_id,
                        account_number,
@@ -260,33 +256,29 @@ public class AccountDAO {
                  WHERE account_number = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, accountNumber);
+      stmt.setString(1, accountNumber);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
-                    return Optional.of(
-                            mapRow(rs)
-                    );
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting account " +
-                            "[accountNumber=" + accountNumber + "]",
-                    e
-            );
+        if (rs.next()) {
+          return Optional.of(mapRow(rs));
         }
+
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting account " + "[accountNumber=" + accountNumber + "]", e);
     }
+  }
 
-    public int debit(Connection conn, CreateBalanceOperationRequest request) {
+  public int debit(Connection conn, CreateBalanceOperationRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE account
                 SET balance = balance - ?,
                     updated_at = now()
@@ -294,167 +286,176 @@ public class AccountDAO {
                   AND balance >= ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setBigDecimal(1, request.amount());
-            stmt.setString(2, request.accountNumber());
-            stmt.setBigDecimal(3, request.amount());
+      stmt.setBigDecimal(1, request.amount());
+      stmt.setString(2, request.accountNumber());
+      stmt.setBigDecimal(3, request.amount());
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while debiting account " +
-                            "[accountNumber=" + request.accountNumber() +
-                            ", amount=" + request.amount() + "]",
-                    e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while debiting account "
+              + "[accountNumber="
+              + request.accountNumber()
+              + ", amount="
+              + request.amount()
+              + "]",
+          e);
     }
+  }
 
-    public int credit(Connection conn, CreateBalanceOperationRequest request) {
+  public int credit(Connection conn, CreateBalanceOperationRequest request) {
 
-        String sql = """
+    String sql =
+        """
                 UPDATE account
                 SET balance = balance + ?,
                     updated_at = now()
                 WHERE account_number = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setBigDecimal(1, request.amount());
-            stmt.setString(2, request.accountNumber());
+      stmt.setBigDecimal(1, request.amount());
+      stmt.setString(2, request.accountNumber());
 
-            return stmt.executeUpdate();
+      return stmt.executeUpdate();
 
-        } catch (SQLException e) {
+    } catch (SQLException e) {
 
-            throw new RuntimeException(
-                    "Database error while crediting account " +
-                            "[accountNumber=" + request.accountNumber() +
-                            ", amount=" + request.amount() + "]",
-                    e
-            );
-        }
+      throw new RuntimeException(
+          "Database error while crediting account "
+              + "[accountNumber="
+              + request.accountNumber()
+              + ", amount="
+              + request.amount()
+              + "]",
+          e);
     }
+  }
 
-    public Optional<Instant> tryClaimArtifactUnit(Connection conn, String accountNumber) {
+  public Optional<Instant> tryClaimArtifactUnit(Connection conn, String accountNumber) {
 
-        String updateSql = """
+    String updateSql =
+        """
                 UPDATE account
                 SET next_free_artifact_at = now() + INTERVAL '2' MINUTE
                 WHERE account_number = ?
                 AND next_free_artifact_at <= now()
                 """;
 
-        String selectSql = """
+    String selectSql =
+        """
                 SELECT next_free_artifact_at
                   FROM account
                  WHERE account_number = ?
                 """;
 
-        try {
-            int rows;
-            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
-                stmt.setString(1, accountNumber);
-                rows = stmt.executeUpdate();
-            }
+    try {
+      int rows;
+      try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+        stmt.setString(1, accountNumber);
+        rows = stmt.executeUpdate();
+      }
 
-            if (rows == 0) {
-                return Optional.empty();
-            }
+      if (rows == 0) {
+        return Optional.empty();
+      }
 
-            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
-                stmt.setString(1, accountNumber);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return Optional.of(rs.getTimestamp("next_free_artifact_at").toInstant());
-                    }
-                    return Optional.empty();
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while claiming free artifact [accountId=" + accountNumber + "]",
-                    e
-            );
+      try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+        stmt.setString(1, accountNumber);
+        try (ResultSet rs = stmt.executeQuery()) {
+          if (rs.next()) {
+            return Optional.of(rs.getTimestamp("next_free_artifact_at").toInstant());
+          }
+          return Optional.empty();
         }
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while claiming free artifact [accountId=" + accountNumber + "]", e);
     }
+  }
 
-    public Instant selectNextClaimById(Connection conn, String accountNumber) {
+  public Instant selectNextClaimById(Connection conn, String accountNumber) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT next_free_artifact_at
                   FROM account
                  WHERE account_number = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, accountNumber);
+      stmt.setString(1, accountNumber);
 
-            try (ResultSet rs = stmt.executeQuery()) {
+      try (ResultSet rs = stmt.executeQuery()) {
 
-                if (rs.next()) {
+        if (rs.next()) {
 
-                    var timestamp = rs.getTimestamp("next_free_artifact_at");
+          var timestamp = rs.getTimestamp("next_free_artifact_at");
 
-                    if (timestamp == null) {
-                        return null;
-                    }
+          if (timestamp == null) {
+            return null;
+          }
 
-                    return timestamp.toInstant();
-                }
-
-                return null;
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting next claim instant account " +
-                            "[accountNumber=" + accountNumber + "]",
-                    e
-            );
+          return timestamp.toInstant();
         }
+
+        return null;
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting next claim instant account "
+              + "[accountNumber="
+              + accountNumber
+              + "]",
+          e);
     }
+  }
 
-    public Optional<PublicProfileResponse> selectPublicProfileById(Connection conn, long accountId) {
+  public Optional<PublicProfileResponse> selectPublicProfileById(Connection conn, long accountId) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT a.id, c.name, c.picture, a.account_number
                   FROM account a
                   JOIN client c ON c.id = a.client_id
                  WHERE a.id = ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, accountId);
+      stmt.setLong(1, accountId);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new PublicProfileResponse(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getString("picture"),
-                            rs.getString("account_number")
-                    ));
-                }
-                return Optional.empty();
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while selecting public profile [accountId=" + accountId + "]", e
-            );
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          return Optional.of(
+              new PublicProfileResponse(
+                  rs.getLong("id"),
+                  rs.getString("name"),
+                  rs.getString("picture"),
+                  rs.getString("account_number")));
         }
+        return Optional.empty();
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while selecting public profile [accountId=" + accountId + "]", e);
     }
+  }
 
-    public List<PublicProfileResponse> searchByName(Connection conn, String query, int page, int pageSize) {
+  public List<PublicProfileResponse> searchByName(
+      Connection conn, String query, int page, int pageSize) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT a.id, c.name, c.picture, a.account_number
                   FROM account a
                   JOIN client c ON c.id = a.client_id
@@ -464,35 +465,35 @@ public class AccountDAO {
                  LIMIT ? OFFSET ?
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, query);
-            stmt.setInt(2, pageSize);
-            stmt.setInt(3, page * pageSize);
+      stmt.setString(1, query);
+      stmt.setInt(2, pageSize);
+      stmt.setInt(3, page * pageSize);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<PublicProfileResponse> results = new ArrayList<>();
-                while (rs.next()) {
-                    results.add(new PublicProfileResponse(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getString("picture"),
-                            rs.getString("account_number")
-                    ));
-                }
-                return results;
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while searching accounts [query=" + query + "]", e
-            );
+      try (ResultSet rs = stmt.executeQuery()) {
+        List<PublicProfileResponse> results = new ArrayList<>();
+        while (rs.next()) {
+          results.add(
+              new PublicProfileResponse(
+                  rs.getLong("id"),
+                  rs.getString("name"),
+                  rs.getString("picture"),
+                  rs.getString("account_number")));
         }
+        return results;
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Database error while searching accounts [query=" + query + "]", e);
     }
+  }
 
-    public long countByName(Connection conn, String query) {
+  public long countByName(Connection conn, String query) {
 
-        String sql = """
+    String sql =
+        """
                 SELECT COUNT(*)
                   FROM account a
                   JOIN client c ON c.id = a.client_id
@@ -500,19 +501,17 @@ public class AccountDAO {
                    AND a.status = 'ACTIVE'
                 """;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, query);
+      stmt.setString(1, query);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getLong(1);
-                return 0;
-            }
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) return rs.getLong(1);
+        return 0;
+      }
 
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Database error while counting accounts [query=" + query + "]", e
-            );
-        }
+    } catch (SQLException e) {
+      throw new RuntimeException("Database error while counting accounts [query=" + query + "]", e);
     }
+  }
 }

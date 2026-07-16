@@ -8,21 +8,23 @@ import br.com.ale.service.auth.JwtService;
 
 public class GetAccountDetailsUseCase {
 
-    private final AccountService accountService;
-    private final JwtService jwtService;
+  private final AccountService accountService;
+  private final JwtService jwtService;
 
-    public GetAccountDetailsUseCase(AccountService accountService, JwtService jwtService) {
-        this.accountService = accountService;
-        this.jwtService = jwtService;
-    }
+  public GetAccountDetailsUseCase(AccountService accountService, JwtService jwtService) {
+    this.accountService = accountService;
+    this.jwtService = jwtService;
+  }
 
-    public AccountDetailsResponse execute(String token) {
+  public AccountDetailsResponse execute(String token) {
 
-        long clientId = jwtService.extractClientId(token);
+    long clientId = jwtService.extractClientId(token);
 
-        Account account = accountService.getAccountByClientId(clientId).orElseThrow(
-                () -> new UnauthorizedOperationException("Account not found"));
+    Account account =
+        accountService
+            .getAccountByClientId(clientId)
+            .orElseThrow(() -> new UnauthorizedOperationException("Account not found"));
 
-        return accountService.getAccountDetailsById(account.getId());
-    }
+    return accountService.getAccountDetailsById(account.getId());
+  }
 }

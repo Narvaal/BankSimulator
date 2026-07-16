@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 @Profile("local")
 public class LogEmailService implements EmailService {
 
-    private static final Logger log = LoggerFactory.getLogger(LogEmailService.class);
+  private static final Logger log = LoggerFactory.getLogger(LogEmailService.class);
 
-    @Override
-    public void send(String to, String subject, String htmlBody) {
-        log.info("[LOCAL EMAIL] To: {} | Subject: {}", to, subject);
-    }
+  @Override
+  public void send(String to, String subject, String htmlBody) {
+    log.info("[LOCAL EMAIL] To: {} | Subject: {}", to, subject);
+  }
 }

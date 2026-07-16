@@ -1,4 +1,3 @@
 package br.com.ale.application.auth.command;
 
-public record LocalLoginCommand(String email, String password) {
-}
+public record LocalLoginCommand(String email, String password) {}

@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -13,57 +15,49 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.List;
-
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
+  @Value("${cors.allowed-origins}")
+  private List<String> allowedOrigins;
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(allowedOrigins);
+    configuration.setAllowedOriginPatterns(allowedOrigins);
 
-        configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
-        ));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Set-Cookie"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+    configuration.setExposedHeaders(List.of("Set-Cookie"));
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+    source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+    return source;
+  }
 
-    @Bean
-    public FilterRegistrationBean<OncePerRequestFilter> coopFilter() {
+  @Bean
+  public FilterRegistrationBean<OncePerRequestFilter> coopFilter() {
 
-        FilterRegistrationBean<OncePerRequestFilter> registrationBean =
-                new FilterRegistrationBean<>();
+    FilterRegistrationBean<OncePerRequestFilter> registrationBean = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(
-                    HttpServletRequest request,
-                    HttpServletResponse response,
-                    FilterChain filterChain
-            ) throws ServletException, IOException {
+    registrationBean.setFilter(
+        new OncePerRequestFilter() {
+          @Override
+          protected void doFilterInternal(
+              HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+              throws ServletException, IOException {
 
-                response.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
-                filterChain.doFilter(request, response);
-            }
+            response.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+            filterChain.doFilter(request, response);
+          }
         });
 
-        return registrationBean;
-    }
+    return registrationBean;
+  }
 }

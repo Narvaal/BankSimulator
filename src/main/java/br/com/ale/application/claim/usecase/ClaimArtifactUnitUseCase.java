@@ -9,49 +9,48 @@ import br.com.ale.service.account.AccountService;
 import br.com.ale.service.artifact.ArtifactService;
 import br.com.ale.service.artifact.ArtifactUnitService;
 import br.com.ale.service.auth.JwtService;
-
 import java.time.Instant;
 
 public class ClaimArtifactUnitUseCase {
-    private final AccountService accountService;
-    private final ArtifactUnitService artifactUnitService;
-    private final ArtifactService assetService;
-    private final JwtService jwtService;
+  private final AccountService accountService;
+  private final ArtifactUnitService artifactUnitService;
+  private final ArtifactService assetService;
+  private final JwtService jwtService;
 
-    public ClaimArtifactUnitUseCase(
-            AccountService accountService,
-            ArtifactUnitService artifactUnitService,
-            ArtifactService assetService,
-            JwtService jwtService
-    ) {
-        this.accountService = accountService;
-        this.artifactUnitService = artifactUnitService;
-        this.assetService = assetService;
-        this.jwtService = jwtService;
+  public ClaimArtifactUnitUseCase(
+      AccountService accountService,
+      ArtifactUnitService artifactUnitService,
+      ArtifactService assetService,
+      JwtService jwtService) {
+    this.accountService = accountService;
+    this.artifactUnitService = artifactUnitService;
+    this.assetService = assetService;
+    this.jwtService = jwtService;
+  }
+
+  public Instant execute(ClaimArtifactUnitCommand command) {
+
+    if (!jwtService.isTokenValid(command.token())) {
+      throw new UnauthorizedOperationException("Invalid or expired token");
     }
 
+    long clientId = jwtService.extractClientId(command.token());
 
-    public Instant execute(ClaimArtifactUnitCommand command) {
+    Account account =
+        accountService
+            .getAccountByClientId(clientId)
+            .orElseThrow(() -> new UnauthorizedOperationException("Account not found"));
 
-        if (!jwtService.isTokenValid(command.token())) {
-            throw new UnauthorizedOperationException("Invalid or expired token");
-        }
+    Artifact artifact = assetService.selectById(command.artifactId());
 
-        long clientId = jwtService.extractClientId(command.token());
+    Instant nextClaim =
+        accountService
+            .tryClaimArtifactUnit(account.getAccountNumber())
+            .orElseThrow(() -> new UnauthorizedOperationException("nextClaim"));
 
-        Account account = accountService.getAccountByClientId(clientId)
-                .orElseThrow(() -> new UnauthorizedOperationException("Account not found"));
+    artifactUnitService.createArtifactUnit(
+        new CreateArtifactUnitRequest(artifact.getId(), account.getId()));
 
-        Artifact artifact = assetService.selectById(command.artifactId());
-
-        Instant nextClaim = accountService
-                .tryClaimArtifactUnit(account.getAccountNumber())
-                .orElseThrow(() -> new UnauthorizedOperationException("nextClaim"));
-
-        artifactUnitService.createArtifactUnit(
-                new CreateArtifactUnitRequest(artifact.getId(), account.getId())
-        );
-
-        return nextClaim;
-    }
+    return nextClaim;
+  }
 }

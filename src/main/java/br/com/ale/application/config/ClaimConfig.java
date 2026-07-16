@@ -11,21 +11,18 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ClaimConfig {
-    @Bean
-    public ClaimArtifactUnitUseCase ClaimArtifactUnitUseCase(
-            AccountService accountService,
-            ArtifactUnitService artifactUnitService,
-            ArtifactService assetService,
-            JwtService jwtService
-    ) {
-        return new ClaimArtifactUnitUseCase(accountService, artifactUnitService, assetService, jwtService);
-    }
+  @Bean
+  public ClaimArtifactUnitUseCase ClaimArtifactUnitUseCase(
+      AccountService accountService,
+      ArtifactUnitService artifactUnitService,
+      ArtifactService assetService,
+      JwtService jwtService) {
+    return new ClaimArtifactUnitUseCase(
+        accountService, artifactUnitService, assetService, jwtService);
+  }
 
-    @Bean
-    GetNextClaimUseCase getNextClaimUseCase(
-            AccountService accountService,
-            JwtService jwtService
-    ) {
-        return new GetNextClaimUseCase(accountService, jwtService);
-    }
+  @Bean
+  GetNextClaimUseCase getNextClaimUseCase(AccountService accountService, JwtService jwtService) {
+    return new GetNextClaimUseCase(accountService, jwtService);
+  }
 }

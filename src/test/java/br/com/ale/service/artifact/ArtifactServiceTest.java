@@ -1,145 +1,131 @@
 package br.com.ale.service.artifact;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import br.com.ale.domain.artifact.Artifact;
 import br.com.ale.dto.CreateArtifactRequest;
 import br.com.ale.infrastructure.db.TestConnectionProvider;
+import java.time.Instant;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class ArtifactServiceTest {
 
-    private ArtifactService assetService;
-    private TestConnectionProvider provider;
+  private ArtifactService assetService;
+  private TestConnectionProvider provider;
 
-    private static final Map<String, Object> VALID_METADATA = Map.of("name", "legendary blue dragon", "rarity", "Rare");
-    private static final int VALID_TOTAL_SUPPLY = 100;
+  private static final Map<String, Object> VALID_METADATA =
+      Map.of("name", "legendary blue dragon", "rarity", "Rare");
+  private static final int VALID_TOTAL_SUPPLY = 100;
 
-    @BeforeEach
-    void setup() {
-        provider = new TestConnectionProvider();
-        assetService = new ArtifactService(provider);
-        cleanDatabase();
+  @BeforeEach
+  void setup() {
+    provider = new TestConnectionProvider();
+    assetService = new ArtifactService(provider);
+    cleanDatabase();
+  }
+
+  private void cleanDatabase() {
+    try (var conn = provider.getConnection();
+        var stmt = conn.createStatement()) {
+
+      stmt.execute("DELETE FROM artifact_price_history");
+      stmt.execute("DELETE FROM artifact_transfer");
+      stmt.execute("DELETE FROM artifact_listing");
+      stmt.execute("DELETE FROM artifact_unit");
+      stmt.execute("DELETE FROM artifact");
+      stmt.execute("DELETE FROM transactions");
+      stmt.execute("DELETE FROM account");
+      stmt.execute("DELETE FROM credential");
+      stmt.execute("DELETE FROM client");
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    private void cleanDatabase() {
-        try (var conn = provider.getConnection();
-             var stmt = conn.createStatement()) {
+  @Test
+  void shouldCreateAsset() {
 
-            stmt.execute("DELETE FROM artifact_price_history");
-            stmt.execute("DELETE FROM artifact_transfer");
-            stmt.execute("DELETE FROM artifact_listing");
-            stmt.execute("DELETE FROM artifact_unit");
-            stmt.execute("DELETE FROM artifact");
-            stmt.execute("DELETE FROM transactions");
-            stmt.execute("DELETE FROM account");
-            stmt.execute("DELETE FROM credential");
-            stmt.execute("DELETE FROM client");
+    Artifact artifact =
+        assetService.createAsset(new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY));
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+    assertNotNull(artifact);
+    assertTrue(artifact.getId() > 0);
+    assertEquals("legendary blue dragon", artifact.getName());
+    assertEquals(VALID_TOTAL_SUPPLY, artifact.getTotalSupply());
+    assertNotNull(artifact.getCreatedAt());
+  }
 
-    @Test
-    void shouldCreateAsset() {
+  @Test
+  void shouldPersistAssetAndRetrieveById() {
 
-        Artifact artifact = assetService.createAsset(
-                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
-        );
+    Artifact created =
+        assetService.createAsset(new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY));
 
-        assertNotNull(artifact);
-        assertTrue(artifact.getId() > 0);
-        assertEquals("legendary blue dragon", artifact.getName());
-        assertEquals(VALID_TOTAL_SUPPLY, artifact.getTotalSupply());
-        assertNotNull(artifact.getCreatedAt());
-    }
+    Artifact fetched = assetService.selectById(created.getId());
 
-    @Test
-    void shouldPersistAssetAndRetrieveById() {
+    assertEquals(created.getId(), fetched.getId());
+    assertEquals(created.getName(), fetched.getName());
+    assertEquals(created.getTotalSupply(), fetched.getTotalSupply());
+    assertEquals(created.getCreatedAt(), fetched.getCreatedAt());
+  }
 
-        Artifact created = assetService.createAsset(
-                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
-        );
+  @Test
+  void shouldFailWhenAssetNotFound() {
 
-        Artifact fetched = assetService.selectById(created.getId());
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> assetService.selectById(9999L));
 
-        assertEquals(created.getId(), fetched.getId());
-        assertEquals(created.getName(), fetched.getName());
-        assertEquals(created.getTotalSupply(), fetched.getTotalSupply());
-        assertEquals(created.getCreatedAt(), fetched.getCreatedAt());
-    }
+    assertNotNull(exception.getCause());
 
-    @Test
-    void shouldFailWhenAssetNotFound() {
+    assertTrue(
+        exception.getCause().getMessage().contains("Artifact not found"),
+        exception.getCause().getMessage());
+  }
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> assetService.selectById(9999L)
-        );
+  @Test
+  void shouldFailWhenCreatingAssetWithBlankName() {
 
-        assertNotNull(exception.getCause());
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                assetService.createAsset(
+                    new CreateArtifactRequest(
+                        Map.of("name", "   ", "rarity", "Common"), VALID_TOTAL_SUPPLY)));
 
-        assertTrue(
-                exception.getCause().getMessage().contains("Artifact not found"),
-                exception.getCause().getMessage()
-        );
-    }
+    assertNotNull(exception.getCause());
+    assertTrue(
+        exception.getCause().getMessage().contains("non-blank 'name'"),
+        exception.getCause().getMessage());
+  }
 
-    @Test
-    void shouldFailWhenCreatingAssetWithBlankName() {
+  @Test
+  void shouldFailWhenCreatingAssetWithInvalidSupply() {
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> assetService.createAsset(
-                        new CreateArtifactRequest(Map.of("name", "   ", "rarity", "Common"), VALID_TOTAL_SUPPLY)
-                )
-        );
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () -> assetService.createAsset(new CreateArtifactRequest(VALID_METADATA, 0)));
 
-        assertNotNull(exception.getCause());
-        assertTrue(
-                exception.getCause().getMessage().contains("non-blank 'name'"),
-                exception.getCause().getMessage()
-        );
-    }
+    String message =
+        exception.getCause() != null ? exception.getCause().getMessage() : exception.getMessage();
 
-    @Test
-    void shouldFailWhenCreatingAssetWithInvalidSupply() {
+    assertTrue(message.contains("total supply"), message);
+  }
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> assetService.createAsset(
-                        new CreateArtifactRequest(VALID_METADATA, 0)
-                )
-        );
+  @Test
+  void shouldSetCreatedAtFromDatabase() {
 
-        String message =
-                exception.getCause() != null
-                        ? exception.getCause().getMessage()
-                        : exception.getMessage();
+    Artifact artifact =
+        assetService.createAsset(new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY));
 
-        assertTrue(
-                message.contains("total supply"),
-                message
-        );
-    }
+    Instant now = Instant.now();
 
-    @Test
-    void shouldSetCreatedAtFromDatabase() {
-
-        Artifact artifact = assetService.createAsset(
-                new CreateArtifactRequest(VALID_METADATA, VALID_TOTAL_SUPPLY)
-        );
-
-        Instant now = Instant.now();
-
-        assertTrue(
-                artifact.getCreatedAt().isBefore(now) || artifact.getCreatedAt().equals(now),
-                "createdAt should be set by database timestamp"
-        );
-    }
+    assertTrue(
+        artifact.getCreatedAt().isBefore(now) || artifact.getCreatedAt().equals(now),
+        "createdAt should be set by database timestamp");
+  }
 }
