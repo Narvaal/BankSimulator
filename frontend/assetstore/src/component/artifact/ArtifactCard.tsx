@@ -417,7 +417,10 @@ export function ArtifactCardFullscreen({
 
                 {/* Extra content — actions, price history, etc. */}
                 {children && (
-                    <div className="mt-3 w-full max-w-[420px] bg-white rounded-2xl shadow-2xl overflow-hidden">
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 w-full max-w-[420px] bg-white rounded-2xl shadow-2xl overflow-hidden"
+                    >
                         {children}
                     </div>
                 )}
