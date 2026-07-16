@@ -340,6 +340,12 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ✅ Validado com Playwright em casos normais, extremos (textos no limite de cada campo) e mínimos, incluindo mobile — `scrollHeight === clientHeight` sempre, garantindo zero overflow por design  
 ⚠️ `ArtifactCardThumb` (grid pequeno) não foi atualizado — não cabe abilities/weakness/metadata bar num tile pequeno, fica para decisão futura
 
+### ADR-017: Quality Gates — Husky + Conventional Commits + google-java-format + JaCoCo 90%
+**Contexto:** o repo não tinha nenhuma automação de qualidade: sem hooks, ESLint falhando com 8 erros, formatação Java inconsistente, cobertura de 43.6% e CI fazendo deploy com `-DskipTests`.  
+**Decisão:** (1) **Husky** na raiz (`package.json` raiz mínimo) com pre-commit **condicional por área staged** — `*.java`/`pom.xml` → `mvn spotless:check test jacoco:check`; `frontend/assetstore/**` → `npm run lint && npm test`; commit só de docs passa direto. (2) **commitlint** no hook commit-msg **bloqueia** mensagens fora do Conventional Commits; commits devem ser atômicos. (3) **Spotless = google-java-format 1.25.2** (estilo GOOGLE) — codebase inteiro reformatado (225 arquivos). (4) **JaCoCo com gate de 90% de linhas** (BUNDLE) no pre-commit e no CI (`mvn verify` no deploy, antes `-DskipTests`); exclusões justificadas: `Application`, `application/config/**`, `SesEmailService`. Cobertura levada de 43.6% → **90.3%** com 157 testes novos (259 no total). Frontend: Vitest + React Testing Library (21 testes) + `npm run test:coverage` sem gate.  
+✅ Escrever os testes expôs 2 bugs reais de produção (ver Bugs Corrigidos) · Deploy nunca mais sobe código sem testes · Histórico de commits padronizado  
+⚠️ Pre-commit de mudança Java leva ~30-40s (testes + gate) — bypass consciente via `--no-verify` · Padrões de teste: `DbTestSupport` (H2 + seeds), `TestJwt`, `RecordingEmailService` em `src/test/java/br/com/ale/support/`
+
 ### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
 ✅ Backend nunca conhece detalhes visuais · Fácil adicionar raridades sem mudar backend  
@@ -711,6 +717,9 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | AI Info cortava texto (letras como "g" decepadas) | `ArtifactCard.tsx` | `line-height` apertado (1.05) + `line-clamp` cortava descenders de glifos. Fix: `leading-[1.15]` + mais espaçamento antes do flavorText |
 | Prompt de imagem duplicava "the exact instant when..." | `card_generator.py` | Claude às vezes já incluía essa frase dentro de `cinematicMoment`, e `assemble_image_prompt` a repetia. Fix: instrução reforçada + limpeza defensiva via regex do prefixo redundante |
 | **Deploy do frontend apagava todas as imagens de cartas** | `.github/workflows/deploy.yml` | `aws s3 sync ... --delete` no mesmo bucket onde a pipeline salva `cards/*.png` — sem exclusão, todo deploy do frontend apagava a pasta inteira. Fix: `--exclude "cards/*"`. Imagens perdidas foram restauradas regenerando com o mesmo prompt+seed salvos no metadata (ver ADR-016) |
+| Insert de transação era descartado silenciosamente | `TransactionService.java` | `createTransaction` abria transação (`autoCommit=false`), inseria e retornava **sem commit** — o insert era revertido no fechamento da conexão. Encontrado pelos testes da ADR-017. Fix: `conn.commit()` após o insert |
+| Webhook Ko-fi respondia 500 para token inválido | `KofiWebhookController.java` | Token errado lançava `IllegalAccessError`, que estende `Error` e escapava do `catch (Exception)` → 500 não tratado. Fix: `IllegalArgumentException` → 400 com "Invalid Token" |
+| `mvn test` falhava com "release version 17 not supported" | ambiente (Fedora) | O `mvn` da distro escolhia o `java-25-openjdk`, que é um **JRE sem javac**. Fix: derivar `JAVA_HOME` do `java` do PATH (Corretto 21) — o pre-commit já faz isso; a nota antiga sobre "Surefire fork" estava desatualizada |
 
 ---
 
