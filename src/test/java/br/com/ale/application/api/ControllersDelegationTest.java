@@ -262,8 +262,9 @@ class ControllersDelegationTest {
         """
         {"verification_token":"wrong","email":"j@t.com","amount":"5.00","currency":"USD"}
         """;
-    // IllegalAccessError é Error (não Exception) — escapa do catch do controller
-    assertThrows(IllegalAccessError.class, () -> controller.handleWebhook(wrongToken));
+    var rejected = controller.handleWebhook(wrongToken);
+    assertEquals(400, rejected.getStatusCode().value());
+    assertEquals("Invalid Token", rejected.getBody());
 
     assertEquals(400, controller.handleWebhook("not-json").getStatusCode().value());
   }
