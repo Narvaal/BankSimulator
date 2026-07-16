@@ -7,7 +7,7 @@ import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
 @Service
-@Profile("!local")
+@Profile("!local & !docker")
 public class SesEmailService implements EmailService {
 
   private final SesClient sesClient;

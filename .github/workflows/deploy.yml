@@ -6,9 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  docker-smoke:
+    name: Docker Smoke Test (Postgres parity)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run smoke test (compose up + endpoints against real Postgres)
+        run: ./docker-smoke.sh
+
   deploy-backend:
     name: Build and Deploy Backend
     runs-on: ubuntu-latest
+    needs: docker-smoke
 
     steps:
       - name: Checkout

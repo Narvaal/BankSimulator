@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("local")
+@Profile({"local", "docker"})
 public class LogEmailService implements EmailService {
 
   private static final Logger log = LoggerFactory.getLogger(LogEmailService.class);
