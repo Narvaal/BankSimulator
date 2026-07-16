@@ -34,7 +34,7 @@ public class KofiWebhookController {
       KofiWebHookResponse response = objectMapper.readValue(data, KofiWebHookResponse.class);
 
       if (!response.token().equals(verificationToken)) {
-        throw new IllegalAccessError("Invalid Token");
+        throw new IllegalArgumentException("Invalid Token");
       }
 
       depositAccountUseCase.execute(new DepositAccountCommand(response.email(), response.amount()));
