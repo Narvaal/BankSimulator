@@ -1,5 +1,5 @@
-# Logs
-logs
+# Logs (raiz apenas — src/component/logs é código fonte)
+/logs
 *.log
 npm-debug.log*
 yarn-debug.log*
