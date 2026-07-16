@@ -116,7 +116,7 @@ public class ArtifactTransferDAO {
   public ArtifactTransferLogPageView selectPublicFeed(
       Connection conn, Long artifactId, int page, int pageSize) {
 
-    String artifactFilter = artifactId != null ? "WHERE au.artifact_id = ?" : "";
+    String artifactFilter = artifactId != null ? "WHERE au.artifact_id = ?\n" : "";
 
     String sql =
         """
