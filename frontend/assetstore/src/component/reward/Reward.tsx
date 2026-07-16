@@ -1,7 +1,7 @@
 /* ===================== IMPORTS ===================== */
 
 import NavBar from "../navBar/NavBar";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import UserMenu from "../usermenu/UserMenu.tsx";
 import {useAccount} from "../auth/Auth";
 import {useQueryClient} from "@tanstack/react-query";
@@ -104,13 +104,39 @@ function Reward() {
     const [timeLeft, setTimeLeft] = useState("");
 
 
+    /* ===================== SIDEBAR PERSISTENCE ===================== */
+
+    useEffect(() => {
+        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+    }, [collapsed]);
+
+
+    /* ===================== TOGGLE BUNDLE ===================== */
+
+    const toggleBundle = useCallback(async (bundleId: string, forceOpen = false) => {
+
+        const isOpen = openBundles[bundleId];
+        const newState = forceOpen ? true : !isOpen;
+
+        setOpenBundles(prev => ({...prev, [bundleId]: newState}));
+
+        if (newState && !bundleAssets[bundleId]) {
+            try {
+                const assets = await getBundleAssets(bundleId);
+                setBundleAssets(prev => ({...prev, [bundleId]: assets}));
+            } catch {
+                setBundleAssets(prev => ({...prev, [bundleId]: []}));
+            }
+        }
+
+    }, [openBundles, bundleAssets]);
+
+
     /* ===================== LOAD BUNDLES ===================== */
 
     const loadBundles = useCallback(async () => {
 
         if (loadingBundles || !hasMore) return;
-
-        localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
 
         setLoading(false);
         setError(null);
@@ -142,14 +168,18 @@ function Reward() {
             setLoadingBundles(false);
         }
 
-    }, [page, loadingBundles, hasMore]);
+    }, [page, loadingBundles, hasMore, toggleBundle]);
 
 
     /* ===================== INITIAL LOAD ===================== */
 
+    const initialLoadDone = useRef(false);
+
     useEffect(() => {
+        if (initialLoadDone.current) return;
+        initialLoadDone.current = true;
         loadBundles();
-    }, [collapsed]);
+    }, [loadBundles]);
 
 
     /* ===================== INFINITE SCROLL ===================== */
@@ -213,26 +243,6 @@ function Reward() {
 
         return () => clearInterval(interval);
     }, []);
-
-    /* ===================== TOGGLE BUNDLE ===================== */
-
-    async function toggleBundle(bundleId: string, forceOpen = false) {
-
-        const isOpen = openBundles[bundleId];
-        const newState = forceOpen ? true : !isOpen;
-
-        setOpenBundles(prev => ({...prev, [bundleId]: newState}));
-
-        if (newState && !bundleAssets[bundleId]) {
-            try {
-                const assets = await getBundleAssets(bundleId);
-                setBundleAssets(prev => ({...prev, [bundleId]: assets}));
-            } catch {
-                setBundleAssets(prev => ({...prev, [bundleId]: []}));
-            }
-        }
-
-    }
 
     /* ===================== MODAL CONTROLS ===================== */
 
