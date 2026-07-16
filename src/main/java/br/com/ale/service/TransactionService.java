@@ -24,6 +24,8 @@ public class TransactionService {
 
       long transactionId = transactionDAO.insert(conn, request);
 
+      conn.commit();
+
       return new Transaction(
           transactionId,
           request.fromAccountId(),
