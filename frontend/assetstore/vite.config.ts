@@ -18,6 +18,9 @@ export default defineConfig({
         // bootstrap ReactDOM — análogo à classe Application no backend
         'src/main.tsx',
       ],
+      thresholds: {
+        lines: 90,
+      },
     },
   },
 })

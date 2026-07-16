@@ -20,11 +20,11 @@ if echo "$STAGED" | grep -qE '(\.java$|^pom\.xml$)'; then
     }
 fi
 
-# ---- Frontend: arquivos em frontend/assetstore/ staged → lint + testes ----
+# ---- Frontend: arquivos em frontend/assetstore/ staged → lint + testes + gate de cobertura ----
 if echo "$STAGED" | grep -q '^frontend/assetstore/'; then
-    echo "[pre-commit] frontend: npm run lint && npm test"
-    (cd frontend/assetstore && npm run lint && npm run test) || {
-        echo "[pre-commit] frontend falhou"
+    echo "[pre-commit] frontend: npm run lint && npm run test:coverage (cobertura mínima: 90% de linhas)"
+    (cd frontend/assetstore && npm run lint && npm run test:coverage) || {
+        echo "[pre-commit] frontend falhou — lint, testes ou cobertura <90% (relatório: frontend/assetstore/coverage/)"
         exit 1
     }
 fi
