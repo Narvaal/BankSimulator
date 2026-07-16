@@ -83,3 +83,4 @@ terraform/terraform.tfstate.backup
 frontend/assetstore/node_modules/
 frontend/assetstore/dist/
 frontend/assetstore/.env.local
+frontend/assetstore/coverage/
