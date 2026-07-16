@@ -637,7 +637,7 @@ export JAVA_HOME=$(dirname $(dirname $(readlink -f $(command -v java))))
 - **Spotless = google-java-format** (`spotless-maven-plugin` no `pom.xml`, GJF 1.25.2 estilo GOOGLE): `mvn spotless:check` verifica, `mvn spotless:apply` reformata. Todo o codebase já foi reformatado.
 - **JaCoCo — gate de 90% de linhas no backend** (`jacoco-maven-plugin` no `pom.xml`): `mvn test jacoco:report jacoco:check` falha se a cobertura de linhas do bundle ficar abaixo de 90%. Exclusões justificadas: `Application` (main), `application/config/**` (wiring Spring), `SesEmailService` (exige AWS real). Relatório em `target/site/jacoco/index.html`. O gate roda no pre-commit e no CI (`mvn verify` no deploy).
 - **ESLint** (`frontend/assetstore`): `npm run lint` — deve ficar em 0 erros (warnings de `exhaustive-deps` tolerados).
-- **Vitest coverage** (frontend, sem gate): `npm run test:coverage`.
+- **Vitest — gate de 90% de linhas no frontend** (`npm run test:coverage`, thresholds no `vite.config.ts`): mesmo tratamento do backend, rodando no pre-commit e no CI. Exclusão justificada: `main.tsx` (bootstrap ReactDOM). Infra de teste em `src/test/`: `helpers.tsx` (`renderWithProviders` com MemoryRouter+React Query, `mockFetch` com gravação de chamadas, fixtures) e `setup.ts` (jest-dom, stubs de ResizeObserver/matchMedia).
 
 ---
 
@@ -719,6 +719,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | **Deploy do frontend apagava todas as imagens de cartas** | `.github/workflows/deploy.yml` | `aws s3 sync ... --delete` no mesmo bucket onde a pipeline salva `cards/*.png` — sem exclusão, todo deploy do frontend apagava a pasta inteira. Fix: `--exclude "cards/*"`. Imagens perdidas foram restauradas regenerando com o mesmo prompt+seed salvos no metadata (ver ADR-016) |
 | Insert de transação era descartado silenciosamente | `TransactionService.java` | `createTransaction` abria transação (`autoCommit=false`), inseria e retornava **sem commit** — o insert era revertido no fechamento da conexão. Encontrado pelos testes da ADR-017. Fix: `conn.commit()` após o insert |
 | Webhook Ko-fi respondia 500 para token inválido | `KofiWebhookController.java` | Token errado lançava `IllegalAccessError`, que estende `Error` e escapava do `catch (Exception)` → 500 não tratado. Fix: `IllegalArgumentException` → 400 com "Invalid Token" |
+| Clique no painel de ações fechava o modal fullscreen | `ArtifactCard.tsx` | O container de `children` (input de preço, botões buy/claim/sell) ficava fora do wrapper com `stopPropagation` — todo clique borbulhava para o backdrop `onClose`; mensagens de erro nunca ficavam visíveis. Encontrado pelos testes de frontend. Fix: `stopPropagation` no container |
 | `mvn test` falhava com "release version 17 not supported" | ambiente (Fedora) | O `mvn` da distro escolhia o `java-25-openjdk`, que é um **JRE sem javac**. Fix: derivar `JAVA_HOME` do `java` do PATH (Corretto 21) — o pre-commit já faz isso; a nota antiga sobre "Surefire fork" estava desatualizada |
 
 ---
@@ -729,7 +730,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 - Sem rate limiting implementado.
 - Sem logs estruturados / observabilidade.
 - Chaves RSA em `/opt/banksimulator/keys/`. Se o EC2 for recriado, chaves existentes são perdidas.
-- 259 testes backend (90.3% de linhas, gate JaCoCo ≥90%) · 21 testes frontend. O antigo BUILD FAILURE do fork do Surefire não se reproduz mais — se `mvn test` falhar com "release version 17 not supported", é o `JAVA_HOME` apontando para JRE sem javac (ver seção Testes).
+- 259 testes backend (90.3% de linhas, gate JaCoCo ≥90%) · 84 testes frontend (93.4% de linhas, gate Vitest ≥90%). O antigo BUILD FAILURE do fork do Surefire não se reproduz mais — se `mvn test` falhar com "release version 17 not supported", é o `JAVA_HOME` apontando para JRE sem javac (ver seção Testes).
 - Three.js ainda não está no projeto — Fase 4.
 - Pipeline de IA rodando em produção (Fase 2 completa). Deploy da Lambda é manual — CI não atualiza o código.
 - Existem bundles antigos no banco (`identifier` tipo "staff 😘", "colleague 🇷", "luck 🐰") sem `prompt`/`seed`/`illustration` — dados de teste sem imagem de IA real, não são da pipeline. Não confundir com bundles legítimos (`weekly-{YYYY-W##}`) ao investigar problemas de imagem.
