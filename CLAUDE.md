@@ -352,6 +352,12 @@ Glass → Reflection → Foil → Particles → Frame → Illustration → Backg
 ✅ 93.4% de linhas (831/890) · Encontrou bug real: cliques no painel de ações do `ArtifactCardFullscreen` fechavam o modal (children fora do `stopPropagation`) — corrigido  
 ⚠️ Testes de página autenticada devem aguardar a 2ª carga do grid (o `useAccount` resolve e o efeito recarrega — clicar antes acerta nó desanexado) · Regra `logs` do gitignore do Vite foi ancorada na raiz (`/logs`) para não engolir `src/component/logs`
 
+### ADR-019: Docker para Build e Dev — Produção Continua JAR + Systemd
+**Contexto:** o desenvolvimento local usa H2 (`MODE=PostgreSQL`) e produção usa PostgreSQL — diferença que já causou vários bugs só reproduzíveis em prod (`INTERVAL`, `UPDATE ... RETURNING`, alias `JSON_VALUE`). Além disso o build dependia do JDK da máquina (problema do `JAVA_HOME`/Fedora). Avaliou-se migrar produção para ECS Fargate/App Runner: descartado — quase triplica o custo de compute (~$7,60 → ~$25-27/mês com ALB) sem benefício nesta escala.  
+**Decisão:** Docker apenas para build e dev. (1) `Dockerfile` multi-stage na raiz (Maven+Corretto 17 → `amazoncorretto:17-alpine`, non-root, `-XX:MaxRAMPercentage=75`), testes/gates ficam fora do build da imagem (rodam no pre-commit/CI). (2) `docker-compose.yml` com `postgres:17-alpine` (mesma major do RDS 17.9; `JSON_VALUE` nativo só existe no PG 17+) + novo profile `docker` (`application-docker.properties`): schema auto-create no Postgres real via `SchemaInitializer`, `DB_HOST`/`DB_PORT` com defaults permitem modo híbrido (backend no host + Postgres no container). (3) `LogEmailService` passou a `@Profile({"local", "docker"})` e `SesEmailService` a `@Profile("!local & !docker")` — única mudança em código Java. Produção (EC2 + JAR + systemd + deploy.yml) intocada; custo AWS inalterado.  
+✅ Bugs de dialeto H2×Postgres morrem no dev · Build reproduzível independente do JDK da máquina · Postgres do compose persiste dados entre restarts (volume `pgdata`) · **Já no primeiro teste encontrou um bug real de produção**: o filtro por artifact do Transfer Log retornava 500 no Postgres (SQL colado `?ORDER` que o H2 tolerava — ver Bugs Corrigidos)  
+⚠️ Sem hot reload no modo full-container (usar modo híbrido) · Porta 5433 no host para não conflitar com Postgres local · Fase 3 (imagem em produção via ECR) fica para quando houver necessidade real
+
 ### ADR-003: Frontend Owns Artifact Rendering (Fase 3)
 **Decisão:** Backend entrega apenas JSON de metadata. Cada camada é componente React em `position: absolute`. Raridade determina visual no frontend.  
 ✅ Backend nunca conhece detalhes visuais · Fácil adicionar raridades sem mudar backend  
@@ -619,6 +625,21 @@ cd frontend/assetstore && npm install && npm run dev   # http://localhost:5173
 
 Google OAuth local: adicionar `http://localhost` e `http://localhost:5173` em **Authorized JavaScript origins** no Google Cloud Console.
 
+### Docker — dev com Postgres 17 real (paridade com produção)
+
+Alternativa ao profile `local` quando a mudança envolve SQL/JSONB (ver ADR-019). O profile `docker` usa Postgres 17 (mesma major do RDS), `LogEmailService` e `InMemoryPrivateKeyStorage`; tokens dummy idênticos ao `local` (o `seed-local.sh` funciona igual).
+
+```bash
+# Modo completo — backend + Postgres em containers
+docker compose up --build          # backend em localhost:5000, Postgres em localhost:5433
+
+# Modo híbrido — só o Postgres em container, backend com hot reload no host
+docker compose up -d db
+DB_HOST=localhost DB_PORT=5433 mvn spring-boot:run -Dspring-boot.run.profiles=docker
+```
+
+Dados persistem no volume `pgdata` entre restarts (`docker compose down -v` zera). O fluxo `local` (H2) continua sendo o loop rápido do dia a dia; testes continuam em H2.
+
 ---
 
 ## Testes
@@ -727,6 +748,7 @@ POST /admin/accounts/deposit — adiciona saldo a uma conta (X-Admin-Token)
 | Webhook Ko-fi respondia 500 para token inválido | `KofiWebhookController.java` | Token errado lançava `IllegalAccessError`, que estende `Error` e escapava do `catch (Exception)` → 500 não tratado. Fix: `IllegalArgumentException` → 400 com "Invalid Token" |
 | Clique no painel de ações fechava o modal fullscreen | `ArtifactCard.tsx` | O container de `children` (input de preço, botões buy/claim/sell) ficava fora do wrapper com `stopPropagation` — todo clique borbulhava para o backdrop `onClose`; mensagens de erro nunca ficavam visíveis. Encontrado pelos testes de frontend. Fix: `stopPropagation` no container |
 | `mvn test` falhava com "release version 17 not supported" | ambiente (Fedora) | O `mvn` da distro escolhia o `java-25-openjdk`, que é um **JRE sem javac**. Fix: derivar `JAVA_HOME` do `java` do PATH (Corretto 21) — o pre-commit já faz isso; a nota antiga sobre "Surefire fork" estava desatualizada |
+| Transfer Log filtrado por artifact quebrado em Postgres (500) | `ArtifactTransferDAO.java` | `selectPublicFeed` concatenava `"WHERE au.artifact_id = ?"` + text block do `ORDER BY` **sem espaço** → `?ORDER`. O H2 tolerava o token colado; o Postgres rejeita (`trailing junk after parameter`) — ou seja, `GET /artifact-transfers?artifactId=` retornava 500 em produção. Encontrado no primeiro teste do compose com Postgres real (ADR-019). Fix: `\n` no final do filtro |
 
 ---
 
