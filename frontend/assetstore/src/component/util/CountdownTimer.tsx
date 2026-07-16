@@ -4,30 +4,30 @@ type CountdownTimerProps = {
     targetDate: string | Date;
 };
 
+function calculateTimeLeft(targetDate: string | Date) {
+    const difference =
+        new Date(targetDate).getTime() - new Date().getTime();
+
+    if (difference <= 0) {
+        return {finished: true, time: "00:00"};
+    }
+
+    const minutes = Math.floor((difference / (1000 * 60)) % 60);
+    const seconds = Math.floor((difference / 1000) % 60);
+
+    const formatted = `${String(
+        minutes
+    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+    return {finished: false, time: formatted};
+}
+
 export default function CountdownTimer({targetDate}: CountdownTimerProps) {
-    const calculateTimeLeft = () => {
-        const difference =
-            new Date(targetDate).getTime() - new Date().getTime();
-
-        if (difference <= 0) {
-            return {finished: true, time: "00:00"};
-        }
-
-        const minutes = Math.floor((difference / (1000 * 60)) % 60);
-        const seconds = Math.floor((difference / 1000) % 60);
-
-        const formatted = `${String(
-            minutes
-        ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-
-        return {finished: false, time: formatted};
-    };
-
-    const [state, setState] = useState(calculateTimeLeft());
+    const [state, setState] = useState(() => calculateTimeLeft(targetDate));
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setState(calculateTimeLeft());
+            setState(calculateTimeLeft(targetDate));
         }, 1000);
 
         return () => clearInterval(interval);
