@@ -1,0 +1,15 @@
+target/
+frontend/
+node_modules/
+.git/
+.github/
+.husky/
+.claude/
+.idea/
+keys/
+pipeline/
+terraform/
+coverage/
+*.md
+*.sh
+*.zip
